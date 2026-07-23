@@ -268,6 +268,7 @@ DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/brri
 | Symptom                                   | Fix                                                        |
 | ----------------------------------------- | ---------------------------------------------------------- |
 | Response says "GEMINI_API_KEY missing"    | Add a valid key to `backend/.env` and restart uvicorn.     |
+| `429 RESOURCE_EXHAUSTED` / quota exceeded | `gemini-2.5-pro` has **no free-tier quota**. Set `GEMINI_MODEL=gemini-2.5-flash` in `.env`, or enable billing. The app auto-falls back to `GEMINI_FALLBACK_MODEL` and returns a Bengali 429 message. |
 | Microphone doesn't work in browser        | Allow mic permission; use `http://localhost` (secure ctx). |
 | CORS errors in production                 | Set `CORS_ORIGINS` and `VITE_API_BASE_URL` correctly.      |
 | Frontend can't reach backend in dev       | Ensure backend runs on port 8000 (Vite proxies `/api`).    |

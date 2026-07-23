@@ -16,6 +16,7 @@ remains runnable for UI demos without a key.
 
 import logging
 import mimetypes
+import re
 from pathlib import Path
 
 from app.config import settings
@@ -29,6 +30,45 @@ _NO_KEY_MESSAGE = (
     "অনুগ্রহ করে সার্ভারের `.env` ফাইলে একটি বৈধ `GEMINI_API_KEY` যুক্ত করুন। "
     "(Server is missing a valid GEMINI_API_KEY.)"
 )
+
+
+class QuotaExceededError(Exception):
+    """Raised when every model in the chain returns a 429 (quota exhausted)."""
+
+    def __init__(self, message: str, retry_after: int | None = None):
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+def _is_quota_error(exc: Exception) -> bool:
+    """Detect a Gemini 429 / RESOURCE_EXHAUSTED error across SDK versions."""
+    status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if status == 429:
+        return True
+    text = str(exc).upper()
+    return "RESOURCE_EXHAUSTED" in text or "429" in text
+
+
+def _should_fallback(exc: Exception) -> bool:
+    """Whether to try the next model: quota (429), model unavailable/retired
+    (404 NOT_FOUND), or temporary overload (503 UNAVAILABLE)."""
+    if _is_quota_error(exc):
+        return True
+    status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if status in (404, 503):
+        return True
+    text = str(exc).upper()
+    return "NOT_FOUND" in text or "UNAVAILABLE" in text
+
+
+def _retry_after_seconds(exc: Exception | None) -> int | None:
+    """Best-effort parse of the 'Please retry in 54.3s' hint from the error."""
+    if exc is None:
+        return None
+    match = re.search(r"retry in (\d+(?:\.\d+)?)s", str(exc))
+    if match:
+        return int(float(match.group(1))) + 1
+    return None
 
 
 class GeminiService:
@@ -74,16 +114,41 @@ class GeminiService:
             parts.append(self._image_part(img))
         return parts
 
+    def _generate_with_fallback(self, contents: list, config=None) -> str:
+        """Run ``generate_content`` across the model chain.
+
+        Tries the primary model first; on a 429 quota error it transparently
+        falls back to the next model (e.g. gemini-2.5-flash). If every model is
+        exhausted, raises ``QuotaExceededError``.
+        """
+        last_exc: Exception | None = None
+        for model in settings.model_chain:
+            try:
+                response = self._client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=config,
+                )
+                if model != settings.GEMINI_MODEL:
+                    logger.warning("Primary model failed; used fallback %s.", model)
+                return (response.text or "").strip()
+            except Exception as exc:  # noqa: BLE001 - inspect then decide
+                if _should_fallback(exc):
+                    logger.warning("Model %s unavailable, trying next: %s", model, str(exc)[:120])
+                    last_exc = exc
+                    continue
+                raise
+
+        raise QuotaExceededError(
+            "All configured Gemini models are unavailable or quota-exhausted.",
+            retry_after=_retry_after_seconds(last_exc),
+        )
+
     def _generate(self, contents: list, kb: KnowledgeBase) -> str:
         config = self._types.GenerateContentConfig(
             system_instruction=kb.build_system_instruction(),
         )
-        response = self._client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=contents,
-            config=config,
-        )
-        return (response.text or "").strip()
+        return self._generate_with_fallback(contents, config=config)
 
     # -- Public API -------------------------------------------------------
 
@@ -138,11 +203,7 @@ class GeminiService:
                 "machine, possibly in Bengali. Return ONLY the transcription text."
             )
         )
-        response = self._client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=[prompt, audio_part],
-        )
-        return (response.text or "").strip()
+        return self._generate_with_fallback([prompt, audio_part])
 
     def analyze_voice(
         self,

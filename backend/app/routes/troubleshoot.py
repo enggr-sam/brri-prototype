@@ -1,6 +1,7 @@
 """Troubleshooting API routes (vision + voice) and query history."""
 
 import logging
+from typing import NoReturn
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy import select
@@ -9,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import QueryLog
 from app.schemas import QueryLogOut, TroubleshootResponse
-from app.services.gemini_service import gemini_service
+from app.services.gemini_service import QuotaExceededError, gemini_service
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
     IMAGE_CONTENT_TYPES,
@@ -24,6 +25,20 @@ router = APIRouter(prefix="/api/troubleshoot", tags=["troubleshoot"])
 
 # Cap how many reference images we attach to keep requests fast/cheap.
 MAX_REFERENCE_IMAGES = 4
+
+# Bengali message returned (HTTP 429) when the Gemini quota is exhausted.
+_QUOTA_MESSAGE_BN = (
+    "দুঃখিত, AI সেবার অনুরোধ সীমা (quota) শেষ হয়ে গেছে। "
+    "অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন, অথবা সার্ভারের `.env` ফাইলে "
+    "`GEMINI_MODEL=gemini-2.5-flash` ব্যবহার করুন বা বিলিং চালু করুন। "
+    "(Gemini quota exceeded — try again shortly or switch model / enable billing.)"
+)
+
+
+def _raise_quota(exc: QuotaExceededError) -> NoReturn:
+    """Convert a quota error into a 429 with a Retry-After header."""
+    headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+    raise HTTPException(status_code=429, detail=_QUOTA_MESSAGE_BN, headers=headers)
 
 
 @router.post("/vision", response_model=TroubleshootResponse)
@@ -48,6 +63,9 @@ async def troubleshoot_vision(
             user_text=text,
             reference_images=reference_images,
         )
+    except QuotaExceededError as exc:
+        logger.warning("Vision request hit Gemini quota: %s", exc)
+        _raise_quota(exc)
     except Exception as exc:
         logger.exception("Vision troubleshooting failed.")
         raise HTTPException(status_code=502, detail="AI service error.") from exc
@@ -93,6 +111,9 @@ async def troubleshoot_voice(
             transcription=transcription,
             reference_images=reference_images,
         )
+    except QuotaExceededError as exc:
+        logger.warning("Voice request hit Gemini quota: %s", exc)
+        _raise_quota(exc)
     except Exception as exc:
         logger.exception("Voice troubleshooting failed.")
         raise HTTPException(status_code=502, detail="AI service error.") from exc

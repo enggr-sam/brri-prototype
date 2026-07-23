@@ -21,7 +21,21 @@ class Settings(BaseSettings):
 
     # --- Secrets / external services -------------------------------------
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-pro"
+    # Primary multimodal model. gemini-flash-latest is broadly available on the
+    # free tier. (gemini-2.5-pro requires a billed project; gemini-2.5-flash is
+    # blocked for newly created keys.) Override in .env if you have Pro access.
+    GEMINI_MODEL: str = "gemini-flash-latest"
+    # Tried automatically when the primary model returns 429/404/503.
+    # Set empty to disable fallback.
+    GEMINI_FALLBACK_MODEL: str = "gemini-flash-lite-latest"
+
+    @property
+    def model_chain(self) -> list[str]:
+        """Ordered, de-duplicated list of models to try (primary → fallback)."""
+        chain = [self.GEMINI_MODEL]
+        if self.GEMINI_FALLBACK_MODEL and self.GEMINI_FALLBACK_MODEL not in chain:
+            chain.append(self.GEMINI_FALLBACK_MODEL)
+        return chain
 
     # --- Database ---------------------------------------------------------
     # SQLite by default. Swapping to PostgreSQL/MySQL later only requires
