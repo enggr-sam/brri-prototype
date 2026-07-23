@@ -95,7 +95,9 @@ async def troubleshoot_voice(
     db: Session = Depends(get_db),
 ) -> TroubleshootResponse:
     """Transcribe an uploaded audio clip and return a Bengali troubleshooting fix."""
-    if audio.content_type not in AUDIO_CONTENT_TYPES:
+    # Normalise "audio/webm;codecs=opus" -> "audio/webm" before validating.
+    audio_type = (audio.content_type or "").split(";")[0].strip().lower()
+    if audio_type not in AUDIO_CONTENT_TYPES:
         raise HTTPException(
             status_code=415,
             detail=f"Unsupported audio type: {audio.content_type}",
@@ -105,7 +107,9 @@ async def troubleshoot_voice(
     reference_images = read_reference_images(limit=MAX_REFERENCE_IMAGES)
 
     try:
-        transcription = gemini_service.transcribe_audio(audio_path)
+        transcription = gemini_service.transcribe_audio(
+            audio_path, content_type=audio.content_type
+        )
         answer = gemini_service.analyze_voice(
             audio_path=audio_path,
             transcription=transcription,

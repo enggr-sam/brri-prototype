@@ -61,6 +61,41 @@ def _should_fallback(exc: Exception) -> bool:
     return "NOT_FOUND" in text or "UNAVAILABLE" in text
 
 
+# Gemini-supported audio MIME types keyed by file extension. This is used
+# instead of ``mimetypes.guess_type`` because the stdlib maps ``.webm`` to
+# ``video/webm`` — which makes Gemini try to decode it as video ("0 Frames
+# found"). Browser MediaRecorder produces webm/opus or ogg audio.
+_AUDIO_EXT_MIME = {
+    ".webm": "audio/webm",
+    ".ogg": "audio/ogg",
+    ".oga": "audio/ogg",
+    ".opus": "audio/ogg",
+    ".mp3": "audio/mp3",
+    ".mpeg": "audio/mpeg",
+    ".mpga": "audio/mpeg",
+    ".m4a": "audio/mp4",
+    ".mp4": "audio/mp4",
+    ".aac": "audio/aac",
+    ".wav": "audio/wav",
+    ".flac": "audio/flac",
+}
+
+
+def _resolve_audio_mime(path: Path, provided: str | None) -> str:
+    """Return a valid ``audio/*`` MIME type for an audio file.
+
+    Prefers the caller-provided content type (from the browser upload) when it
+    is already an audio type, otherwise maps the file extension explicitly.
+    Never returns a ``video/*`` type.
+    """
+    if provided:
+        # Strip any codec parameter, e.g. "audio/webm;codecs=opus".
+        base = provided.split(";")[0].strip().lower()
+        if base.startswith("audio/"):
+            return base
+    return _AUDIO_EXT_MIME.get(path.suffix.lower(), "audio/webm")
+
+
 def _retry_after_seconds(exc: Exception | None) -> int | None:
     """Best-effort parse of the 'Please retry in 54.3s' hint from the error."""
     if exc is None:
@@ -186,15 +221,14 @@ class GeminiService:
             logger.exception("Gemini vision request failed: %s", exc)
             raise
 
-    def transcribe_audio(self, audio_path: Path) -> str:
+    def transcribe_audio(self, audio_path: Path, content_type: str | None = None) -> str:
         """Transcribe an audio clip to text (kept as a separate step so the
         transcription can be stored and displayed independently)."""
         if not self.is_configured:
             return ""
 
         types = self._types
-        mime, _ = mimetypes.guess_type(str(audio_path))
-        mime = mime or "audio/webm"
+        mime = _resolve_audio_mime(audio_path, content_type)
         audio_part = types.Part.from_bytes(data=audio_path.read_bytes(), mime_type=mime)
         prompt = types.Part.from_text(
             text=(
