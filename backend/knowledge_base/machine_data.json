@@ -1,0 +1,58 @@
+{
+  "machine_name": "BRRI Winnower Model 2024",
+  "short_name": "BRRI Win2024",
+  "manufacturer": "Bangladesh Rice Research Institute (BRRI)",
+  "purpose": "Cleaning and separating rice grain from chaff, dust, and lighter impurities using a controlled air blast and an oscillating sieve.",
+  "dimensions": {
+    "overall_mm": "1350 x 835 x 1310",
+    "length_mm": 1350,
+    "width_mm": 835,
+    "height_mm": 1310
+  },
+  "motor": {
+    "power_hp": 0.5,
+    "phase": "Single phase",
+    "voltage_v": 220,
+    "speed_rpm": 1450
+  },
+  "power_transmission": {
+    "type": "V-belt drive",
+    "belt": {
+      "profile": "B-belt",
+      "length_mm": 1650,
+      "marking": "B65"
+    },
+    "description": "The motor drives the main shaft through the B65 V-belt."
+  },
+  "bearings": {
+    "ball_bearing": "6306",
+    "pillow_block_bearing": "P-206"
+  },
+  "core_mechanism": {
+    "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the sieve.",
+    "main_shaft": "Driven by the motor through the B65 V-belt; supported by 6306 ball bearings and P-206 pillow block bearings.",
+    "blower_unit": {
+      "diameter_mm": 270,
+      "function": "Generates the air blast that separates light chaff and dust from heavier grain."
+    },
+    "sieve_mechanism": {
+      "type": "Cam / linkage driven oscillating sieve",
+      "function": "The main shaft's cam and linkage shake the sieve back and forth to grade and separate the grain."
+    }
+  },
+  "materials": {
+    "main_frame": "Plain Carbon Steel angle bars (38 x 38 x 3 mm)",
+    "hoppers": "Plain Carbon Steel",
+    "structural_components": "Some ASTM A36 components",
+    "fasteners": "Stainless steel",
+    "angle_bar_spec_mm": "38 x 38 x 3"
+  },
+  "common_issues": [
+    "V-belt (B65) slipping, cracking, or over/under tension causing low shaft speed.",
+    "Worn or noisy 6306 / P-206 bearings causing vibration and heat.",
+    "Blower imbalance or blade damage reducing air blast and cleaning quality.",
+    "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
+    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 0.5 HP single-phase motor).",
+    "Frame or hopper corrosion / cracked welds on the carbon steel angle bars."
+  ]
+}
