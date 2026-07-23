@@ -272,6 +272,7 @@ DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/brri
 | Microphone doesn't work in browser        | Allow mic permission; use `http://localhost` (secure ctx). |
 | CORS errors in production                 | Set `CORS_ORIGINS` and `VITE_API_BASE_URL` correctly.      |
 | Frontend can't reach backend in dev       | Ensure backend runs on port 8000 (Vite proxies `/api`).    |
+| `sqlite3.OperationalError: attempt to write a readonly database` | The SQLite file/dir isn't writable by the server process. Relative DB paths are auto-anchored to `backend/`; ensure that directory is writable by the user running uvicorn (`chown`/`chmod` if it's owned by another user), or point `DATABASE_URL` to a writable absolute path. |
 
 ---
 

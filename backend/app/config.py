@@ -42,6 +42,29 @@ class Settings(BaseSettings):
     # changing this URL (and installing the relevant driver).
     DATABASE_URL: str = f"sqlite:///{BACKEND_DIR / 'brri_winnower.db'}"
 
+    @property
+    def resolved_database_url(self) -> str:
+        """Return the DB URL with relative SQLite paths anchored to BACKEND_DIR.
+
+        A URL like ``sqlite:///./brri_winnower.db`` is relative to the process's
+        working directory, which breaks (e.g. "attempt to write a readonly
+        database") when uvicorn is launched from a non-writable directory. We
+        rewrite such relative paths to an absolute location under ``backend/``
+        so the database always lives in a known, writable place regardless of
+        the launch directory. Non-SQLite URLs are returned unchanged.
+        """
+        prefix = "sqlite:///"
+        if not self.DATABASE_URL.startswith(prefix):
+            return self.DATABASE_URL
+
+        path_part = self.DATABASE_URL[len(prefix):]
+        # In-memory or already-absolute ("sqlite:////abs") paths are left alone.
+        if path_part.startswith(":memory:") or path_part.startswith("/"):
+            return self.DATABASE_URL
+
+        abs_path = (BACKEND_DIR / path_part).resolve()
+        return f"sqlite:///{abs_path}"
+
     # --- CORS -------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API.
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
@@ -51,7 +74,9 @@ class Settings(BaseSettings):
     UPLOAD_DIR: Path = BACKEND_DIR / "uploads"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Absolute path so the .env is found no matter which directory uvicorn
+        # is launched from (relative "env_file" is resolved against the CWD).
+        env_file=str(BACKEND_DIR / ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

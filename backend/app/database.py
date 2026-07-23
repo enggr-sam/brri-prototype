@@ -5,23 +5,30 @@ migrating from SQLite to PostgreSQL/MySQL later is a one-line change.
 """
 
 from collections.abc import Generator
+from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.config import settings
 
+DATABASE_URL = settings.resolved_database_url
+
 # ``check_same_thread`` is a SQLite-only quirk: FastAPI serves requests from a
 # threadpool, so we must disable SQLite's default single-thread guard. The
 # argument is ignored for other databases.
 connect_args = (
-    {"check_same_thread": False}
-    if settings.DATABASE_URL.startswith("sqlite")
-    else {}
+    {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 )
 
+# For file-based SQLite, make sure the parent directory exists so SQLite can
+# create both the database file and its journal/WAL files.
+if DATABASE_URL.startswith("sqlite:///") and ":memory:" not in DATABASE_URL:
+    db_file = Path(DATABASE_URL[len("sqlite:///"):])
+    db_file.parent.mkdir(parents=True, exist_ok=True)
+
 engine = create_engine(
-    settings.DATABASE_URL,
+    DATABASE_URL,
     connect_args=connect_args,
     pool_pre_ping=True,
 )
