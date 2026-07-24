@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.routes.knowledge_base import router as knowledge_base_router
 from app.routes.troubleshoot import router as troubleshoot_router
 from app.services.knowledge_base import get_knowledge_base
 
@@ -57,6 +58,7 @@ app.add_middleware(
 )
 
 app.include_router(troubleshoot_router)
+app.include_router(knowledge_base_router)
 
 
 @app.get("/", tags=["health"])

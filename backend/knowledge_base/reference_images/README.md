@@ -14,9 +14,8 @@ known-good reference.
   - `01_brri_winnower_motor_pulley_and_belt_system.jpg`
   - `27_v_belt_b65_marking_closeup.jpg`
   - `30_sieve_drive_arm_and_pillow_bearing_side_view.jpg`
-- At most the first 4 images (alphabetical, i.e. lowest numbers) are attached as
-  actual images per request (`MAX_REFERENCE_IMAGES` in
-  `app/routes/troubleshoot.py`).
+- At most **8** relevant images are attached per request (smart selection based
+  on the user's text; configurable via `MAX_REFERENCE_IMAGES` in `.env`).
 
 ## Descriptions catalogue
 
@@ -29,6 +28,7 @@ loads this catalogue and:
 - attaches each actual reference image alongside its specific description.
 
 To add a new reference image: drop the file here as `NN_name.jpg` and add a
-matching entry to `reference_images.json`, then restart the backend.
+matching entry to `reference_images.json`. Changes are picked up automatically
+on the next API request (or call `POST /api/knowledge-base/reload`).
 
 > This `README.md` is ignored by the loader — only actual image files are used.

@@ -11,10 +11,11 @@ from app.database import get_db
 from app.models import QueryLog
 from app.schemas import QueryLogOut, TroubleshootResponse
 from app.services.gemini_service import QuotaExceededError, gemini_service
+from app.services.knowledge_base import get_knowledge_base
+from app.services.reference_selector import select_reference_images
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
     IMAGE_CONTENT_TYPES,
-    read_reference_images,
     relative_to_backend,
     save_upload,
 )
@@ -22,9 +23,6 @@ from app.utils.files import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/troubleshoot", tags=["troubleshoot"])
-
-# Cap how many reference images we attach to keep requests fast/cheap.
-MAX_REFERENCE_IMAGES = 4
 
 # Bengali message returned (HTTP 429) when the Gemini quota is exhausted.
 _QUOTA_MESSAGE_BN = (
@@ -54,8 +52,10 @@ async def troubleshoot_vision(
             detail=f"Unsupported image type: {image.content_type}",
         )
 
+    # Reload KB if catalogue files changed; pick relevant reference photos.
+    get_knowledge_base()
     image_path = await save_upload(image, subdir="images", fallback_ext=".jpg")
-    reference_images = read_reference_images(limit=MAX_REFERENCE_IMAGES)
+    reference_images = select_reference_images(user_text=text)
 
     try:
         answer = gemini_service.analyze_image(
@@ -104,12 +104,14 @@ async def troubleshoot_voice(
         )
 
     audio_path = await save_upload(audio, subdir="audio", fallback_ext=".webm")
-    reference_images = read_reference_images(limit=MAX_REFERENCE_IMAGES)
 
     try:
+        get_knowledge_base()
         transcription = gemini_service.transcribe_audio(
             audio_path, content_type=audio.content_type
         )
+        # Select reference images AFTER transcription so voice keywords match.
+        reference_images = select_reference_images(user_text=transcription)
         answer = gemini_service.analyze_voice(
             audio_path=audio_path,
             transcription=transcription,

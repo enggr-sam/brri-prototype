@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     # Comma-separated list of origins allowed to call the API.
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    # --- Reference images (Gemini grounding) -----------------------------
+    # How many intact-part photos to attach per request (descriptions for all
+    # 36 parts are still injected as text in the system instruction).
+    MAX_REFERENCE_IMAGES: int = 8
+
     # --- Filesystem locations --------------------------------------------
     KNOWLEDGE_BASE_DIR: Path = BACKEND_DIR / "knowledge_base"
     UPLOAD_DIR: Path = BACKEND_DIR / "uploads"

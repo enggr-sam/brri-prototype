@@ -7,18 +7,23 @@ Reads the local ``knowledge_base/`` directory:
 * ``reference_images.json`` – numbered catalogue of the intact-part reference
   images and their descriptions/troubleshooting context.
 
-The content is cached in-process and can be force-reloaded, which is handy
-during development when the files change.
+The cache reloads automatically when any of those files change on disk, so
+edits during development take effect on the next request without restarting
+uvicorn.
 """
 
 import json
 import logging
-from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Manual cache (mtime-checked on each ``get_knowledge_base()`` call).
+_kb_cache: "KnowledgeBase | None" = None
+_kb_mtimes: tuple[float, ...] | None = None
 
 
 class KnowledgeBase:
@@ -33,7 +38,6 @@ class KnowledgeBase:
         self.base_prompt = base_prompt
         self.machine_data = machine_data
         self.reference_images = reference_images
-        # Fast lookup: final image filename -> catalogue entry.
         self._by_name = {
             entry.get("image_name"): entry for entry in reference_images
         }
@@ -44,9 +48,6 @@ class KnowledgeBase:
         return entry.get("description") if entry else None
 
     def _reference_catalog_text(self) -> str:
-        """A compact text catalogue of every reference image (number, name,
-        description) so the model knows what intact parts exist even when only a
-        few images are attached to a given request."""
         if not self.reference_images:
             return ""
         lines = []
@@ -58,9 +59,6 @@ class KnowledgeBase:
         return "\n".join(lines)
 
     def build_system_instruction(self) -> str:
-        """Combine the base prompt with the machine JSON and the reference-image
-        catalogue into one grounded system instruction fed to Gemini.
-        """
         machine_json = json.dumps(self.machine_data, ensure_ascii=False, indent=2)
         parts = [
             self.base_prompt.strip(),
@@ -81,6 +79,18 @@ class KnowledgeBase:
                 "=== END REFERENCE IMAGE CATALOGUE ===",
             ]
         return "\n".join(parts) + "\n"
+
+
+def _kb_source_paths() -> tuple[Path, ...]:
+    return (
+        settings.prompts_file,
+        settings.machine_data_file,
+        settings.reference_images_json,
+    )
+
+
+def _kb_source_mtimes() -> tuple[float, ...]:
+    return tuple(p.stat().st_mtime if p.exists() else 0.0 for p in _kb_source_paths())
 
 
 def _load_base_prompt() -> str:
@@ -116,9 +126,7 @@ def _load_reference_images() -> list[dict[str, Any]]:
         return []
 
 
-@lru_cache
-def get_knowledge_base() -> KnowledgeBase:
-    """Return the cached knowledge base (loaded once per process)."""
+def _build_kb() -> KnowledgeBase:
     kb = KnowledgeBase(
         base_prompt=_load_base_prompt(),
         machine_data=_load_machine_data(),
@@ -133,7 +141,22 @@ def get_knowledge_base() -> KnowledgeBase:
     return kb
 
 
+def get_knowledge_base() -> KnowledgeBase:
+    """Return the knowledge base, reloading if any source file changed on disk."""
+    global _kb_cache, _kb_mtimes
+
+    current = _kb_source_mtimes()
+    if _kb_cache is None or current != _kb_mtimes:
+        if _kb_cache is not None:
+            logger.info("Knowledge base source file(s) changed — reloading.")
+        _kb_cache = _build_kb()
+        _kb_mtimes = current
+    return _kb_cache
+
+
 def reload_knowledge_base() -> KnowledgeBase:
-    """Clear the cache and reload the knowledge base from disk."""
-    get_knowledge_base.cache_clear()
+    """Force an immediate reload (e.g. from the admin API endpoint)."""
+    global _kb_cache, _kb_mtimes
+    _kb_cache = None
+    _kb_mtimes = None
     return get_knowledge_base()
