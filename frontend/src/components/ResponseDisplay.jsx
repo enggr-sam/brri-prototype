@@ -32,8 +32,7 @@ export default function ResponseDisplay({ result }) {
 
       {result.reference_images_used?.length > 0 && (
         <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
-          Compared against reference images:{" "}
-          {result.reference_images_used.join(", ")}
+          তুলনা করা হয়েছে: {result.reference_images_used.join(", ")}
         </p>
       )}
     </div>

@@ -11,7 +11,7 @@ export default function Header() {
               BRRI Winnower 2024 Support
             </h1>
             <p className="text-sm text-brri-light/90">
-              Multimodal troubleshooting assistant · উত্তর বাংলা ভাষায়
+              কথোপকথন · উত্তর বাংলা ভাষায়
             </p>
           </div>
         </div>

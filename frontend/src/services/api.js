@@ -1,7 +1,3 @@
-// Central API client for the BRRI Winnower backend.
-// In dev, requests go through Vite's proxy (see vite.config.js). In prod,
-// set VITE_API_BASE_URL to the deployed backend origin.
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 async function handleResponse(res) {
@@ -11,7 +7,7 @@ async function handleResponse(res) {
       const body = await res.json();
       if (body?.detail) detail = body.detail;
     } catch {
-      /* ignore non-JSON error bodies */
+      /* ignore */
     }
     throw new Error(detail);
   }
@@ -19,34 +15,37 @@ async function handleResponse(res) {
 }
 
 /**
- * Send an image (and optional text) to the vision troubleshooting endpoint.
- * @param {File|Blob} imageFile
- * @param {string} text
+ * Send a chat message (text, optional image, optional audio).
+ * @param {{ sessionId?: string, text?: string, imageFile?: File, audioBlob?: Blob, audioFilename?: string }} opts
  */
-export async function troubleshootVision(imageFile, text) {
+export async function sendChatMessage({
+  sessionId,
+  text,
+  imageFile,
+  audioBlob,
+  audioFilename = "recording.webm",
+}) {
   const formData = new FormData();
-  formData.append("image", imageFile);
-  if (text && text.trim()) formData.append("text", text.trim());
+  if (sessionId) formData.append("session_id", sessionId);
+  if (text?.trim()) formData.append("text", text.trim());
+  if (imageFile) formData.append("image", imageFile);
+  if (audioBlob) formData.append("audio", audioBlob, audioFilename);
 
-  const res = await fetch(`${API_BASE_URL}/api/troubleshoot/vision`, {
+  const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
     method: "POST",
     body: formData,
   });
   return handleResponse(res);
 }
 
-/**
- * Send a recorded audio blob to the voice troubleshooting endpoint.
- * @param {Blob} audioBlob
- * @param {string} filename
- */
-export async function troubleshootVoice(audioBlob, filename = "recording.webm") {
-  const formData = new FormData();
-  formData.append("audio", audioBlob, filename);
-
-  const res = await fetch(`${API_BASE_URL}/api/troubleshoot/voice`, {
-    method: "POST",
-    body: formData,
-  });
+export async function fetchChatHistory(sessionId) {
+  const res = await fetch(`${API_BASE_URL}/api/chat/${sessionId}`);
   return handleResponse(res);
+}
+
+/** Prefix API base for image URLs returned by the backend. */
+export function mediaUrl(path) {
+  if (!path) return null;
+  if (path.startsWith("http")) return path;
+  return `${API_BASE_URL}${path}`;
 }

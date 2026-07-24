@@ -1,8 +1,13 @@
-"""Pydantic schema package (request/response validation & serialization)."""
-
-from app.schemas.troubleshoot import (
-    QueryLogOut,
-    TroubleshootResponse,
+from app.schemas.chat import (
+    ChatHistoryOut,
+    ChatMessageOut,
+    ChatResponse,
+    ReferenceImageOut,
 )
 
-__all__ = ["QueryLogOut", "TroubleshootResponse"]
+__all__ = [
+    "ChatHistoryOut",
+    "ChatMessageOut",
+    "ChatResponse",
+    "ReferenceImageOut",
+]

@@ -7,7 +7,6 @@ export default {
         // Prefer a Bengali-capable font stack for the response area.
         bengali: [
           "Noto Sans Bengali",
-          "Hind Siliguri",
           "SolaimanLipi",
           "system-ui",
           "sans-serif",

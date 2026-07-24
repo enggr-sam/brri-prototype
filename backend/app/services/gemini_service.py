@@ -186,6 +186,57 @@ class GeminiService:
         )
         return self._generate_with_fallback(contents, config=config)
 
+    def chat_reply(
+        self,
+        history: list[dict[str, str]],
+        user_text: str,
+        reference_images: list[Path],
+        user_image_path: Path | None = None,
+    ) -> str:
+        """Multi-turn chat: history + optional new image + reference grounding."""
+        kb = get_knowledge_base()
+        if not self.is_configured:
+            return _NO_KEY_MESSAGE
+
+        types = self._types
+        contents: list = []
+        contents.extend(self._reference_image_parts(reference_images))
+
+        if user_image_path is not None:
+            contents.append(
+                types.Part.from_text(
+                    text="[User uploaded a NEW photo of the part that may be faulty:]"
+                )
+            )
+            contents.append(self._image_part(user_image_path))
+
+        history_block = self._format_history(history)
+        prompt_parts = []
+        if history_block:
+            prompt_parts.append("Previous conversation:\n" + history_block)
+        prompt_parts.append(f"Current user message:\n{user_text.strip()}")
+        prompt_parts.append(
+            "Reply in concise Bengali following the system style (short, interactive, accurate)."
+        )
+        contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
+
+        try:
+            return self._generate(contents, kb)
+        except Exception as exc:
+            logger.exception("Chat request failed: %s", exc)
+            raise
+
+    @staticmethod
+    def _format_history(history: list[dict[str, str]], limit: int = 8) -> str:
+        """Serialise recent turns for conversational context."""
+        lines: list[str] = []
+        for msg in history[-limit:]:
+            role = "User" if msg.get("role") == "user" else "Assistant"
+            content = (msg.get("content") or "").strip()
+            if content:
+                lines.append(f"{role}: {content}")
+        return "\n".join(lines)
+
     # -- Public API -------------------------------------------------------
 
     def analyze_image(

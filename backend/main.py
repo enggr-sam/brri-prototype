@@ -15,8 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
+from app.routes.chat import router as chat_router
 from app.routes.knowledge_base import router as knowledge_base_router
-from app.routes.troubleshoot import router as troubleshoot_router
 from app.services.knowledge_base import get_knowledge_base
 
 logging.basicConfig(
@@ -57,7 +57,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(troubleshoot_router)
+app.include_router(chat_router)
 app.include_router(knowledge_base_router)
 
 
