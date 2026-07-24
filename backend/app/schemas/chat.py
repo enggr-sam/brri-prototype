@@ -11,6 +11,7 @@ class ReferenceImageOut(BaseModel):
     url: str
     label: str
     description: str | None = None
+    contextual_note: str | None = None
 
 
 class ChatMessageOut(BaseModel):

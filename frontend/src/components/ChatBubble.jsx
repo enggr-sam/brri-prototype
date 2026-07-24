@@ -4,26 +4,35 @@ function ReferenceGallery({ images }) {
   if (!images?.length) return null;
 
   return (
-    <div className="mt-3 border-t border-slate-100 pt-3">
-      <p className="mb-2 text-xs font-medium text-slate-500">
-        🖼️ তুলনা করা হয়েছে:
+    <div className="mt-4 border-t border-slate-100 pt-4">
+      <p className="mb-3 text-sm font-medium text-brri-dark">
+        🖼️ ঠিক আছে এমন যন্ত্রাংশের ছবি — আপনার যন্ত্রাংশের সাথে তুলনা করুন
       </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="space-y-3">
         {images.map((img) => (
           <figure
             key={img.image_name}
-            className="overflow-hidden rounded-lg border border-slate-200 bg-white"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
           >
             <img
               src={mediaUrl(img.url)}
               alt={img.label}
-              className="h-24 w-full object-cover"
+              className="max-h-48 w-full object-contain bg-white"
               loading="lazy"
             />
-            <figcaption className="px-2 py-1.5">
-              <p className="truncate text-xs font-medium text-brri-dark">
+            <figcaption className="px-3 py-2.5">
+              <p className="text-sm font-semibold text-brri-dark">
                 #{img.image_number} {img.label}
               </p>
+              {img.contextual_note ? (
+                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-700">
+                  {img.contextual_note}
+                </p>
+              ) : img.description ? (
+                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-600">
+                  এই ছবিতে ঠিক অংশ দেখানো হয়েছে — আপনার যন্ত্রাংশের সাথে মিলিয়ে দেখুন।
+                </p>
+              ) : null}
             </figcaption>
           </figure>
         ))}
@@ -38,30 +47,17 @@ export default function ChatBubble({ message }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[85%] ${
+        className={`max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[88%] ${
           isUser
             ? "rounded-br-md bg-brri-green text-white"
             : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-100"
         }`}
       >
         {!isUser && (
-          <p className="mb-1 text-xs font-medium text-brri-green">🌾 BRRI সহায়ক</p>
+          <p className="mb-2 text-xs font-medium text-brri-green">🌾 BRRI সহায়ক</p>
         )}
 
-        {message.attachment_url && isUser && (
-          <div className="mb-2">
-            {message.modality === "vision" ? (
-              <img
-                src={mediaUrl(message.attachment_url)}
-                alt="Uploaded"
-                className="max-h-40 rounded-lg object-cover"
-              />
-            ) : (
-              <p className="text-xs opacity-90">🎙️ Voice message</p>
-            )}
-          </div>
-        )}
-
+        {/* Text first — then images (easier to read) */}
         <article
           className={`max-w-none whitespace-pre-wrap font-bengali text-[15px] leading-relaxed ${
             isUser ? "text-white" : "text-slate-800"
@@ -70,7 +66,23 @@ export default function ChatBubble({ message }) {
           {message.content}
         </article>
 
-        {!isUser && <ReferenceGallery images={message.reference_images} />}
+        {message.attachment_url && isUser && (
+          <div className="mt-3">
+            {message.modality === "vision" ? (
+              <img
+                src={mediaUrl(message.attachment_url)}
+                alt="Uploaded part"
+                className="max-h-52 w-full rounded-lg object-contain bg-black/10"
+              />
+            ) : (
+              <p className="text-xs opacity-90">🎙️ কণ্ঠ বার্তা</p>
+            )}
+          </div>
+        )}
+
+        {!isUser && message.reference_images?.length > 0 && (
+          <ReferenceGallery images={message.reference_images} />
+        )}
       </div>
     </div>
   );

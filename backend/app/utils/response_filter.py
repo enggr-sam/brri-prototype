@@ -1,14 +1,9 @@
-"""Post-process assistant replies: keep them brief and on-point."""
+"""Light cleanup of assistant replies — remove noise, never cut mid-sentence."""
 
 import re
 
-# ~7 short Bengali lines; hard cap prevents rambling in the UI.
-MAX_REPLY_CHARS = 750
-
-# Lines/sections often added by the model that add no value for the farmer.
 _NOISE_PATTERNS = [
-    r"^#{1,6}\s+.+$",  # markdown headings
-    r"^\*\*.+\*\*$",  # bold-only lines
+    r"^#{1,6}\s+.+$",
     r"^---+$",
     r"^উপসংহার.*",
     r"^সারসংক্ষেপ.*",
@@ -21,35 +16,25 @@ _NOISE_PATTERNS = [
 
 
 def filter_assistant_reply(text: str) -> str:
-    """Trim filler and enforce a concise reply suitable for chat."""
+    """Strip markdown/noise only — do NOT truncate (truncation caused cut-off replies)."""
     if not text:
         return text
 
     cleaned = text.strip()
 
-    # Drop obvious noise lines.
+    # Flatten markdown bold/italic markers the model sometimes adds.
+    cleaned = re.sub(r"\*+([^*]+)\*+", r"\1", cleaned)
+
     kept: list[str] = []
     for line in cleaned.splitlines():
         stripped = line.strip()
         if not stripped:
+            kept.append("")
             continue
         if any(re.match(p, stripped, re.IGNORECASE) for p in _NOISE_PATTERNS):
             continue
         kept.append(stripped)
+
     cleaned = "\n".join(kept).strip()
-
-    # Collapse excessive blank lines.
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
-
-    # Hard character cap — cut at last sentence boundary when possible.
-    if len(cleaned) > MAX_REPLY_CHARS:
-        chunk = cleaned[:MAX_REPLY_CHARS]
-        for sep in ("।\n", "?\n", "?\n", "। ", "? ", "! "):
-            idx = chunk.rfind(sep)
-            if idx > MAX_REPLY_CHARS // 2:
-                cleaned = chunk[: idx + len(sep.rstrip())].strip()
-                break
-        else:
-            cleaned = chunk.rstrip() + "…"
-
     return cleaned

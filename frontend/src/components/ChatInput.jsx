@@ -83,7 +83,7 @@ export default function ChatInput({ onSend, disabled }) {
   };
 
   return (
-    <div className="border-t border-slate-200 bg-white p-3">
+    <div className="shrink-0 border-t border-slate-200 bg-white p-3">
       {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
 
       {imagePreview && (

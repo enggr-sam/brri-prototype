@@ -155,10 +155,9 @@ async def chat_message(
 
     # --- Gemini ----------------------------------------------------------
     reference_paths = select_reference_images(user_text=user_content)
-    ref_meta = reference_images_metadata(reference_paths)
 
     try:
-        answer = gemini_service.chat_reply(
+        chat_result = gemini_service.chat_reply(
             history=history,
             user_text=user_content,
             reference_images=reference_paths,
@@ -169,6 +168,9 @@ async def chat_message(
     except Exception as exc:
         logger.exception("Chat message failed.")
         raise HTTPException(status_code=502, detail="AI service error.") from exc
+
+    answer = chat_result.text
+    ref_meta = reference_images_metadata(reference_paths, captions=chat_result.image_captions)
 
     # --- Persist ---------------------------------------------------------
     user_msg = ChatMessage(
@@ -183,7 +185,7 @@ async def chat_message(
         role="assistant",
         content=answer,
         modality="text",
-        reference_images_json=dumps_reference_images(reference_paths),
+        reference_images_json=dumps_reference_images(ref_meta),
     )
     db.add(user_msg)
     db.add(assistant_msg)

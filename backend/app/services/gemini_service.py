@@ -17,10 +17,12 @@ remains runnable for UI demos without a key.
 import logging
 import mimetypes
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from app.config import settings
 from app.services.knowledge_base import KnowledgeBase, get_knowledge_base
+from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,12 @@ class QuotaExceededError(Exception):
     def __init__(self, message: str, retry_after: int | None = None):
         super().__init__(message)
         self.retry_after = retry_after
+
+
+@dataclass
+class ChatReplyResult:
+    text: str
+    image_captions: dict[int, str] = field(default_factory=dict)
 
 
 def _is_quota_error(exc: Exception) -> bool:
@@ -158,11 +166,11 @@ class GeminiService:
         return parts
 
     def _chat_generation_config(self, kb: KnowledgeBase):
-        """Tighter generation settings for interactive chat replies."""
+        """Generation settings for clear, complete chat replies."""
         return self._types.GenerateContentConfig(
             system_instruction=kb.build_system_instruction(),
-            max_output_tokens=400,
-            temperature=0.3,
+            max_output_tokens=2048,
+            temperature=0.5,
         )
 
     def _generate(self, contents: list, kb: KnowledgeBase, *, chat: bool = False) -> str:
@@ -190,9 +198,27 @@ class GeminiService:
                     contents=contents,
                     config=config,
                 )
+                text = (response.text or "").strip()
+                if not text:
+                    parts = getattr(response, "candidates", None) or []
+                    if parts:
+                        content = getattr(parts[0], "content", None)
+                        if content and getattr(content, "parts", None):
+                            text = "".join(
+                                getattr(p, "text", "") or "" for p in content.parts
+                            ).strip()
+                finish = None
+                if getattr(response, "candidates", None):
+                    finish = getattr(response.candidates[0], "finish_reason", None)
+                if finish and str(finish).endswith("MAX_TOKENS"):
+                    logger.warning(
+                        "Gemini reply truncated (finish_reason=%s, len=%d).",
+                        finish,
+                        len(text),
+                    )
                 if model != settings.GEMINI_MODEL:
                     logger.warning("Primary model failed; used fallback %s.", model)
-                return (response.text or "").strip()
+                return text
             except Exception as exc:  # noqa: BLE001 - inspect then decide
                 if _should_fallback(exc):
                     logger.warning("Model %s unavailable, trying next: %s", model, str(exc)[:120])
@@ -205,19 +231,43 @@ class GeminiService:
             retry_after=_retry_after_seconds(last_exc),
         )
 
+    def _caption_generation_config(self, kb: KnowledgeBase):
+        return self._types.GenerateContentConfig(
+            system_instruction=kb.build_system_instruction(),
+            max_output_tokens=1024,
+            temperature=0.4,
+        )
+
+    def _generate_image_captions(
+        self,
+        user_text: str,
+        reply: str,
+        reference_images: list[Path],
+        kb: KnowledgeBase,
+    ) -> dict[int, str]:
+        if not reference_images:
+            return {}
+
+        prompt = caption_prompt(user_text, reply, reference_images)
+        raw = self._generate_with_fallback(
+            [self._types.Part.from_text(text=prompt)],
+            config=self._caption_generation_config(kb),
+        )
+        return parse_image_caption_lines(raw)
+
     def chat_reply(
         self,
         history: list[dict[str, str]],
         user_text: str,
         reference_images: list[Path],
         user_image_path: Path | None = None,
-    ) -> str:
+    ) -> ChatReplyResult:
         """Multi-turn chat: history + optional new image + reference grounding."""
         from app.utils.response_filter import filter_assistant_reply
 
         kb = get_knowledge_base()
         if not self.is_configured:
-            return _NO_KEY_MESSAGE
+            return ChatReplyResult(text=_NO_KEY_MESSAGE)
 
         types = self._types
         contents: list = []
@@ -237,14 +287,23 @@ class GeminiService:
             prompt_parts.append("Previous conversation:\n" + history_block)
         prompt_parts.append(f"Current user message:\n{user_text.strip()}")
         prompt_parts.append(
-            "Follow the STRICT OUTPUT FORMAT in the system instruction. "
-            "Maximum ৭ lines. Answer only what was asked. End with one question."
+            "Write complete sentences in natural spoken Bangla. "
+            "Include a full 'সমাধান:' section with 2–3 detailed steps (not half sentences). "
+            "No markdown. Plain text only. If images help, say to compare with photos below."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
 
         try:
             raw = self._generate(contents, kb, chat=True)
-            return filter_assistant_reply(raw)
+            main_text = filter_assistant_reply(raw)
+            captions = (
+                self._generate_image_captions(
+                    user_text, main_text, reference_images, kb
+                )
+                if reference_images
+                else {}
+            )
+            return ChatReplyResult(text=main_text, image_captions=captions)
         except Exception as exc:
             logger.exception("Chat request failed: %s", exc)
             raise

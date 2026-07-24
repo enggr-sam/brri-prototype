@@ -44,11 +44,11 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-full min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-50">
       <Header />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-2 py-4 sm:px-4">
-        <div className="mb-2 flex justify-end">
+      <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-2 py-3 sm:px-4">
+        <div className="mb-2 shrink-0 flex justify-end">
           <button
             type="button"
             onClick={newChat}
@@ -64,7 +64,7 @@ export default function App() {
         </div>
 
         {error && (
-          <p className="mt-2 text-center text-sm text-red-600">{error}</p>
+          <p className="mt-2 shrink-0 text-center text-sm text-red-600">{error}</p>
         )}
       </main>
     </div>
