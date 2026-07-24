@@ -1,0 +1,218 @@
+[
+  {
+    "image_number": 1,
+    "image_name": "01_brri_winnower_motor_pulley_and_belt_system.jpg",
+    "original_image_name": "IMG-20260718-WA0030.jpg",
+    "description": "A close-up view of the external power transmission system of the orange BRRI Winnower machine. It shows a gray 0.5 HP electric motor mounted on the bottom frame, connected to a larger upper cast-iron pulley via a black rubber V-belt (B-belt). This system drives the machine's blower and sieve mechanisms. Troubleshooting context: If the machine is powered on but the internal parts are not moving, the AI bot should advise the farmer to check if this belt is loose, slipped off, or broken, and ensure the motor is running properly."
+  },
+  {
+    "image_number": 2,
+    "image_name": "02_brri_winnower_full_exterior_view.jpg",
+    "original_image_name": "IMG-20260718-WA0009.jpg",
+    "description": "A full exterior perspective of the BRRI Winnower machine (painted orange) resting on wet concrete. It shows the complete grain cleaning pathway: the top hopper with a green adjustable feed flap (where uncleaned grain is poured), the vibrating perforated metal sieve/screen in the middle (for filtering debris by size), and the lower curved discharge chutes (where clean grain drops out). Troubleshooting context: This acts as a visual reference for the whole machine. The bot can use this to help farmers locate where clogs might happen, such as wet straw stuck in the sieve or a jammed top hopper flap."
+  },
+  {
+    "image_number": 3,
+    "image_name": "03_blueprint_grain_outlet_2nd_plate.jpg",
+    "original_image_name": "IMG-20260718-WA0006.jpg",
+    "description": "A technical manufacturing blueprint for the 'GRAIN OUTLET 2ND PLATE' of the BRRI Win2024 model. It displays a 3D projection and exact millimeter dimensions (e.g., length 705mm, width 165mm, angle 19 degrees) for bending plain carbon steel into a curved chute. Troubleshooting context: While farmers won't read the blueprint, the bot can use this data to understand the exact shape of the grain exit pathway. If a farmer reports grain spilling out incorrectly, the bot knows the exact structural geometry of the intended chute."
+  },
+  {
+    "image_number": 4,
+    "image_name": "04_brri_winnower_bill_of_materials_list.jpg",
+    "original_image_name": "IMG-20260718-WA0002.jpg",
+    "description": "A technical document showing the 'BILL OF MATERIALS' (BOM) for the BRRI Winnower machine. It is a table listing structural components 1 through 15, including the Main Frame, Hopper Plates, Air Control Plate, and Grain Outlets. It specifies the part numbers, material (Plain Carbon Steel and ASTM A36), and the required quantity per machine. Troubleshooting context: The bot can use this to lookup official part names and materials if a farmer needs to get a replacement part welded or manufactured by a local blacksmith."
+  },
+  {
+    "image_number": 5,
+    "image_name": "05_brri_winnower_technical_specifications_table.jpg",
+    "original_image_name": "IMG-20260718-WA0001.jpg",
+    "description": "The master 'Technical specifications' sheet for the BRRI Winnower (Model: BRRI Win2024). It lists 29 critical parameters including overall dimensions (1350x835x1310 mm), motor power (0.5 hp, 220V, 1450 rpm), V-belt size (B-belt, 1650mm), sieve hole diameters (6, 10, 13 mm), and specific bearing numbers (6306, P-206). Troubleshooting context: This is the most vital data source for the AI. If a farmer's motor burns out or a bearing breaks, the bot can tell them exactly what specification (e.g., bearing 6306 or a 220V 0.5hp motor) to buy at the local hardware store."
+  },
+  {
+    "image_number": 6,
+    "image_name": "06_blower_unit_exploded_view_and_parts_table.jpg",
+    "original_image_name": "IMG-20260718-WA0012.jpg",
+    "description": "A technical diagram featuring an exploded view of 'SUB-ASSEMBLY 3 BLOWER UNITE' alongside a corresponding parts list table. It identifies 12 internal fan components, including the Blower Shaft, Pillow Bearing, Bearing House, and Blower Cover Plate, mostly made of plain carbon steel, stainless steel, and gray cast iron. Troubleshooting context: Explains the internal fan mechanics. If the machine vibrates heavily or makes a grinding noise, the bot can deduce that a Pillow Bearing (part 5) or the Blower Shaft (part 3) might be damaged or need grease."
+  },
+  {
+    "image_number": 7,
+    "image_name": "07_blower_unit_assembly_diagram_lines.jpg",
+    "original_image_name": "IMG-20260718-WA0008.jpg",
+    "description": "A detailed 3D exploded assembly diagram of the 'SUB-ASSEMBLY 3 BLOWER UNITE'. It uses dashed assembly lines to show exactly how the blower shaft, bearings, side plates, and the curved outer blower casing fit together to form the fan that generates wind for the winnower. Troubleshooting context: Helps the bot understand the physical sequence of parts. If a local mechanic needs to dismantle the fan to clear a massive blockage or replace a blade, the bot can guide them step-by-step on how the assembly comes apart."
+  },
+  {
+    "image_number": 8,
+    "image_name": "08_brri_winnower_3d_cad_model_and_sub_assemblies_index.jpg",
+    "original_image_name": "IMG-20260718-WA0003.jpg",
+    "description": "A 3D CAD render of the fully assembled BRRI Winnower, featuring an index table of 10 major sub-assemblies (Main Body, Sieve, Blower Unite, Sieve Cam, Blower Pulley, Pulley Belt, Motor, Motor Pulley, Sieve Shaft, and Winnower Show Cover). Troubleshooting context: Provides a high-level map of the machine's anatomy. The AI bot can use this to ask the farmer targeted diagnostic questions, like 'Is the issue near the Sieve (the shaking net) or the Motor (the electrical box at the bottom)?'"
+  },
+  {
+    "image_number": 9,
+    "image_name": "09_blueprint_hopper_left_side_plate.jpg",
+    "original_image_name": "IMG-20260718-WA0005.jpg",
+    "description": "A technical blueprint drawing for the 'HOPPER LEFT SIDE PLATE' of the machine. It details the dimensions, angles, and a large circular cutout necessary for manufacturing the left wall of the top grain feeding hopper. Troubleshooting context: While primarily for manufacturing, this tells the bot about the structural boundaries of the grain intake area, helpful if a farmer reports that the hopper structure is bent or damaged."
+  },
+  {
+    "image_number": 10,
+    "image_name": "10_blueprint_air_control_plate.jpg",
+    "original_image_name": "IMG-20260718-WA0004.jpg",
+    "description": "A technical blueprint drawing for the 'AIR CONTROL PLATE'. It shows a flat metal component with a specific curved profile and a long vertical adjustment slot. Troubleshooting context: This is a highly functional part for the farmer. The bot should know that this plate slides to restrict or open the airflow from the blower. If a farmer complains that 'good rice is blowing away with the dust,' the bot should instruct them to slide this Air Control Plate to reduce the wind speed."
+  },
+  {
+    "image_number": 11,
+    "image_name": "11_hopper_feed_control_gate_and_sieve.jpg",
+    "original_image_name": "IMG-20260718-WA0026.jpg",
+    "description": "A close-up view of the green adjustable feed gate located at the bottom of the main orange grain hopper. The gate regulates how much uncleaned grain drops onto the corrugated metal sheet and the circular-perforated metal sieve below. Troubleshooting context: If grain is jamming or feeding too fast, the bot can advise the farmer to loosen the central bolt and adjust this green sliding door up or down."
+  },
+  {
+    "image_number": 12,
+    "image_name": "12_hopper_feed_gate_side_angle.jpg",
+    "original_image_name": "IMG-20260718-WA0022.jpg",
+    "description": "A slightly angled close-up showing the green adjustable feed flap on the orange hopper, positioned over the vibrating sieve bed. A blue pillow block bearing is visible on the lower left, which supports a shaft for the shaking mechanism. Troubleshooting context: Helps identify the grain path. If the sieve isn't shaking, the bot can point the farmer to check the blue bearing and the shaft connected to it."
+  },
+  {
+    "image_number": 13,
+    "image_name": "13_air_control_lever_and_sieve_drive_arm.jpg",
+    "original_image_name": "IMG-20260718-WA0017.jpg",
+    "description": "A side view of the machine showing the manual air control mechanism and the sieve's driving arm. It features a slotted metal lever attached to a semi-circular plate covering the blower's air intake, and a blue bearing connecting a long orange metal arm that shakes the sieve. Troubleshooting context: Instruct the farmer to move the slotted lever to control wind speed, or if the sieve fails to shake, tell them to inspect the long connecting arm and bolts on the blue bearing."
+  },
+  {
+    "image_number": 14,
+    "image_name": "14_blower_air_intake_control_open.jpg",
+    "original_image_name": "IMG-20260718-WA0016.jpg",
+    "description": "A close-up of the adjustable air intake plate on the side of the blower housing. The semi-circular orange plate is shown partially open, exposing the internal black fan blades. Troubleshooting context: If the wind is too weak to blow away chaff, the bot can guide the farmer to loosen the bolt on the slotted lever and open this plate wider to let more air into the fan."
+  },
+  {
+    "image_number": 15,
+    "image_name": "15_blueprint_sieve_shaft.jpg",
+    "original_image_name": "IMG-20260718-WA0011.jpg",
+    "description": "A technical manufacturing blueprint for the 'SIEVE SHAFT' (Sub-assembly 9). It details a long solid metal rod made of ASTM A36 material, measuring 770 mm in length with precisely stepped outer diameters. Troubleshooting context: If the main shaking frame breaks, the bot can use this blueprint to provide exact dimensions to a local machinist to craft a replacement shaft."
+  },
+  {
+    "image_number": 16,
+    "image_name": "16_blueprint_sieve_assembly.jpg",
+    "original_image_name": "IMG-20260718-WA0014.jpg",
+    "description": "A complex technical blueprint for the 'SIEVE' assembly (Drawing No: BWM_S_022_A4). It shows the multi-layered internal structure including the first-grade net, second-grade net, zigzag sheet, and the placement of 6203 bearings. Troubleshooting context: If small stones are mixing with good grain, the bot can reference this to explain how to access and clean or replace the specific layered nets within the sieve bed."
+  },
+  {
+    "image_number": 17,
+    "image_name": "17_blueprint_right_side_plate.jpg",
+    "original_image_name": "IMG-20260718-WA0013.jpg",
+    "description": "A technical blueprint for the machine's 'RIGHT SIDE PLATE'. It outlines the precise geometry, bending angles, and drilled hole placements for the main side wall of the winnower. Troubleshooting context: Knowing the layout of these mounting holes helps the bot understand where the internal blower and sieve mechanisms are bolted to the outer frame, aiding in structural troubleshooting."
+  },
+  {
+    "image_number": 18,
+    "image_name": "18_blueprint_motor_pulley.jpg",
+    "original_image_name": "IMG-20260718-WA0015.jpg",
+    "description": "A technical blueprint drawing for the 'MOTOR PULLEY' (Sub-assembly 8). It depicts a circular, grooved gray cast iron wheel with an outer diameter of 125mm and a central bore, designed to attach to the electric motor. Troubleshooting context: If the V-belt is slipping or the pulley cracks, the bot can provide these exact dimensions to the farmer so they can purchase the correct replacement pulley at a local hardware shop."
+  },
+  {
+    "image_number": 19,
+    "image_name": "19_brri_winnower_front_right_perspective.jpg",
+    "original_image_name": "IMG-20260718-WA0010.jpg",
+    "description": "A comprehensive three-quarter angle photograph of the assembled BRRI Winnower machine resting on a dirt surface. It clearly shows the relationship between the top feeding hopper, the exposed primary sieve screen in the middle, and the clean grain exit chutes at the bottom. Troubleshooting context: The bot can use this overall view to help farmers visually locate major sections of the machine when guiding them through maintenance."
+  },
+  {
+    "image_number": 20,
+    "image_name": "20_brri_winnower_motor_bottom_pulley.jpg",
+    "original_image_name": "IMG-20260718-WA0029.jpg",
+    "description": "A top-down close-up view of the 0.5 HP electric motor bolted to the bottom frame, focusing on the small driving pulley and the V-belt attached to it. Troubleshooting context: If the machine loses power or smells like burning rubber, the bot should tell the farmer to check if this specific small bottom pulley is jammed or if the belt is misaligned and rubbing against the frame."
+  },
+  {
+    "image_number": 21,
+    "image_name": "21_brri_winnower_full_left_side_profile.jpg",
+    "original_image_name": "IMG-20260718-WA0035.jpg",
+    "description": "A full left-side profile of the orange BRRI Winnower machine. It prominently displays the official blue 'BRRI Win2024' logo on the hopper, the V-belt connecting the bottom motor to the central blower pulley, and the horizontal linkage arm that drives the sieve. Troubleshooting context: This acts as an excellent diagnostic overview for the left side of the machine. The bot can use this to verify if the long linkage arm is properly connected to the center pulley, which is necessary for the sieve to shake."
+  },
+  {
+    "image_number": 22,
+    "image_name": "22_brri_winnower_front_discharge_view.jpg",
+    "original_image_name": "IMG-20260718-WA0031.jpg",
+    "description": "A straight front-facing view of the winnower. It shows the green hopper feed flap at the top, the wide perforated metal sieve in the middle, and the primary angled grain discharge chute at the bottom right. Troubleshooting context: Useful for identifying blockages in the primary grain flow path. If clean grain is not coming out, the bot can direct the farmer to check the wide middle screen or the bottom right curved chute for clogs."
+  },
+  {
+    "image_number": 23,
+    "image_name": "23_brri_winnower_motor_mount_and_frame_leg.jpg",
+    "original_image_name": "IMG-20260718-WA0034.jpg",
+    "description": "A close-up focusing on the bottom corner of the machine frame, showing the motor mounting plate and a vertical frame leg with the text 'SALAM - STRONG' stamped into the metal. Troubleshooting context: Important for structural integrity checks. If the machine is vibrating excessively and moving around on the dirt, the bot should tell the farmer to check the bolts securing the motor to this base plate and ensure all four legs are sitting on level ground."
+  },
+  {
+    "image_number": 24,
+    "image_name": "24_brri_winnower_sieve_discharge_lip.jpg",
+    "original_image_name": "IMG-20260718-WA0019.jpg",
+    "description": "A close-up of the front discharge end of the vibrating sieve bed. It shows the circular perforated metal sheet where the grain falls through, and a solid orange metal lip where larger debris like straw and un-threshed pieces are shaken off the front. Troubleshooting context: If good grain is spilling over the front edge instead of falling through to the collection tray, the bot should tell the farmer to clear the circular holes on this metal sheet, as they are likely clogged with wet dirt or straw."
+  },
+  {
+    "image_number": 25,
+    "image_name": "25_brri_winnower_front_discharge_view_alt.jpg",
+    "original_image_name": "IMG-20260718-WA0020.jpg",
+    "description": "A slightly lower angle front view of the winnower, emphasizing the gap between the vibrating sieve bed and the lower collection tray that directs clean grain to the right-side chute. Troubleshooting context: If the machine is running but clean grain is backing up inside instead of flowing out, the bot can instruct the farmer to clear any obstructions in the lower angled collection tray situated right beneath the perforated screen."
+  },
+  {
+    "image_number": 26,
+    "image_name": "26_blueprint_sieve_right_side_view.jpg",
+    "original_image_name": "IMG-20260718-WA0007.jpg",
+    "description": "A technical manufacturing blueprint of the SIEVE unit (BRRI Win2024) showing an isometric view and a right-side sectional view of the layered sieve bed with its flat-bar frame, zigzag sheet, cleaning outlet, and bearing-block positions, annotated with millimetre dimensions. Troubleshooting context: The bot can use this to explain the internal layered structure of the shaking sieve and where the grading nets and bearing blocks sit, useful when guiding a mechanic to dismantle or clean the sieve."
+  },
+  {
+    "image_number": 27,
+    "image_name": "27_v_belt_b65_marking_closeup.jpg",
+    "original_image_name": "IMG-20260718-WA0018.jpg",
+    "description": "An extreme close-up of the machine's V-belt stretched between the pulleys, clearly showing the moulded markings 'B65' and 'FLEX TS / OIL & HEAT RESISTANT / MADE IN KOREA'. Troubleshooting context: Confirms the exact belt specification (B-section, size 65 / 1650 mm). If a farmer's belt is worn, cracked, or slipping, the bot should tell them to buy this exact 'B65' V-belt as the replacement."
+  },
+  {
+    "image_number": 28,
+    "image_name": "28_sieve_screen_bed_top_view.jpg",
+    "original_image_name": "IMG-20260718-WA0021.jpg",
+    "description": "A top-down view into the machine from the discharge end, showing the large circular-perforated metal sieve screen in its frame and the angled orange collection tray/chutes beneath it. Troubleshooting context: If clean grain is not dropping through, the bot can direct the farmer to inspect this perforated screen for clogging by wet dirt or straw, and to check that the lower tray channels grain to the outlet."
+  },
+  {
+    "image_number": 29,
+    "image_name": "29_hopper_feed_gate_front_closeup.jpg",
+    "original_image_name": "IMG-20260718-WA0023.jpg",
+    "description": "A front close-up of the green adjustable feed gate/flap at the base of the hopper, held by a central vertical adjustment bolt, positioned directly above the perforated sieve bed. Troubleshooting context: This gate controls how fast uncleaned grain drops onto the sieve. If grain feeds too fast, jams, or too slowly, the bot should instruct the farmer to loosen the central bolt and slide this green gate down or up."
+  },
+  {
+    "image_number": 30,
+    "image_name": "30_sieve_drive_arm_and_pillow_bearing_side_view.jpg",
+    "original_image_name": "IMG-20260718-WA0024.jpg",
+    "description": "An angled side view (beneath the blue 'BRRI Win2024' logo) showing the sieve driving/linkage arm connected to a blue P-206 pillow block bearing on the side plate, with the 0.5 HP motor mounted below. Troubleshooting context: This is the mechanism that shakes the sieve. If the sieve does not oscillate, the bot should tell the farmer to check the bolts on this blue P-206 pillow bearing and that the drive arm is securely connected."
+  },
+  {
+    "image_number": 31,
+    "image_name": "31_sieve_crank_eccentric_and_pillow_bearing.jpg",
+    "original_image_name": "IMG-20260718-WA0025.jpg",
+    "description": "A close-up of the sieve crank/eccentric mechanism: a blue P-206 pillow block bearing mounted on the side plate driving a horizontal connecting arm, with the eccentric disc and the blower opening partly visible and the motor below. Troubleshooting context: This converts shaft rotation into the back-and-forth shaking of the sieve. If shaking is weak or noisy, the bot should advise checking this pillow bearing for wear/grease and the tightness of the crank-arm bolts."
+  },
+  {
+    "image_number": 32,
+    "image_name": "32_machine_rear_side_chaff_outlet_and_sieve_shaft.jpg",
+    "original_image_name": "IMG-20260718-WA0027.jpg",
+    "description": "A rear three-quarter view showing the sieve bed, a side discharge/chaff chute on the left, the sieve shaft end protruding through a slot in the right side plate, and the motor at the lower right. Troubleshooting context: Helps locate the light-material (chaff/dust) outlet and the sieve shaft. If the sieve shaft is stuck or the chaff outlet is blocked, the bot can direct the farmer to this area."
+  },
+  {
+    "image_number": 33,
+    "image_name": "33_blower_pulley_and_sieve_linkage_arm.jpg",
+    "original_image_name": "IMG-20260718-WA0028.jpg",
+    "description": "A close-up of the left side showing the grey cast-iron blower pulley with the V-belt, and the horizontal sieve linkage arm passing through a slot in the side plate to a bearing. Troubleshooting context: Shows how the main pulley drives both the blower and, via the linkage arm, the sieve. If the blower or sieve stops while the motor still runs, the bot should check this pulley, the belt tension, and the linkage-arm connection."
+  },
+  {
+    "image_number": 34,
+    "image_name": "34_detached_sieve_connecting_rod_short.jpg",
+    "original_image_name": "IMG-20260718-WA0032.jpg",
+    "description": "A removed/detached orange-painted connecting rod (linkage) with a circular bearing eye at each end and a central adjustable clamp with bolts, lying on the ground. Troubleshooting context: This connecting rod transfers motion to shake the sieve. If it is bent, cracked, or its clamp is loose, the sieve will not shake correctly; the bot can use this to help a farmer identify and replace the part."
+  },
+  {
+    "image_number": 35,
+    "image_name": "35_detached_frame_mounting_strap.jpg",
+    "original_image_name": "IMG-20260718-WA0033.jpg",
+    "description": "A removed/detached orange-painted flat metal strap/bracket with two bolt holes at one end and a bent hook at the other, lying on the ground. Troubleshooting context: A mounting/support strap from the frame or motor base. If the machine vibrates excessively or a part feels loose, the bot can use this to help identify a detached bracket that needs re-bolting."
+  },
+  {
+    "image_number": 36,
+    "image_name": "36_detached_sieve_connecting_rod_long.jpg",
+    "original_image_name": "IMG-20260718-WA0036.jpg",
+    "description": "A removed/detached long orange-painted connecting rod with a circular bearing eye at each end and a central clamp with adjustment bolts, lying on the ground. Troubleshooting context: The long drive linkage connecting the crank to the sieve/blower assembly. If it is bent or its eye bearings are worn, the shaking action fails; the bot can reference this to guide replacement."
+  }
+]

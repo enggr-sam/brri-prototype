@@ -137,15 +137,16 @@ class GeminiService:
         return self._types.Part.from_bytes(data=path.read_bytes(), mime_type=mime)
 
     def _reference_image_parts(self, reference_images: list[Path]) -> list:
-        """Wrap each reference image with a small label so the model knows the
-        images are the *intact* parts to compare against."""
+        """Wrap each reference image with its catalogue description so the model
+        knows exactly which *intact* part it is looking at and how to use it."""
+        kb = get_knowledge_base()
         parts: list = []
         for img in reference_images:
-            parts.append(
-                self._types.Part.from_text(
-                    text=f"[Reference image of an INTACT machine part: {img.name}]"
-                )
-            )
+            description = kb.get_image_description(img.name)
+            label = f"[Reference image of an INTACT machine part: {img.name}]"
+            if description:
+                label += f"\n{description}"
+            parts.append(self._types.Part.from_text(text=label))
             parts.append(self._image_part(img))
         return parts
 

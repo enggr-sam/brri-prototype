@@ -95,6 +95,10 @@ class Settings(BaseSettings):
         return self.KNOWLEDGE_BASE_DIR / "machine_data.json"
 
     @property
+    def reference_images_json(self) -> Path:
+        return self.KNOWLEDGE_BASE_DIR / "reference_images.json"
+
+    @property
     def reference_images_dir(self) -> Path:
         return self.KNOWLEDGE_BASE_DIR / "reference_images"
 
