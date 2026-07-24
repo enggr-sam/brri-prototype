@@ -16,7 +16,10 @@ from app.models import ChatMessage, ChatSession
 from app.schemas import ChatHistoryOut, ChatMessageOut, ChatResponse, ReferenceImageOut
 from app.services.gemini_service import QuotaExceededError, gemini_service
 from app.services.knowledge_base import get_knowledge_base
-from app.services.reference_selector import select_reference_images
+from app.services.reference_selector import (
+    order_reference_images_by_relevance,
+    select_reference_images,
+)
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
     IMAGE_CONTENT_TYPES,
@@ -170,6 +173,10 @@ async def chat_message(
         raise HTTPException(status_code=502, detail="AI service error.") from exc
 
     answer = chat_result.text
+    reference_paths = order_reference_images_by_relevance(
+        reference_paths,
+        f"{user_content}\n{answer}",
+    )
     ref_meta = reference_images_metadata(reference_paths, captions=chat_result.image_captions)
 
     # --- Persist ---------------------------------------------------------

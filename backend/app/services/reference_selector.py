@@ -50,7 +50,11 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "air control", "airflow", "air flow", "wind speed", "chaff", "dust",
         "বাতাস", "নিয়ন্ত্রণ", "তুষ", "ধুল",
     ),
-    "pulley": ("pulley", "pulley", "cast-iron", "groove", "tension", "পুলি"),
+    "pulley": (
+        "pulley", "cast-iron", "groove", "tension",
+        "ratio", "ration", "speed ratio", "diameter",
+        "পুলি", "অনুপাত",
+    ),
     "linkage": (
         "linkage", "connecting rod", "arm", "crank", "eccentric", "cam",
         "রড", "লিঙ্ক",
@@ -101,21 +105,57 @@ def _resolve_path(image_name: str) -> Path | None:
     return path if path.is_file() else None
 
 
+def _rank_entries(entries: list[dict], query: str) -> list[tuple[float, dict]]:
+    """Sort catalogue entries by relevance (highest score first)."""
+    query = query.strip()
+    scored: list[tuple[float, dict]] = []
+    for entry in entries:
+        if query:
+            score = _score_entry(entry, query)
+        else:
+            num = entry.get("image_number") or 999
+            score = 10.0 if num in _ANCHOR_NUMBERS else max(0.0, 5.0 - num * 0.01)
+        scored.append((score, entry))
+    scored.sort(key=lambda item: (-item[0], item[1].get("image_number", 999)))
+    return scored
+
+
+def order_reference_images_by_relevance(
+    paths: list[Path],
+    query: str,
+) -> list[Path]:
+    """Re-sort selected images so the most relevant appear first in the gallery."""
+    query = (query or "").strip()
+    if not paths or not query:
+        return paths
+
+    kb = get_knowledge_base()
+    scored: list[tuple[float, Path]] = []
+    for path in paths:
+        entry = kb._by_name.get(path.name, {})
+        scored.append((_score_entry(entry, query), path))
+    scored.sort(key=lambda item: (-item[0], item[1].name))
+    return [path for _, path in scored]
+
+
 def select_reference_images(
     user_text: str | None = None,
     limit: int | None = None,
 ) -> list[Path]:
-    """Return up to ``limit`` reference image paths, chosen for relevance.
+    """Return up to ``limit`` reference image paths, most relevant first.
 
-    * Anchors (specs + full overview) are included first.
-    * Remaining slots go to highest-scoring catalogue entries for ``user_text``.
-    * If there is no user text, fills with anchors plus low-numbered defaults.
+    Images are ordered by match to ``user_text`` (highest score at index 0).
+    Anchor images (specs + overview) are included when they score well or as
+    back-fill — not forced to the top of the gallery.
     """
     limit = limit or settings.MAX_REFERENCE_IMAGES
     kb = get_knowledge_base()
     entries = kb.reference_images
     if not entries:
         return []
+
+    query = (user_text or "").strip()
+    ranked = _rank_entries(entries, query)
 
     chosen: list[Path] = []
     chosen_names: set[str] = set()
@@ -133,34 +173,17 @@ def select_reference_images(
         chosen_names.add(name)
         return True
 
-    # 1) Always pin anchor images (technical specs + full machine view).
-    by_number = {e.get("image_number"): e for e in entries}
-    for num in _ANCHOR_NUMBERS:
-        entry = by_number.get(num)
-        if entry:
-            _add(entry)
-
-    query = (user_text or "").strip()
-
     if query:
-        # 2) Rank remaining entries by relevance to the user's words.
-        ranked = sorted(
-            entries,
-            key=lambda e: _score_entry(e, query),
-            reverse=True,
-        )
-        for entry in ranked:
-            if _score_entry(entry, query) <= 0:
+        for score, entry in ranked:
+            if score <= 0:
                 break
             _add(entry)
     else:
-        # 3) No query text: add early catalogue numbers for broad coverage.
-        for entry in sorted(entries, key=lambda e: e.get("image_number", 999)):
+        for _, entry in ranked:
             _add(entry)
 
-    # 4) Back-fill if anchors + matches did not reach the limit.
     if len(chosen) < limit:
-        for entry in sorted(entries, key=lambda e: e.get("image_number", 999)):
+        for _, entry in ranked:
             _add(entry)
             if len(chosen) >= limit:
                 break
