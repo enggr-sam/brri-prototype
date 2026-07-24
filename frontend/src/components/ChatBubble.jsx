@@ -1,4 +1,3 @@
-import ReactMarkdown from "react-markdown";
 import { mediaUrl } from "../services/api.js";
 
 function ReferenceGallery({ images }) {
@@ -64,13 +63,11 @@ export default function ChatBubble({ message }) {
         )}
 
         <article
-          className={`prose prose-sm max-w-none font-bengali ${
-            isUser
-              ? "prose-invert prose-p:text-white"
-              : "text-slate-800 prose-headings:text-brri-dark"
+          className={`max-w-none whitespace-pre-wrap font-bengali text-[15px] leading-relaxed ${
+            isUser ? "text-white" : "text-slate-800"
           }`}
         >
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+          {message.content}
         </article>
 
         {!isUser && <ReferenceGallery images={message.reference_images} />}

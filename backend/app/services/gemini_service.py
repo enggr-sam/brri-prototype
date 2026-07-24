@@ -137,18 +137,43 @@ class GeminiService:
         return self._types.Part.from_bytes(data=path.read_bytes(), mime_type=mime)
 
     def _reference_image_parts(self, reference_images: list[Path]) -> list:
-        """Wrap each reference image with its catalogue description so the model
-        knows exactly which *intact* part it is looking at and how to use it."""
+        """Attach reference images with a SHORT label (full catalogue is already
+        in the system instruction — long per-image text makes replies verbose)."""
         kb = get_knowledge_base()
         parts: list = []
         for img in reference_images:
-            description = kb.get_image_description(img.name)
-            label = f"[Reference image of an INTACT machine part: {img.name}]"
-            if description:
-                label += f"\n{description}"
+            entry = kb._by_name.get(img.name, {})
+            num = entry.get("image_number")
+            desc = entry.get("description") or ""
+            # Keep only the troubleshooting hook, not the full paragraph.
+            if "Troubleshooting context:" in desc:
+                short = desc.split("Troubleshooting context:", 1)[-1].strip()
+            else:
+                short = desc[:120].strip()
+            label = f"[Reference #{num}: {img.name}]"
+            if short:
+                label += f"\n{short[:180]}"
             parts.append(self._types.Part.from_text(text=label))
             parts.append(self._image_part(img))
         return parts
+
+    def _chat_generation_config(self, kb: KnowledgeBase):
+        """Tighter generation settings for interactive chat replies."""
+        return self._types.GenerateContentConfig(
+            system_instruction=kb.build_system_instruction(),
+            max_output_tokens=400,
+            temperature=0.3,
+        )
+
+    def _generate(self, contents: list, kb: KnowledgeBase, *, chat: bool = False) -> str:
+        config = (
+            self._chat_generation_config(kb)
+            if chat
+            else self._types.GenerateContentConfig(
+                system_instruction=kb.build_system_instruction(),
+            )
+        )
+        return self._generate_with_fallback(contents, config=config)
 
     def _generate_with_fallback(self, contents: list, config=None) -> str:
         """Run ``generate_content`` across the model chain.
@@ -180,12 +205,6 @@ class GeminiService:
             retry_after=_retry_after_seconds(last_exc),
         )
 
-    def _generate(self, contents: list, kb: KnowledgeBase) -> str:
-        config = self._types.GenerateContentConfig(
-            system_instruction=kb.build_system_instruction(),
-        )
-        return self._generate_with_fallback(contents, config=config)
-
     def chat_reply(
         self,
         history: list[dict[str, str]],
@@ -194,6 +213,8 @@ class GeminiService:
         user_image_path: Path | None = None,
     ) -> str:
         """Multi-turn chat: history + optional new image + reference grounding."""
+        from app.utils.response_filter import filter_assistant_reply
+
         kb = get_knowledge_base()
         if not self.is_configured:
             return _NO_KEY_MESSAGE
@@ -216,23 +237,27 @@ class GeminiService:
             prompt_parts.append("Previous conversation:\n" + history_block)
         prompt_parts.append(f"Current user message:\n{user_text.strip()}")
         prompt_parts.append(
-            "Reply in concise Bengali following the system style (short, interactive, accurate)."
+            "Follow the STRICT OUTPUT FORMAT in the system instruction. "
+            "Maximum ৭ lines. Answer only what was asked. End with one question."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
 
         try:
-            return self._generate(contents, kb)
+            raw = self._generate(contents, kb, chat=True)
+            return filter_assistant_reply(raw)
         except Exception as exc:
             logger.exception("Chat request failed: %s", exc)
             raise
 
     @staticmethod
-    def _format_history(history: list[dict[str, str]], limit: int = 8) -> str:
-        """Serialise recent turns for conversational context."""
+    def _format_history(history: list[dict[str, str]], limit: int = 6) -> str:
+        """Serialise recent turns — truncated so the model does not re-copy long replies."""
         lines: list[str] = []
         for msg in history[-limit:]:
             role = "User" if msg.get("role") == "user" else "Assistant"
             content = (msg.get("content") or "").strip()
+            if len(content) > 280:
+                content = content[:280].rstrip() + "…"
             if content:
                 lines.append(f"{role}: {content}")
         return "\n".join(lines)
