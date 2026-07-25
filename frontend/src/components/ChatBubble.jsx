@@ -54,7 +54,15 @@ export default function ChatBubble({ message }) {
         }`}
       >
         {!isUser && (
-          <p className="mb-2 text-xs font-medium text-brri-green">🌾 BRRI সহায়ক</p>
+          <div className="mb-2 flex items-center gap-2">
+            <img
+              src="/brri-logo.jpg"
+              alt=""
+              className="h-5 w-5 object-contain"
+              aria-hidden
+            />
+            <p className="text-xs font-medium text-brri-green">BRRI সহায়ক</p>
+          </div>
         )}
 
         {/* Text first — then images (easier to read) */}
