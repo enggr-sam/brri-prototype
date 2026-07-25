@@ -49,6 +49,33 @@ def init_db() -> None:
     from app import models  # noqa: F401  (import for side effects)
 
     Base.metadata.create_all(bind=engine)
+    _migrate_sqlite_schema()
+
+
+def _migrate_sqlite_schema() -> None:
+    """Add new columns to existing SQLite DBs (create_all does not alter tables)."""
+    if not DATABASE_URL.startswith("sqlite"):
+        return
+
+    migrations = [
+        ("chat_sessions", "total_cost_usd", "REAL NOT NULL DEFAULT 0.0"),
+        ("chat_messages", "follow_up_suggestions_json", "TEXT"),
+        ("chat_messages", "cost_usd", "REAL NOT NULL DEFAULT 0.0"),
+        ("chat_messages", "input_tokens", "INTEGER NOT NULL DEFAULT 0"),
+        ("chat_messages", "output_tokens", "INTEGER NOT NULL DEFAULT 0"),
+        ("chat_messages", "model_used", "TEXT"),
+    ]
+
+    with engine.begin() as conn:
+        for table, column, col_type in migrations:
+            existing = {
+                row[1]
+                for row in conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+            }
+            if column not in existing:
+                conn.exec_driver_sql(
+                    f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
+                )
 
 
 def get_db() -> Generator[Session, None, None]:

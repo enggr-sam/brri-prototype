@@ -141,14 +141,19 @@ def order_reference_images_by_relevance(
 def select_reference_images(
     user_text: str | None = None,
     limit: int | None = None,
+    *,
+    has_user_image: bool = False,
 ) -> list[Path]:
     """Return up to ``limit`` reference image paths, most relevant first.
 
-    Images are ordered by match to ``user_text`` (highest score at index 0).
-    Anchor images (specs + overview) are included when they score well or as
-    back-fill — not forced to the top of the gallery.
+    Only images scoring above ``REFERENCE_IMAGE_MIN_SCORE`` are included.
+    No low-score back-fill — keeps galleries small and strictly relevant.
     """
     limit = limit or settings.MAX_REFERENCE_IMAGES
+    min_score = settings.REFERENCE_IMAGE_MIN_SCORE
+    if has_user_image:
+        min_score = max(2.0, min_score - 2.0)
+
     kb = get_knowledge_base()
     entries = kb.reference_images
     if not entries:
@@ -175,22 +180,19 @@ def select_reference_images(
 
     if query:
         for score, entry in ranked:
-            if score <= 0:
+            if score < min_score:
                 break
             _add(entry)
-    else:
-        for _, entry in ranked:
-            _add(entry)
-
-    if len(chosen) < limit:
-        for _, entry in ranked:
-            _add(entry)
-            if len(chosen) >= limit:
+    elif has_user_image:
+        for score, entry in ranked:
+            if score < min_score:
                 break
+            _add(entry)
 
     logger.info(
-        "Selected %d reference images for query=%r: %s",
+        "Selected %d reference images (min_score=%.1f) for query=%r: %s",
         len(chosen),
+        min_score,
         query[:80] if query else "(none)",
         [p.name for p in chosen],
     )

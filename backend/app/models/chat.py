@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -22,6 +22,7 @@ class ChatSession(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
+    total_cost_usd: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
     messages: Mapped[list["ChatMessage"]] = relationship(
         back_populates="session",
@@ -47,6 +48,12 @@ class ChatMessage(Base):
 
     attachment_path: Mapped[str | None] = mapped_column(String(512), nullable=True)
     reference_images_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    follow_up_suggestions_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    model_used: Mapped[str | None] = mapped_column(String(80), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

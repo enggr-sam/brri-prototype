@@ -1,4 +1,5 @@
 import { mediaUrl } from "../services/api.js";
+import { formatReplyCostLabel } from "../utils/formatCost.js";
 
 function ReferenceGallery({ images }) {
   if (!images?.length) return null;
@@ -105,6 +106,13 @@ export default function ChatBubble({ message, showTimestamp = false }) {
 
         {!isUser && message.reference_images?.length > 0 && (
           <ReferenceGallery images={message.reference_images} />
+        )}
+
+        {!isUser && message.cost_usd > 0 && (
+          <p className="mt-2 border-t border-slate-100 pt-2 font-bengali text-[10px] text-slate-400">
+            {formatReplyCostLabel(message.cost_usd)}
+            {message.model_used ? ` · ${message.model_used}` : ""}
+          </p>
         )}
       </div>
     </div>

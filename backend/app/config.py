@@ -21,13 +21,11 @@ class Settings(BaseSettings):
 
     # --- Secrets / external services -------------------------------------
     GEMINI_API_KEY: str = ""
-    # Primary multimodal model. gemini-flash-latest is broadly available on the
-    # free tier. (gemini-2.5-pro requires a billed project; gemini-2.5-flash is
-    # blocked for newly created keys.) Override in .env if you have Pro access.
-    GEMINI_MODEL: str = "gemini-flash-latest"
+    # Primary multimodal model. gemini-2.0-flash works on paid API keys.
+    # gemini-2.5-pro may 404 for newer accounts — use gemini-2.5-flash instead.
+    GEMINI_MODEL: str = "gemini-2.0-flash"
     # Tried automatically when the primary model returns 429/404/503.
-    # Set empty to disable fallback.
-    GEMINI_FALLBACK_MODEL: str = "gemini-flash-lite-latest"
+    GEMINI_FALLBACK_MODEL: str = "gemini-flash-latest"
 
     @property
     def model_chain(self) -> list[str]:
@@ -72,7 +70,9 @@ class Settings(BaseSettings):
     # --- Reference images (Gemini grounding) -----------------------------
     # How many intact-part photos to attach per request (descriptions for all
     # 36 parts are still injected as text in the system instruction).
-    MAX_REFERENCE_IMAGES: int = 8
+    MAX_REFERENCE_IMAGES: int = 3
+    # Minimum relevance score (see reference_selector) to attach an image.
+    REFERENCE_IMAGE_MIN_SCORE: float = 4.0
 
     # --- Filesystem locations --------------------------------------------
     KNOWLEDGE_BASE_DIR: Path = BACKEND_DIR / "knowledge_base"
