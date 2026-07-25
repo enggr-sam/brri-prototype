@@ -5,15 +5,22 @@ import uuid
 from pathlib import Path
 from typing import NoReturn
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
 from app.models import ChatMessage, ChatSession
-from app.schemas import ChatHistoryOut, ChatMessageOut, ChatResponse, ReferenceImageOut
+from app.schemas import (
+    ChatHistoryOut,
+    ChatMessageOut,
+    ChatResponse,
+    ChatSessionSummaryOut,
+    ChatSessionsListOut,
+    ReferenceImageOut,
+)
 from app.services.gemini_service import QuotaExceededError, gemini_service
 from app.services.knowledge_base import get_knowledge_base
 from app.services.reference_selector import (
@@ -212,6 +219,57 @@ async def chat_message(
         user_message=_message_out(user_msg),
         assistant_message=assistant_out,
     )
+
+
+@router.get("/chat/sessions/list", response_model=ChatSessionsListOut)
+def list_chat_sessions(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+) -> ChatSessionsListOut:
+    """List all chat sessions (newest activity first) with a short preview."""
+    total = db.scalar(select(func.count()).select_from(ChatSession)) or 0
+
+    rows = db.execute(
+        select(
+            ChatSession.id,
+            ChatSession.created_at,
+            func.count(ChatMessage.id).label("message_count"),
+            func.max(ChatMessage.created_at).label("last_message_at"),
+        )
+        .join(ChatMessage, ChatMessage.session_id == ChatSession.id)
+        .group_by(ChatSession.id)
+        .order_by(func.max(ChatMessage.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    summaries: list[ChatSessionSummaryOut] = []
+    for row in rows:
+        first_user = db.scalar(
+            select(ChatMessage.content)
+            .where(
+                ChatMessage.session_id == row.id,
+                ChatMessage.role == "user",
+            )
+            .order_by(ChatMessage.created_at)
+            .limit(1)
+        )
+        preview = (first_user or "").strip()
+        if len(preview) > 140:
+            preview = preview[:140].rstrip() + "…"
+
+        summaries.append(
+            ChatSessionSummaryOut(
+                session_id=row.id,
+                started_at=row.created_at,
+                last_message_at=row.last_message_at,
+                message_count=row.message_count,
+                preview=preview or "(no text)",
+            )
+        )
+
+    return ChatSessionsListOut(total=total, sessions=summaries)
 
 
 @router.get("/chat/{session_id}", response_model=ChatHistoryOut)

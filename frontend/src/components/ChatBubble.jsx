@@ -41,7 +41,7 @@ function ReferenceGallery({ images }) {
   );
 }
 
-export default function ChatBubble({ message }) {
+export default function ChatBubble({ message, showTimestamp = false }) {
   const isUser = message.role === "user";
 
   return (
@@ -53,6 +53,21 @@ export default function ChatBubble({ message }) {
             : "rounded-bl-md bg-white shadow-sm ring-1 ring-slate-100"
         }`}
       >
+        {showTimestamp && message.created_at && (
+          <p
+            className={`mb-2 text-[11px] ${
+              isUser ? "text-white/70" : "text-slate-400"
+            }`}
+          >
+            {new Date(message.created_at).toLocaleString("bn-BD", {
+              timeZone: "Asia/Dhaka",
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "numeric",
+              month: "short",
+            })}
+          </p>
+        )}
         {!isUser && (
           <div className="mb-2 flex items-center gap-2">
             <img

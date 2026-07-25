@@ -43,6 +43,15 @@ export async function fetchChatHistory(sessionId) {
   return handleResponse(res);
 }
 
+export async function fetchChatSessions({ limit = 50, offset = 0 } = {}) {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const res = await fetch(`${API_BASE_URL}/api/chat/sessions/list?${params}`);
+  return handleResponse(res);
+}
+
 /** Prefix API base for image URLs returned by the backend. */
 export function mediaUrl(path) {
   if (!path) return null;

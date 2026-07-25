@@ -35,3 +35,16 @@ class ChatResponse(BaseModel):
 class ChatHistoryOut(BaseModel):
     session_id: str
     messages: list[ChatMessageOut]
+
+
+class ChatSessionSummaryOut(BaseModel):
+    session_id: str
+    started_at: datetime
+    last_message_at: datetime
+    message_count: int
+    preview: str
+
+
+class ChatSessionsListOut(BaseModel):
+    total: int
+    sessions: list[ChatSessionSummaryOut]
