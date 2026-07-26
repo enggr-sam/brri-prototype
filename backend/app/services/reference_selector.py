@@ -44,11 +44,16 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "hopper": (
         "hopper", "feed", "gate", "flap", "grain flow", "pour",
-        "হপার", "গেট", "দানা", "ঢাল",
+        "হপার", "গেট", "দানা", "ঢাল", "ফিড", "ফ্লাপ", "সবুজ",
     ),
     "air_control": (
         "air control", "airflow", "air flow", "wind speed", "chaff", "dust",
-        "বাতাস", "নিয়ন্ত্রণ", "তুষ", "ধুল",
+        "বাতাস", "নিয়ন্ত্রণ", "তুষ", "ধুল", "চিট", "চিটা", "ভেসে", "উড়",
+        "উড়ে", "ময়লা", "আলাদা",
+    ),
+    "grain_loss": (
+        "blow away", "spill", "good rice", "clean grain", "losing grain",
+        "ধান", "চাল", "চাউল", "নষ্ট", "পড়", "ঝর", "বের হয়", "বের হচ্ছ",
     ),
     "pulley": (
         "pulley", "cast-iron", "groove", "tension",
@@ -68,6 +73,91 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "খসড়া", "মাপ",
     ),
 }
+
+# Strong symptom → catalogue image numbers (shown when query matches any keyword).
+_ISSUE_IMAGE_NUMBERS: list[tuple[tuple[str, ...], tuple[int, ...]]] = [
+    (
+        (
+            "চিট", "চিটা", "chaff", "তুষ", "ধান বের", "চাল বের", "উড়", "উড়ে",
+            "ভেসে", "বাতাস বেশি", "air control", "wind speed", "good rice",
+            "blow away",
+        ),
+        (13, 14, 10, 11, 32),
+    ),
+    (
+        ("belt", "বেল্ট", "b65", "slip", "slipping", "পিছল", "ছিঁড়", "v-belt"),
+        (1, 27, 20, 18),
+    ),
+    (
+        ("sieve", "ঝরন", "চালুনি", "জাল", "ঝাঁক", "screen", "shake", "আটক"),
+        (28, 16, 31, 30),
+    ),
+    (
+        ("motor", "মোটর", "220v", "0.5 hp", "ধোঁয়া", "জ্বল"),
+        (1, 20, 23, 5),
+    ),
+    (
+        ("bearing", "বিয়ারিং", "6306", "p-206", "pillow", "grinding", "কম্পন"),
+        (31, 30, 13, 6),
+    ),
+]
+
+_IMAGE_REQUEST_MARKERS = (
+    "ছবি", "photo", "picture", "image", "দেখান", "দেখিয়", "দেখাই",
+    "বুঝিয়", "বুঝাই", "visual", "diagram",
+)
+
+
+def user_requests_visual_help(text: str) -> bool:
+    """True when the farmer explicitly asks for pictures or visual explanation."""
+    lower = (text or "").lower()
+    return any(m in lower for m in _IMAGE_REQUEST_MARKERS)
+
+
+def build_image_selection_query(
+    user_text: str,
+    history: list[dict[str, str]] | None = None,
+) -> str:
+    """Combine current message with recent user context for image matching.
+
+    Follow-ups like “ছবি দিয়ে বুঝিয়ে দেন” need the prior symptom text.
+    """
+    text = (user_text or "").strip()
+    if not text:
+        return ""
+
+    if history and (user_requests_visual_help(text) or len(text) < 40):
+        prior_user = [
+            (m.get("content") or "").strip()
+            for m in history
+            if m.get("role") == "user"
+        ]
+        if prior_user:
+            combined = f"{prior_user[-1]} {text}".strip()
+            if combined != text:
+                logger.debug("Image query expanded with prior user message.")
+            return combined
+    return text
+
+
+def _issue_matched_numbers(query: str) -> list[int]:
+    ql = query.lower()
+    seen: set[int] = set()
+    ordered: list[int] = []
+    for keywords, numbers in _ISSUE_IMAGE_NUMBERS:
+        if any(kw in ql for kw in keywords):
+            for num in numbers:
+                if num not in seen:
+                    seen.add(num)
+                    ordered.append(num)
+    return ordered
+
+
+def _entry_by_number(entries: list[dict], number: int) -> dict | None:
+    for entry in entries:
+        if entry.get("image_number") == number:
+            return entry
+    return None
 
 
 def _tokenize(text: str) -> set[str]:
@@ -143,11 +233,12 @@ def select_reference_images(
     limit: int | None = None,
     *,
     has_user_image: bool = False,
+    history: list[dict[str, str]] | None = None,
 ) -> list[Path]:
     """Return up to ``limit`` reference image paths, most relevant first.
 
     Only images scoring above ``REFERENCE_IMAGE_MIN_SCORE`` are included.
-    No low-score back-fill — keeps galleries small and strictly relevant.
+    Known symptom patterns (e.g. chaff with grain) always pick curated photos.
     """
     limit = limit or settings.MAX_REFERENCE_IMAGES
     min_score = settings.REFERENCE_IMAGE_MIN_SCORE
@@ -159,7 +250,11 @@ def select_reference_images(
     if not entries:
         return []
 
-    query = (user_text or "").strip()
+    query = build_image_selection_query(user_text or "", history)
+    wants_photos = user_requests_visual_help(user_text or "")
+    if wants_photos:
+        min_score = max(2.0, min_score - 1.5)
+
     ranked = _rank_entries(entries, query)
 
     chosen: list[Path] = []
@@ -178,6 +273,12 @@ def select_reference_images(
         chosen_names.add(name)
         return True
 
+    # Curated images for known farmer symptoms (Bangla + English).
+    for num in _issue_matched_numbers(query):
+        entry = _entry_by_number(entries, num)
+        if entry:
+            _add(entry)
+
     if query:
         for score, entry in ranked:
             if score < min_score:
@@ -190,9 +291,10 @@ def select_reference_images(
             _add(entry)
 
     logger.info(
-        "Selected %d reference images (min_score=%.1f) for query=%r: %s",
+        "Selected %d reference images (min_score=%.1f, visual_help=%s) for query=%r: %s",
         len(chosen),
         min_score,
+        wants_photos,
         query[:80] if query else "(none)",
         [p.name for p in chosen],
     )

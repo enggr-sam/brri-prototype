@@ -258,6 +258,7 @@ async def chat_message_stream(
         reference_paths = select_reference_images(
             user_text=user_content,
             has_user_image=user_image_path is not None,
+            history=history,
         )
 
     def event_stream():
@@ -273,7 +274,7 @@ async def chat_message_stream(
                 yield _sse({"type": "token", "text": token})
 
             chat_result = gemini_service.finalize_streamed_reply(
-                user_content, reference_paths
+                user_content, reference_paths, history
             )
             save_db = SessionLocal()
             try:
@@ -353,6 +354,7 @@ async def chat_message(
         reference_paths = select_reference_images(
             user_text=user_content,
             has_user_image=user_image_path is not None,
+            history=history,
         )
 
     try:

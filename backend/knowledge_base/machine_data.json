@@ -53,6 +53,27 @@
     "Blower imbalance or blade damage reducing air blast and cleaning quality.",
     "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
     "Motor not starting or running slow (voltage, capacitor, or winding issues on the 0.5 HP single-phase motor).",
-    "Frame or hopper corrosion / cracked welds on the carbon steel angle bars."
-  ]
+    "Frame or hopper corrosion / cracked welds on the carbon steel angle bars.",
+    "Too much air/wind causing good grain to blow away with chaff — adjust air control lever and feed gate."
+  ],
+  "parts_suppliers": {
+    "v_belt_b65": {
+      "part": "B65 V-belt (B-belt, 1650 mm)",
+      "note_bn": "বেল্ট (B65) পাওয়া যাবে নিম্নোল্লিখিত ডিলার/দোকান থেকে। অন্য ঠিকানা বানিয়ে বলবেন না — শুধু এই তালিকা দিন।",
+      "dealers": [
+        {
+          "name_bn": "এসি আই মোটরস",
+          "dealer_point_bn": "হরিংঘাটা মেশিনারীজ, পটুয়াখালী",
+          "mobile": "01718232406",
+          "mobile_bn": "০১৭১৮২৩২৪০৬"
+        },
+        {
+          "name_bn": "নিউ এগ্রো মেশিনারীজ",
+          "address_bn": "৪২, টিপু সুলতান রোড, ওয়ারী, ঢাকা",
+          "mobile": "01718231496",
+          "mobile_bn": "০১৭১৮২৩১৪৯৬"
+        }
+      ]
+    }
+  }
 }

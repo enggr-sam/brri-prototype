@@ -11,6 +11,11 @@ from pathlib import Path
 
 from app.config import settings
 from app.services.knowledge_base import KnowledgeBase, get_knowledge_base
+from app.services.reference_selector import (
+    build_image_selection_query,
+    user_requests_visual_help,
+    _issue_matched_numbers,
+)
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
@@ -23,6 +28,27 @@ _NO_KEY_MESSAGE = (
 )
 
 _META_PREFIXES = ("---", "---M", "---ME", "---MET", "---META")
+
+
+def _resolve_show_reference_images(
+    user_text: str,
+    reference_images: list[Path],
+    meta: dict,
+    history: list[dict[str, str]] | None = None,
+) -> bool:
+    """Decide whether to show the reference gallery in the UI."""
+    if not reference_images:
+        return False
+    if user_requests_visual_help(user_text):
+        return True
+    query = build_image_selection_query(user_text, history)
+    if _issue_matched_numbers(query):
+        return True
+    if meta.get("show_images") is True:
+        return True
+    if meta.get("show_images") is False:
+        return False
+    return True
 
 
 class QuotaExceededError(Exception):
@@ -313,6 +339,7 @@ class GeminiService:
         self,
         user_text: str,
         reference_images: list[Path],
+        history: list[dict[str, str]] | None = None,
     ) -> ChatReplyResult:
         """Parse streamed buffer, captions, usage — call after stream completes."""
         from app.utils.response_filter import filter_assistant_reply
@@ -324,7 +351,9 @@ class GeminiService:
 
         main_raw, meta = split_reply_metadata(raw)
         main_text = filter_assistant_reply(main_raw)
-        show_images = bool(meta.get("show_images", False)) and bool(reference_images)
+        show_images = _resolve_show_reference_images(
+            user_text, reference_images, meta, history
+        )
         suggestions = meta.get("suggestions") or []
 
         captions: dict[int, str] = {}
@@ -405,7 +434,9 @@ class GeminiService:
             )
             main_raw, meta = split_reply_metadata(raw)
             main_text = filter_assistant_reply(main_raw)
-            show_images = bool(meta.get("show_images", False)) and bool(reference_images)
+            show_images = _resolve_show_reference_images(
+                user_text, reference_images, meta, history
+            )
             suggestions = meta.get("suggestions") or []
 
             captions: dict[int, str] = {}
