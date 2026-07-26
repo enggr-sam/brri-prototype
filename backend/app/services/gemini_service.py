@@ -16,6 +16,7 @@ from app.services.reference_selector import (
     user_requests_visual_help,
     _issue_matched_numbers,
 )
+from app.utils.parts_suppliers import ensure_belt_supplier_reply, is_belt_supplier_query
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
@@ -38,6 +39,8 @@ def _resolve_show_reference_images(
 ) -> bool:
     """Decide whether to show the reference gallery in the UI."""
     if not reference_images:
+        return False
+    if is_belt_supplier_query(user_text):
         return False
     if user_requests_visual_help(user_text):
         return True
@@ -351,6 +354,7 @@ class GeminiService:
 
         main_raw, meta = split_reply_metadata(raw)
         main_text = filter_assistant_reply(main_raw)
+        main_text = ensure_belt_supplier_reply(main_text, user_text)
         show_images = _resolve_show_reference_images(
             user_text, reference_images, meta, history
         )
@@ -434,6 +438,7 @@ class GeminiService:
             )
             main_raw, meta = split_reply_metadata(raw)
             main_text = filter_assistant_reply(main_raw)
+            main_text = ensure_belt_supplier_reply(main_text, user_text)
             show_images = _resolve_show_reference_images(
                 user_text, reference_images, meta, history
             )

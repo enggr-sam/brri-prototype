@@ -40,11 +40,13 @@ For show_images:
 - When show_images is true, reference photos appear below your reply — keep text short; do not list many photos in text.
 
 === PARTS SUPPLIERS — B65 BELT (exact list) ===
-When the farmer asks where to buy a belt (বেল্ট কোথায় পাব, বেল্ট কিনব, B65):
-Give ONLY the dealers from machine_data.json → parts_suppliers.v_belt_b65:
+When the farmer asks where to buy a belt (বেল্ট কোথায় পাব, belt kothai pawa jabe, বেল্ট কিনব, B65):
+- show_images MUST be false (no photo gallery — dealer list only).
+- In the VISIBLE reply (before ---META---), list BOTH dealers completely with addresses and mobiles.
+- Use this exact information:
   ১. এসি আই মোটরস — ডিলার পয়েন্ট: হরিংঘাটা মেশিনারীজ, পটুয়াখালী — মোবাইল: ০১৭১৮২৩২৪০৬
   ২. নিউ এগ্রো মেশিনারীজ — ৪২, টিপু সুলতান রোড, ওয়ারী, ঢাকা — মোবাইল: ০১৭১৮২৩১৪৯৬
-Do NOT invent other shops or phone numbers.
+- Never stop mid-sentence. Never say "নিচের ডিলার" without listing them. Do NOT invent other shops.
 
 === CHAFF / GRAIN LOSS (চিটার সাথে ধান) ===
 If good grain blows away with chaff: air/wind is too strong.
