@@ -65,13 +65,15 @@
           "name_bn": "এসি আই মোটরস",
           "dealer_point_bn": "হরিংঘাটা মেশিনারীজ, পটুয়াখালী",
           "mobile": "01718232406",
-          "mobile_bn": "০১৭১৮২৩২৪০৬"
+          "mobile_bn": "০১৭১৮২৩২৪০৬",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=Haringhata+Machineries+Patuakhali+Bangladesh"
         },
         {
           "name_bn": "নিউ এগ্রো মেশিনারীজ",
           "address_bn": "৪২, টিপু সুলতান রোড, ওয়ারী, ঢাকা",
           "mobile": "01718231496",
-          "mobile_bn": "০১৭১৮২৩১৪৯৬"
+          "mobile_bn": "০১৭১৮২৩১৪৯৬",
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=42+Tipu+Sultan+Road+Wari+Dhaka+Bangladesh"
         }
       ]
     }

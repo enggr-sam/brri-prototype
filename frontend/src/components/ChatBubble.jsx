@@ -1,6 +1,28 @@
 import { mediaUrl } from "../services/api.js";
 import { formatReplyCostLabel } from "../utils/formatCost.js";
 
+const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
+
+function renderTextWithLinks(text, linkClass) {
+  if (!text) return null;
+  const parts = text.split(URL_PATTERN);
+  return parts.map((part, index) =>
+    part.startsWith("http") ? (
+      <a
+        key={`link-${index}`}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClass}
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  );
+}
+
 function ReferenceGallery({ images }) {
   if (!images?.length) return null;
 
@@ -87,7 +109,12 @@ export default function ChatBubble({ message, showTimestamp = false }) {
             isUser ? "text-white" : "text-slate-800"
           }`}
         >
-          {message.content}
+          {renderTextWithLinks(
+            message.content,
+            isUser
+              ? "underline decoration-white/60 underline-offset-2 break-all"
+              : "text-brri-green underline decoration-brri-green/40 underline-offset-2 break-all"
+          )}
         </article>
 
         {message.attachment_url && isUser && (
