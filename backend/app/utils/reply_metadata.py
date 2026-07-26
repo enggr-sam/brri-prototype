@@ -7,20 +7,80 @@ import re
 
 META_MARKER = "---META---"
 
+# Leaked model metadata / malformed META fragments shown to users.
+_LEAKED_LINE_MARKERS = (
+    "show_images",
+    '"suggestions"',
+    "'suggestions'",
+    "as mandated for belt",
+    "mandated for belt buyer",
+)
+
+
+def strip_leaked_metadata(text: str) -> str:
+    """Remove ---META--- tails and JSON/meta lines the model sometimes leaks."""
+    if not text:
+        return text
+
+    cleaned = text.strip()
+
+    if META_MARKER in cleaned:
+        cleaned = cleaned.split(META_MARKER, 1)[0].strip()
+    elif "---META" in cleaned:
+        cleaned = re.split(r"---META-+", cleaned, maxsplit=1)[0].strip()
+
+    # Trailing JSON blob without marker.
+    cleaned = re.sub(
+        r'\s*\{[\s\n]*"suggestions"[\s\S]*?"show_images"[\s\S]*?\}\s*$',
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    kept: list[str] = []
+    for line in cleaned.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            kept.append("")
+            continue
+        lower = stripped.lower()
+        if any(marker in lower for marker in _LEAKED_LINE_MARKERS):
+            continue
+        if stripped.startswith("*") and ("`" in stripped or "show_images" in lower):
+            continue
+        if re.search(r'["\'\`\[\]\{\}]', stripped) and (
+            "show_images" in lower
+            or "suggestions" in lower
+            or "পাওয়া যায়" in stripped
+            or "পরিবর্তন করব" in stripped
+        ):
+            continue
+        kept.append(stripped)
+
+    cleaned = "\n".join(kept).strip()
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    return cleaned
+
 
 def split_reply_metadata(text: str) -> tuple[str, dict]:
     """Split visible reply from trailing metadata block."""
-    if META_MARKER not in text:
-        return text.strip(), {}
+    raw = text or ""
 
-    main, tail = text.split(META_MARKER, 1)
+    if META_MARKER not in raw and "---META" not in raw:
+        return strip_leaked_metadata(raw).strip(), {}
+
+    if META_MARKER in raw:
+        main, tail = raw.split(META_MARKER, 1)
+    else:
+        main, tail = re.split(r"---META-+", raw, maxsplit=1)
+
+    main = strip_leaked_metadata(main)
     meta: dict = {"suggestions": [], "show_images": True}
 
     tail = tail.strip()
     if not tail:
         return main.strip(), meta
 
-    # Try JSON first: {"suggestions":[...],"show_images":false}
     json_match = re.search(r"\{.*\}", tail, re.DOTALL)
     if json_match:
         try:

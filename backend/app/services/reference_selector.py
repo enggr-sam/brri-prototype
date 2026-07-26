@@ -108,7 +108,7 @@ _IMAGE_REQUEST_MARKERS = (
 )
 
 
-from app.utils.parts_suppliers import is_belt_supplier_query
+from app.utils.parts_suppliers import is_belt_price_query, is_belt_supplier_query
 
 
 def user_requests_visual_help(text: str) -> bool:
@@ -254,8 +254,8 @@ def select_reference_images(
         return []
 
     query = build_image_selection_query(user_text or "", history)
-    if is_belt_supplier_query(query):
-        logger.info("Skipping reference images for belt supplier query.")
+    if is_belt_supplier_query(query) or is_belt_price_query(query):
+        logger.info("Skipping reference images for belt price/supplier query.")
         return []
 
     wants_photos = user_requests_visual_help(user_text or "")

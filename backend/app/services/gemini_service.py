@@ -16,7 +16,11 @@ from app.services.reference_selector import (
     user_requests_visual_help,
     _issue_matched_numbers,
 )
-from app.utils.parts_suppliers import ensure_belt_dealers_in_reply, is_belt_supplier_query
+from app.utils.parts_suppliers import (
+    ensure_belt_dealers_in_reply,
+    is_belt_price_query,
+    is_belt_supplier_query,
+)
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
@@ -41,6 +45,9 @@ def _resolve_show_reference_images(
     if not reference_images:
         return False
     if is_belt_supplier_query(user_text):
+        return False
+    query = build_image_selection_query(user_text, history)
+    if is_belt_price_query(query):
         return False
     if user_requests_visual_help(user_text):
         return True

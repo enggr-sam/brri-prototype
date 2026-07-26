@@ -2,6 +2,8 @@
 
 import re
 
+from app.utils.reply_metadata import strip_leaked_metadata
+
 _NOISE_PATTERNS = [
     r"^#{1,6}\s+.+$",
     r"^---+$",
@@ -37,4 +39,4 @@ def filter_assistant_reply(text: str) -> str:
 
     cleaned = "\n".join(kept).strip()
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
-    return cleaned
+    return strip_leaked_metadata(cleaned)
