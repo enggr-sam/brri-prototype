@@ -16,6 +16,7 @@ from app.services.reference_selector import (
     user_requests_visual_help,
     _issue_matched_numbers,
 )
+from app.utils.canonical_replies import ensure_canonical_reply
 from app.utils.parts_suppliers import (
     ensure_belt_dealers_in_reply,
     is_belt_price_query,
@@ -361,6 +362,7 @@ class GeminiService:
 
         main_raw, meta = split_reply_metadata(raw)
         main_text = filter_assistant_reply(main_raw)
+        main_text = ensure_canonical_reply(main_text, user_text)
         main_text = ensure_belt_dealers_in_reply(main_text, user_text)
         show_images = _resolve_show_reference_images(
             user_text, reference_images, meta, history
@@ -445,6 +447,7 @@ class GeminiService:
             )
             main_raw, meta = split_reply_metadata(raw)
             main_text = filter_assistant_reply(main_raw)
+            main_text = ensure_canonical_reply(main_text, user_text)
             main_text = ensure_belt_dealers_in_reply(main_text, user_text)
             show_images = _resolve_show_reference_images(
                 user_text, reference_images, meta, history

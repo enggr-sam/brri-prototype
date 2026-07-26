@@ -48,7 +48,7 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "air_control": (
         "air control", "airflow", "air flow", "wind speed", "chaff", "dust",
-        "বাতাস", "নিয়ন্ত্রণ", "তুষ", "ধুল", "চিট", "চিটা", "ভেসে", "উড়",
+        "বাতাস", "নিয়ন্ত্রণ", "তুষ", "ধুল", "চিট", "চিটা", "chita", "ভেসে", "উড়", "উড়",
         "উড়ে", "ময়লা", "আলাদা",
     ),
     "grain_loss": (
@@ -78,7 +78,14 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
 _ISSUE_IMAGE_NUMBERS: list[tuple[tuple[str, ...], tuple[int, ...]]] = [
     (
         (
-            "চিট", "চিটা", "chaff", "তুষ", "ধান বের", "চাল বের", "উড়", "উড়ে",
+            "chita",
+            "chita ure",
+            "ure jai",
+            "ure jay",
+            "keno eto",
+            "এত বেশi",
+            "এত বেশি",
+            "চিট", "চিটা", "chaff", "তুষ", "ধান বের", "চাল বের", "উড়", "উড়", "উড়ে",
             "ভেসে", "বাতাস বেশি", "air control", "wind speed", "good rice",
             "blow away",
         ),

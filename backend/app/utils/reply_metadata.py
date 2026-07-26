@@ -14,6 +14,12 @@ _LEAKED_LINE_MARKERS = (
     "'suggestions'",
     "as mandated for belt",
     "mandated for belt buyer",
+    "suggestions (2-3",
+    "smart diagnostic follow-up",
+    "follow-ups in bangla",
+    "air control lever & feed gate",
+    "since air control lever",
+    "feed gate photo help",
 )
 
 
@@ -45,6 +51,8 @@ def strip_leaked_metadata(text: str) -> str:
             continue
         lower = stripped.lower()
         if any(marker in lower for marker in _LEAKED_LINE_MARKERS):
+            continue
+        if re.match(r"^:\s*true\b", stripped, re.IGNORECASE):
             continue
         if stripped.startswith("*") and ("`" in stripped or "show_images" in lower):
             continue
