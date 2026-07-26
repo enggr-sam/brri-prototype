@@ -25,6 +25,8 @@ from app.utils.parts_suppliers import (
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
+from app.utils.reply_polish import needs_polish, polish_prompt
+from app.utils.response_filter import filter_assistant_reply
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,7 @@ def _resolve_show_reference_images(
     if is_belt_supplier_query(user_text):
         return False
     query = build_image_selection_query(user_text, history)
-    if is_belt_price_query(query):
+    if is_belt_price_query(query, history):
         return False
     if user_requests_visual_help(user_text):
         return True
@@ -191,8 +193,15 @@ class GeminiService:
     def _chat_generation_config(self, kb: KnowledgeBase):
         return self._types.GenerateContentConfig(
             system_instruction=kb.build_system_instruction(),
-            max_output_tokens=768,
+            max_output_tokens=1536,
             temperature=0.35,
+        )
+
+    def _polish_generation_config(self, kb: KnowledgeBase):
+        return self._types.GenerateContentConfig(
+            system_instruction=kb.build_system_instruction(),
+            max_output_tokens=1024,
+            temperature=0.2,
         )
 
     def _caption_generation_config(self, kb: KnowledgeBase):
@@ -200,6 +209,101 @@ class GeminiService:
             system_instruction=kb.build_system_instruction(),
             max_output_tokens=512,
             temperature=0.3,
+        )
+
+    def _polish_draft(
+        self,
+        user_text: str,
+        draft: str,
+        usage: UsageCost,
+    ) -> tuple[str, dict, UsageCost]:
+        """Analyze question + draft → complete concise Bangla answer + META."""
+        kb = get_knowledge_base()
+        draft_clean = filter_assistant_reply(draft)
+        force = needs_polish(draft_clean)
+        try:
+            polished_raw, polish_usage = self._generate_with_fallback(
+                [self._types.Part.from_text(text=polish_prompt(user_text, draft_clean))],
+                config=self._polish_generation_config(kb),
+            )
+            usage.input_tokens += polish_usage.input_tokens
+            usage.output_tokens += polish_usage.output_tokens
+            usage.cost_usd = round(usage.cost_usd + polish_usage.cost_usd, 6)
+            if polish_usage.model_used and not usage.model_used:
+                usage.model_used = polish_usage.model_used
+
+            main, meta = split_reply_metadata(polished_raw)
+            main = filter_assistant_reply(main)
+            if main and not needs_polish(main):
+                logger.info(
+                    "Polished reply OK (draft_chars=%d → final_chars=%d).",
+                    len(draft_clean),
+                    len(main),
+                )
+                return main, meta, usage
+            # Prefer a longer polished attempt when the draft was clearly broken.
+            if (
+                main
+                and force
+                and len(main) >= max(40, len(draft_clean) + 10)
+            ):
+                logger.info("Using polished reply over truncated draft.")
+                return main, meta, usage
+            logger.warning("Polish still incomplete; keeping cleaned draft.")
+        except Exception:
+            logger.exception("Reply polish failed; using draft.")
+
+        main, meta = split_reply_metadata(draft_clean)
+        main = filter_assistant_reply(main)
+        return main, meta if meta else {}, usage
+
+    def _assemble_chat_result(
+        self,
+        user_text: str,
+        draft: str,
+        reference_images: list[Path],
+        history: list[dict[str, str]] | None,
+        usage: UsageCost,
+    ) -> ChatReplyResult:
+        """Polish Q+A, inject dealers, captions, and image flag."""
+        main_text, meta, usage = self._polish_draft(user_text, draft, usage)
+        main_text = ensure_canonical_reply(main_text, user_text)
+        main_text = ensure_belt_dealers_in_reply(main_text, user_text, history)
+        # Only replace truncated buy/price answers — never force dealers elsewhere.
+        if needs_polish(main_text) and (
+            is_belt_price_query(user_text, history) or is_belt_supplier_query(user_text)
+        ):
+            main_text = ensure_belt_dealers_in_reply("", user_text, history)
+
+        show_images = _resolve_show_reference_images(
+            user_text, reference_images, meta, history
+        )
+        suggestions = meta.get("suggestions") or []
+
+        captions: dict[int, str] = {}
+        if show_images and reference_images:
+            try:
+                cap_raw, cap_usage = self._generate_with_fallback(
+                    [
+                        self._types.Part.from_text(
+                            text=caption_prompt(user_text, main_text, reference_images)
+                        )
+                    ],
+                    config=self._caption_generation_config(get_knowledge_base()),
+                )
+                captions = parse_image_caption_lines(cap_raw)
+                usage.input_tokens += cap_usage.input_tokens
+                usage.output_tokens += cap_usage.output_tokens
+                usage.cost_usd = round(usage.cost_usd + cap_usage.cost_usd, 6)
+            except Exception:
+                logger.exception("Caption generation failed.")
+
+        return ChatReplyResult(
+            text=main_text,
+            image_captions=captions if show_images else {},
+            suggestions=suggestions[:3],
+            show_reference_images=show_images,
+            usage=usage,
         )
 
     def _usage_from_response(self, response, model: str) -> UsageCost:
@@ -352,44 +456,14 @@ class GeminiService:
         reference_images: list[Path],
         history: list[dict[str, str]] | None = None,
     ) -> ChatReplyResult:
-        """Parse streamed buffer, captions, usage — call after stream completes."""
-        from app.utils.response_filter import filter_assistant_reply
-
+        """Polish streamed draft (Q+A review) into a complete final reply."""
         raw = getattr(self, "_last_stream_buffer", "") or ""
         usage = getattr(self, "_last_stream_usage", None) or UsageCost(
             model_used=getattr(self, "_last_stream_model", settings.GEMINI_MODEL)
         )
-
-        main_raw, meta = split_reply_metadata(raw)
-        main_text = filter_assistant_reply(main_raw)
-        main_text = ensure_canonical_reply(main_text, user_text)
-        main_text = ensure_belt_dealers_in_reply(main_text, user_text)
-        show_images = _resolve_show_reference_images(
-            user_text, reference_images, meta, history
-        )
-        suggestions = meta.get("suggestions") or []
-
-        captions: dict[int, str] = {}
-        if show_images and reference_images:
-            cap_raw, cap_usage = self._generate_with_fallback(
-                [
-                    self._types.Part.from_text(
-                        text=caption_prompt(user_text, main_text, reference_images)
-                    )
-                ],
-                config=self._caption_generation_config(get_knowledge_base()),
-            )
-            captions = parse_image_caption_lines(cap_raw)
-            usage.input_tokens += cap_usage.input_tokens
-            usage.output_tokens += cap_usage.output_tokens
-            usage.cost_usd = round(usage.cost_usd + cap_usage.cost_usd, 6)
-
-        return ChatReplyResult(
-            text=main_text,
-            image_captions=captions if show_images else {},
-            suggestions=suggestions[:3],
-            show_reference_images=show_images,
-            usage=usage,
+        draft, _ = split_reply_metadata(raw)
+        return self._assemble_chat_result(
+            user_text, draft, reference_images, history, usage
         )
 
     def _build_chat_contents(
@@ -419,7 +493,8 @@ class GeminiService:
         prompt_parts.append(f"Current user message:\n{user_text.strip()}")
         prompt_parts.append(
             "Reply in concise natural Bangla. Follow prompts.txt format rules. "
-            "Append ---META--- block as instructed."
+            "Write a COMPLETE answer — never stop mid-sentence. "
+            "Do NOT write ---META---, show_images, suggestions, or JSON."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
         return contents
@@ -431,8 +506,6 @@ class GeminiService:
         reference_images: list[Path],
         user_image_path: Path | None = None,
     ) -> ChatReplyResult:
-        from app.utils.response_filter import filter_assistant_reply
-
         kb = get_knowledge_base()
         if not self.is_configured:
             return ChatReplyResult(text=_NO_KEY_MESSAGE)
@@ -445,36 +518,9 @@ class GeminiService:
             raw, usage = self._stream_generate_with_fallback(
                 contents, config=self._chat_generation_config(kb)
             )
-            main_raw, meta = split_reply_metadata(raw)
-            main_text = filter_assistant_reply(main_raw)
-            main_text = ensure_canonical_reply(main_text, user_text)
-            main_text = ensure_belt_dealers_in_reply(main_text, user_text)
-            show_images = _resolve_show_reference_images(
-                user_text, reference_images, meta, history
-            )
-            suggestions = meta.get("suggestions") or []
-
-            captions: dict[int, str] = {}
-            if show_images and reference_images:
-                cap_raw, cap_usage = self._generate_with_fallback(
-                    [
-                        self._types.Part.from_text(
-                            text=caption_prompt(user_text, main_text, reference_images)
-                        )
-                    ],
-                    config=self._caption_generation_config(kb),
-                )
-                captions = parse_image_caption_lines(cap_raw)
-                usage.input_tokens += cap_usage.input_tokens
-                usage.output_tokens += cap_usage.output_tokens
-                usage.cost_usd = round(usage.cost_usd + cap_usage.cost_usd, 6)
-
-            return ChatReplyResult(
-                text=main_text,
-                image_captions=captions if show_images else {},
-                suggestions=suggestions[:3],
-                show_reference_images=show_images,
-                usage=usage,
+            draft, _ = split_reply_metadata(raw)
+            return self._assemble_chat_result(
+                user_text, draft, reference_images, history, usage
             )
         except Exception as exc:
             logger.exception("Chat request failed: %s", exc)

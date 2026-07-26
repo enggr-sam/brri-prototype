@@ -21,8 +21,8 @@ _ANCHOR_NUMBERS = (5, 2)
 # Topic → keywords (English + common Bangla terms farmers may use).
 _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "belt": (
-        "belt", "v-belt", "vbelt", "b65", "b-belt", "slip", "slipping", "crack",
-        "বেল্ট", "পিছল", "ছিঁড়", "রাবার",
+        "belt", "v-belt", "vbelt", "b65", "b-belt",
+        "বেল্ট", "ভি-বেল্ট",
     ),
     "motor": (
         "motor", "electric", "220v", "0.5 hp", "hp", "rpm", "capacitor", "burn",
@@ -92,7 +92,11 @@ _ISSUE_IMAGE_NUMBERS: list[tuple[tuple[str, ...], tuple[int, ...]]] = [
         (13, 14, 10, 11, 32),
     ),
     (
-        ("belt", "বেল্ট", "b65", "slip", "slipping", "পিছল", "ছিঁড়", "v-belt"),
+        # Require belt wording — do not fire on bare "slip"/"crack" alone.
+        (
+            "belt", "বেল্ট", "b65", "v-belt", "v belt", "ভি-বেল্ট",
+            "বেল্ট পিছল", "বেল্ট ছিঁড়", "belt slip", "belt crack",
+        ),
         (1, 27, 20, 18),
     ),
     (
@@ -261,7 +265,7 @@ def select_reference_images(
         return []
 
     query = build_image_selection_query(user_text or "", history)
-    if is_belt_supplier_query(query) or is_belt_price_query(query):
+    if is_belt_supplier_query(query) or is_belt_price_query(query, history):
         logger.info("Skipping reference images for belt price/supplier query.")
         return []
 

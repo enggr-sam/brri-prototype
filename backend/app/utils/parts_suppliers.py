@@ -1,4 +1,4 @@
-"""Detect belt-buying / belt-replacement context and inject canonical dealer info."""
+"""Inject B65 belt dealer info only when the farmer clearly needs it."""
 
 from __future__ import annotations
 
@@ -13,12 +13,11 @@ _PRICE_TERMS = (
     "dam",
     "দাম",
     "মূল্য",
-    "koto",
-    "কত",
-    "টাকা",
-    "kemon",
     "cost",
     "rate",
+    "কত টাকা",
+    "কতটাকা",
+    "টাকা কত",
 )
 
 _SUPPLIER_TERMS = (
@@ -31,71 +30,65 @@ _SUPPLIER_TERMS = (
     "পাও",
     "pawa",
     "paowa",
-    "jabe",
-    "যাবে",
     "kinbo",
     "কিনব",
+    "কিনতে",
     "buy",
     "ডিলার",
     "dealer",
     "দোকান",
     "supplier",
-    "shop",
-    "vendor",
 )
 
-_BELT_FAULT_TERMS = (
-    "slip",
-    "slipping",
-    "crack",
-    "cracked",
-    "broken",
-    "tear",
-    "torn",
-    "worn",
-    "replace",
-    "loose",
-    "cut",
-    "damage",
-    "পিছল",
-    "ছিঁড়",
-    "ছিড়",
-    "ভাঙ",
-    "আলগা",
-    "ঝুল",
+# Only when a NEW belt is clearly needed — not every slip/tension check.
+_BUY_OR_REPLACE_TERMS = (
     "নতুন বেল্ট",
     "বেল্ট বদল",
-    "tension",
-    "তেনশন",
-)
-
-_REPLACEMENT_REPLY_TERMS = (
-    "নতুন বেল্ট",
-    "বেল্ট বদল",
-    "বদলে",
-    "replace",
-    "replacement",
-    "ছিঁড়",
-    "ছিড়",
-    "crack",
-    "broken",
-    "ভাঙ",
-    "পাওয়া যায়",
-    "পাবেন",
+    "বেল্ট কিন",
+    "বেল্ট লাগবে",
+    "replace the belt",
+    "new belt",
+    "buy a belt",
+    "buy belt",
+    "need a new belt",
+    "কিনতে হবে",
+    "বদলাতে হবে",
+    "বদল লাগবে",
 )
 
 
-def is_belt_price_query(text: str) -> bool:
-    """Farmer asks belt price (দাম, price kemon, etc.)."""
+def _has_belt(text: str) -> bool:
+    lower = (text or "").lower()
+    return any(term in lower for term in _BELT_TERMS)
+
+
+def _recent_user_mentions_belt(history: list[dict[str, str]] | None) -> bool:
+    if not history:
+        return False
+    for msg in reversed(history[-4:]):
+        if msg.get("role") == "user" and _has_belt(msg.get("content") or ""):
+            return True
+    return False
+
+
+def is_belt_price_query(
+    text: str,
+    history: list[dict[str, str]] | None = None,
+) -> bool:
+    """Farmer asks the price of the B65 belt — not a generic 'price/kemon'."""
     lower = (text or "").lower().strip()
     if not lower:
         return False
-    has_price = any(term in lower for term in _PRICE_TERMS)
-    has_belt = any(term in lower for term in _BELT_TERMS)
-    if has_belt and has_price:
+    has_price = any(term in lower for term in _PRICE_TERMS) or (
+        "kemon" in lower and any(t in lower for t in ("dam", "দাম", "price", "টাকা"))
+    )
+    # "belt er dam" / "বেল্টের দাম"
+    if _has_belt(lower) and (
+        has_price or "kemon" in lower or "কত" in lower or "কেমন" in lower
+    ):
         return True
-    # Short follow-up: "price kemon?" after a belt message in the same session.
-    if has_price and len(lower) < 40:
+    # Short follow-up only if the recent user turn was about a belt.
+    if has_price and len(lower) < 40 and _recent_user_mentions_belt(history):
         return True
     return False
 
@@ -103,52 +96,46 @@ def is_belt_price_query(text: str) -> bool:
 def is_belt_supplier_query(text: str) -> bool:
     """Farmer explicitly asks where to buy a V-belt."""
     lower = (text or "").lower()
-    if is_belt_price_query(text):
+    if not _has_belt(lower):
         return False
-    has_belt = any(term in lower for term in _BELT_TERMS)
-    wants_source = any(term in lower for term in _SUPPLIER_TERMS)
-    return has_belt and wants_source
+    return any(term in lower for term in _SUPPLIER_TERMS)
 
 
-def is_belt_fault_context(text: str) -> bool:
-    """Belt problem report (slip, crack, broken, etc.)."""
-    if is_belt_price_query(text):
+def clearly_needs_new_belt(user_text: str, reply_text: str) -> bool:
+    """True only when buy/replace intent is explicit — not every belt fault."""
+    blob = f"{user_text or ''}\n{reply_text or ''}".lower()
+    if not _has_belt(blob):
         return False
-    lower = (text or "").lower()
-    if not any(term in lower for term in _BELT_TERMS):
-        return False
-    return any(term in lower for term in _BELT_FAULT_TERMS)
+    return any(term in blob for term in _BUY_OR_REPLACE_TERMS)
 
 
-def reply_suggests_belt_replacement(text: str) -> bool:
-    """Assistant reply indicates a new belt may be needed."""
-    lower = (text or "").lower()
-    if not any(term in lower for term in _BELT_TERMS):
-        return False
-    return any(term in lower for term in _REPLACEMENT_REPLY_TERMS)
-
-
-def should_include_belt_dealers(user_text: str, reply_text: str) -> bool:
+def should_include_belt_dealers(
+    user_text: str,
+    reply_text: str,
+    history: list[dict[str, str]] | None = None,
+) -> bool:
+    """Dealers only for: where-to-buy, price, or clear new-belt need."""
     from app.utils.reply_metadata import strip_leaked_metadata
 
     reply_text = strip_leaked_metadata(reply_text)
-    if is_belt_price_query(user_text):
+    if is_belt_price_query(user_text, history):
         return True
     if is_belt_supplier_query(user_text):
         return True
-    if is_belt_fault_context(user_text):
-        return True
-    if reply_suggests_belt_replacement(reply_text):
+    if clearly_needs_new_belt(user_text, reply_text):
         return True
     return False
 
 
-def should_skip_belt_images(user_text: str, history: list[dict[str, str]] | None = None) -> bool:
-    """No reference gallery for price / where-to-buy belt questions."""
+def should_skip_belt_images(
+    user_text: str,
+    history: list[dict[str, str]] | None = None,
+) -> bool:
+    """No gallery for belt price / where-to-buy."""
     from app.services.reference_selector import build_image_selection_query
 
     query = build_image_selection_query(user_text or "", history)
-    return is_belt_price_query(query) or is_belt_supplier_query(query)
+    return is_belt_price_query(query, history) or is_belt_supplier_query(query)
 
 
 def _dealers_complete(text: str) -> bool:
@@ -161,7 +148,6 @@ def _reply_looks_truncated(text: str) -> bool:
         return True
     if t.endswith((".", "।", "!", "?", ":", ")", "»", "”", '"', "’", "'")):
         return False
-    # Unclosed parenthesis / cut mid-spec.
     if t.count("(") > t.count(")"):
         return True
     if re.search(r"\d+\s*(mm|mim|মিমি)?$", t, re.I):
@@ -192,7 +178,6 @@ def _format_dealer_lines(dealers: list[dict]) -> list[str]:
 
 
 def format_belt_suppliers_bn(*, heading: str | None = None) -> str:
-    """Canonical Bangla dealer list with Google Maps links."""
     kb = get_knowledge_base()
     block = kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {})
     dealers = block.get("dealers") or []
@@ -212,9 +197,11 @@ def format_belt_suppliers_bn(*, heading: str | None = None) -> str:
 
 
 def format_belt_price_reply_bn() -> str:
-    """Price varies — direct farmer to dealers (no fixed price in KB)."""
     kb = get_knowledge_base()
-    dealers = kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {}).get("dealers") or []
+    dealers = (
+        kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {}).get("dealers")
+        or []
+    )
 
     lines = [
         "B65 ভি-বেল্ট (১৬৫০ mm) এর দাম সময় ও বাজার অনুযায়ী বদলায়; "
@@ -228,17 +215,21 @@ def format_belt_price_reply_bn() -> str:
     return "\n".join(lines).strip()
 
 
-def ensure_belt_dealers_in_reply(text: str, user_text: str) -> str:
-    """Ensure approved B65 belt dealers (with maps) appear when relevant."""
+def ensure_belt_dealers_in_reply(
+    text: str,
+    user_text: str,
+    history: list[dict[str, str]] | None = None,
+) -> str:
+    """Append dealers only when buy/price/replace is clearly intended."""
     from app.utils.reply_metadata import strip_leaked_metadata
 
     text = strip_leaked_metadata(text)
 
-    if not should_include_belt_dealers(user_text, text):
+    if not should_include_belt_dealers(user_text, text, history):
         return text
 
-    if is_belt_price_query(user_text):
-        if _dealers_complete(text) and not _reply_looks_truncated(text) and "দাম" in text:
+    if is_belt_price_query(user_text, history):
+        if _dealers_complete(text) and not _reply_looks_truncated(text):
             return text.strip()
         return format_belt_price_reply_bn()
 
@@ -248,12 +239,11 @@ def ensure_belt_dealers_in_reply(text: str, user_text: str) -> str:
     if is_belt_supplier_query(user_text):
         return format_belt_suppliers_bn()
 
-    if _reply_looks_truncated(text):
-        return format_belt_suppliers_bn(
-            heading="নতুন B65 বেল্ট কেনার জায়গা:"
-        )
-
-    return f"{text.rstrip()}\n\n{format_belt_suppliers_bn(heading='নতুন B65 বেল্ট কেনার জায়গা:')}"
+    # Clear new-belt need: append quietly under the diagnosis.
+    return (
+        f"{text.rstrip()}\n\n"
+        f"{format_belt_suppliers_bn(heading='নতুন B65 বেল্ট লাগলে কেনার জায়গা:')}"
+    )
 
 
 ensure_belt_supplier_reply = ensure_belt_dealers_in_reply
