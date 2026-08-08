@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import csv
 from pathlib import Path
 
 from docx import Document
@@ -11,6 +12,18 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 
 OUT = Path(__file__).resolve().parent / "BRRI_Win2024_Data_Collection_Form.docx"
+DOCS_DIR = OUT.parent
+REPO_ROOT = DOCS_DIR.parent
+
+
+def _photo_links_csv_path() -> Path | None:
+    for candidate in (
+        DOCS_DIR / "photo_folder_links.csv",
+        REPO_ROOT / "photo_folder_links.csv",
+    ):
+        if candidate.is_file():
+            return candidate
+    return None
 
 PDF_TITLE = (
     "Technical Drawings of BRRI Winnower (Model: BRRI Win2024), "
@@ -83,6 +96,28 @@ PHOTO_SLOTS = [
 ]
 
 
+def load_photo_drive_links() -> tuple[str, dict[str, str]]:
+    """Load folder links from Colab CSV (photo_no → folder_link)."""
+    csv_path = _photo_links_csv_path()
+    if csv_path is None:
+        return "", {}
+
+    root = ""
+    by_no: dict[str, str] = {}
+    with csv_path.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            no = (row.get("photo_no") or "").strip()
+            link = (row.get("folder_link") or "").strip()
+            if not no or not link:
+                continue
+            if no.lower() == "root":
+                root = link
+            else:
+                by_no[no.zfill(2)] = link
+    return root, by_no
+
+
 def problem_rows() -> list[list[str]]:
     rows = [list(PROBLEM_EXAMPLE)]
     for key, part, paper_problem in PROBLEM_BLANKS:
@@ -98,13 +133,17 @@ def dealer_rows() -> list[list[str]]:
 
 
 def photo_rows() -> list[list[str]]:
-    ex_num, ex_part, ex_local, ex_folder, ex_file, ex_link, ex_problem = PHOTO_EXAMPLE
+    ex_num, ex_part, ex_local, ex_folder, ex_file, _, ex_problem = PHOTO_EXAMPLE
+    _, drive_links = load_photo_drive_links()
     rows: list[list[str]] = []
     for key, num, part, folder, filename in PHOTO_SLOTS:
+        link = drive_links.get(num, "")
         if num == ex_num:
-            rows.append([key, num, ex_part, ex_local, ex_folder, ex_file, ex_link, ex_problem])
+            rows.append(
+                [key, num, ex_part, ex_local, ex_folder, ex_file, link, ex_problem]
+            )
         else:
-            rows.append([key, num, part, "", folder, filename, "", ""])
+            rows.append([key, num, part, "", folder, filename, link, ""])
     return rows
 
 
@@ -291,6 +330,7 @@ def main() -> None:
 
     # --- Collector meta ---
     add_section(doc, "meta", "সংগ্রহকারীর তথ্য (Collector Info)")
+    drive_root, _ = load_photo_drive_links()
     kv_table(
         doc,
         [
@@ -298,12 +338,17 @@ def main() -> None:
             ("meta.organization", "প্রতিষ্ঠান", ""),
             ("meta.district", "জেলা", ""),
             ("meta.date", "তারিখ", ""),
-            ("meta.drive_root_link", "Google Drive মূল ফোল্ডার লিংক", ""),
+            ("meta.drive_root_link", "Google Drive মূল ফোল্ডার লিংক", drive_root),
             ("meta.notes", "মন্তব্য", ""),
         ],
     )
 
     doc.save(OUT)
+    csv_path = _photo_links_csv_path()
+    if csv_path:
+        print(f"Loaded photo links from {csv_path}")
+    else:
+        print("No photo_folder_links.csv — photo links left blank.")
     print(f"Wrote {OUT}")
 
 
