@@ -55,7 +55,6 @@ PHOTO_EXAMPLE = (
     "বি-৬৫ বেল্ট",
     "10_POWER_PULLEY_BELT",
     "10_b65_marking.jpg",
-    "ক্ষতিগ্রস্ত",
     f"{DRIVE_ROOT}/10_POWER_PULLEY_BELT/10_b65_marking.jpg",
     "বেল্ট পিছলে যায়",
 )
@@ -99,13 +98,13 @@ def dealer_rows() -> list[list[str]]:
 
 
 def photo_rows() -> list[list[str]]:
-    ex_num, ex_part, ex_local, ex_folder, ex_file, ex_cond, ex_link, ex_problem = PHOTO_EXAMPLE
+    ex_num, ex_part, ex_local, ex_folder, ex_file, ex_link, ex_problem = PHOTO_EXAMPLE
     rows: list[list[str]] = []
     for key, num, part, folder, filename in PHOTO_SLOTS:
         if num == ex_num:
-            rows.append([key, num, ex_part, ex_local, ex_folder, ex_file, ex_cond, ex_link, ex_problem])
+            rows.append([key, num, ex_part, ex_local, ex_folder, ex_file, ex_link, ex_problem])
         else:
-            rows.append([key, num, part, "", folder, filename, "", "", ""])
+            rows.append([key, num, part, "", folder, filename, "", ""])
     return rows
 
 
@@ -272,8 +271,9 @@ def main() -> None:
         "   02_MOTOR/\n"
         "   03_POWER_PULLEY_BELT/\n"
         "   … (নিচের টেবিলের ‘ফোল্ডার নাম’ কলাম)\n"
-        "৩. ফাইল নাম: NN_english-name.jpg (উদাহরণ: 03_B65_belt_marking.jpg)\n"
-        "৪. ছবি তোলার পর ‘Google Drive লিংক’ কলামে ফাইল বা ফোল্ডার লিংক দিন।"
+        "৩. ফাইল নাম: NN_description.jpg — এক ফোল্ডারে একাধিক ছবি OK (উদাহরণ: 10_b65_marking.jpg, 10_belt_worn.jpg)\n"
+        "৪. ‘ফাইল নাম’ কলামে শুধু মূল/সেরা ছবির নাম; বাকি ছবি Drive ফোল্ডারেই থাকবে\n"
+        "৫. ছবি তোলার পর ‘Google Drive লিংক’ কলামে ফোল্ডার লিংক দিন।"
     )
 
     photo_headers = [
@@ -282,8 +282,7 @@ def main() -> None:
         "অংশ (পেপার)",
         "স্থানীয় নাম",
         "ফোল্ডার নাম",
-        "ফাইল নাম",
-        "অবস্থা",
+        "ফাইল নাম (মূল ছবি)",
         "Google Drive লিংক",
         "সম্পর্কিত সমস্যা (স্থানীয়)",
     ]
