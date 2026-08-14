@@ -1,0 +1,267 @@
+{
+  "tests": 12,
+  "average_score_pct": 83.4,
+  "pass_rate_60pct": 100.0,
+  "pass_rate_70pct": 83.3,
+  "with_images": 11,
+  "results": [
+    {
+      "id": "wet_grain",
+      "question": "বর্ষায় ধান একটু ভেজা থাকলে Win2024 দিয়ে পরিষ্কার করলে ভালো ধান উড়ে যায়, কী করব?",
+      "reply": "সমস্যা: বর্ষার দিনে ভেজা ধান পরিষ্কার করার সময় বাতাসের চাপে ভালো ধান তুষের সাথে উড়ে যায়।\n\nসমাধান:\n১. এয়ার কন্ট্রোল প্লেট সামান্য নামিয়ে ব্লোয়ারের বাতাসের বেগ ও চাপ কমিয়ে দিন।\n২. গ্রেইন কন্ট্রোল গেট সামঞ্জস্য করে ধানের প্রবাহ কিছুটা কমিয়ে দিন।\n\nসাবধান: ধান অতিরিক্ত ভেজা থাকলে রোদে শুকিয়ে তারপর উইনোভারে দিলে ভালো ফল পাবেন।",
+      "reply_len": 327,
+      "images": [
+        "field_03.jpg",
+        "field_04.jpg",
+        "field_08.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": "Fault feed",
+      "score_pct": 92.4,
+      "score_detail": {
+        "relevance": 3.6,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 5.0
+      },
+      "notes": "kw=2/expect; img: matched: ['field_03']"
+    },
+    {
+      "id": "first_use",
+      "question": "নতুন মেশিন কিনেছি, প্রথমবার চালু করার আগে কী কী চেক করব?",
+      "reply": "নতুন ব্ররি উইনোয়ার ২০২৪ মেশিন চালু করার আগে নিচের বিষয়গুলো ভালোভাবে চেক করে নিন:\n১. মোটর মাউন্ট বোল্ট, বিয়ারিং এবং বি-বেল্ট (B65) ঠিকমতো টাইট ও সারিবদ্ধ আছে কি না দেখে নিন।\n২. হপার এবং গ্রেইন কন্ট্রোল গেট পরিষ্কার আছে কি না এবং ঝরনি বা সিভ ঠিকমতো নড়াচড়া করছে কি না পরীক্ষা করুন।\nমেশিন সংক্রান্ত অন্য কোনো প্রশ্ন থাকলে জানাতে পারেন।",
+      "reply_len": 333,
+      "images": [
+        "cad_02_bearing_support_plate.jpg",
+        "cad_18_zigzag_plate.jpg",
+        "cad_22_sieve_frame_1.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": null,
+      "score_pct": 84.4,
+      "score_detail": {
+        "relevance": 3.6,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 3.0
+      },
+      "notes": "kw=2/expect; img: no image expectation"
+    },
+    {
+      "id": "straw_jam",
+      "question": "গমের খড় হপারে আটকে যায়, দানা নামে না — কোন অংশ দেখব?",
+      "reply": "সমস্যা: হপারে গমের খড় আটকে গিয়ে দানা ঠিকমতো নিচে নামছে না।\n\nসমাধান:\n১. গ্রেইন কন্ট্রোল প্লেট ও হপারের নিচের অংশ ভালোভাবে পরিষ্কার করুন।\n২. গ্রেইন কন্ট্রোল গেটের ফাঁক কিছুটা বাড়িয়ে দিন যাতে খড় বা জট সহজে বের হতে পারে।",
+      "reply_len": 218,
+      "images": [
+        "field_09.jpg",
+        "field_11.jpg",
+        "field_04.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": "Fault feed",
+      "score_pct": 92.4,
+      "score_detail": {
+        "relevance": 3.6,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 5.0
+      },
+      "notes": "kw=2/expect; img: matched: ['field_04']"
+    },
+    {
+      "id": "generator_power",
+      "question": "বাড়িতে জেনারেটর আছে 2kVA — এই Winnower চালানো যাবে?",
+      "reply": "হ্যাঁ, আপনার বাড়িতে থাকা ২ কেভিএ (2kVA) জেনারেটর দিয়ে বিআরআরআই উইনোয়ার ২০২৪ (BRRI Winnower 2024) মেশিনটি খুব সহজেই চালানো যাবে। এই মেশিনে মাত্র শূন্য দশমিক পাঁচ হর্স পাওয়ারের সিঙ্গেল ফেজ মোটর ব্যবহার করা হয়, যা জেনারেটরের ক্ষমতার মধ্যে খুব আরামেই চলে।",
+      "reply_len": 256,
+      "images": [
+        "field_09.jpg",
+        "field_11.jpg",
+        "field_04.jpg"
+      ],
+      "show_gallery": false,
+      "field_fault_match": null,
+      "score_pct": 75.2,
+      "score_detail": {
+        "relevance": 2.8,
+        "grounded": 4.0,
+        "actionable": 4.5,
+        "language": 4.5,
+        "images": 3.0
+      },
+      "notes": "kw=1/expect; img: no image expectation"
+    },
+    {
+      "id": "mustard_sieve",
+      "question": "সরিষা পরিষ্কার করতে 6mm নাকি 10mm ঝরনি লাগবে?",
+      "reply": "সরিষা পরিষ্কার করার জন্য সাধারণত ৬ মিলিমিটার (6mm) জালের ঝরনি ব্যবহার করতে হবে। ছোট দানার ফসল যেমন সরিষার জন্য ৬মিমি জাল সবচেয়ে উপযোগী।",
+      "reply_len": 135,
+      "images": [
+        "field_09.jpg",
+        "field_11.jpg",
+        "field_04.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": "Fault multicrop",
+      "score_pct": 83.6,
+      "score_detail": {
+        "relevance": 4.4,
+        "grounded": 5.0,
+        "actionable": 4.5,
+        "language": 4.5,
+        "images": 2.5
+      },
+      "notes": "kw=3/expect; img: images but not ideal: ['field_09.jpg', 'field_11.jpg', 'field_04.jpg']"
+    },
+    {
+      "id": "rust_frame",
+      "question": "বৃষ্টির পর মেশিনের নরম প্লেটে মরিচা ধরেছে, কাজে সমস্যা হবে?",
+      "reply": "বৃষ্টির পানি লেগে মেশিনের প্লেটে হালকা মরিচা ধরলে তাৎক্ষণিকভাবে কাজে বড় কোনো সমস্যা হয় না, তবে নিয়মিত পরিষ্কার না করলে প্লেট ও জাল দ্রুত ক্ষয় হয়ে যেতে পারে। কাজ শেষ করার পর শুকনো কাপড় দিয়ে মুছে সামান্য তেল বা গ্রীজ লাগিয়ে রাখুন।",
+      "reply_len": 228,
+      "images": [
+        "field_08.jpg"
+      ],
+      "show_gallery": false,
+      "field_fault_match": null,
+      "score_pct": 69.2,
+      "score_detail": {
+        "relevance": 2.8,
+        "grounded": 4.0,
+        "actionable": 3.0,
+        "language": 4.5,
+        "images": 3.0
+      },
+      "notes": "kw=1/expect; img: no image expectation"
+    },
+    {
+      "id": "cad_hopper_welder",
+      "question": "হপার পার্ট-২ এর কাটিং ড্রয়িং দেখান, কামাই করতে হবে",
+      "reply": "হপার পার্ট-২ তৈরির জন্য রেফারেন্স নম্বর #২১৭ ক্যাড ড্রয়িং ব্যবহার করুন। এই ড্রয়িং অনুযায়ী প্লেন কার্বন স্টিল শিট কেটে হপারের অবশিষ্ট দেওয়াল তৈরি করা যাবে। স্থানীয় ওয়ার্কশপে এই মাপ অনুযায়ী শিট কেটে সহজেই হপার মেরামত বা তৈরি করতে পারবেন।",
+      "reply_len": 242,
+      "images": [
+        "cad_13_grain_divider_1.jpg",
+        "cad_14_grain_divider_2.jpg",
+        "cad_16_hopper_part_1.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": null,
+      "score_pct": 83.2,
+      "score_detail": {
+        "relevance": 2.8,
+        "grounded": 4.0,
+        "actionable": 4.5,
+        "language": 4.5,
+        "images": 5.0
+      },
+      "notes": "kw=1/expect; img: matched: ['hopper']"
+    },
+    {
+      "id": "blower_weak_not_fault",
+      "question": "ব্লোয়ার ঘুরছে কিন্তু হাওয়া খুব দুর্বল, ধুল আলাদা হয় না",
+      "reply": "সমস্যা: ব্লোয়ার ঘুরছে কিন্তু বাতাসের বেগ কম থাকায় তুষ ও ধুলো ময়লা ধান থেকে আলাদা হচ্ছে না।\nসমাধান: ১. ব্লোয়ার ফ্যানের ব্লেডে জমে থাকা তুষ ও ময়লা ভালো করে পরিষ্কার করুন। ২. ব্লোয়ার পুলির বেল্ট টেনশন ও পুলির মাপ ঠিক আছে কিনা পরীক্ষা করুন।\nসাবধান: নিয়মিত ব্লোয়ার বিয়ারিংয়ে গ্রীজ দিন এবং এয়ার কন্ট্রোল প্লেট প্রয়োজনমতো সামঞ্জস্য করুন।",
+      "reply_len": 337,
+      "images": [
+        "field_09.jpg",
+        "field_11.jpg",
+        "field_14.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": "Fault sieve motion",
+      "score_pct": 82.4,
+      "score_detail": {
+        "relevance": 3.6,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 2.5
+      },
+      "notes": "kw=2/expect; img: images but not ideal: ['field_09.jpg', 'field_11.jpg', 'field_14.jpg']"
+    },
+    {
+      "id": "safety_belt",
+      "question": "বাচ্চারা খেলতে গিয়ে বেল্টে হাত দিলে কী হতে পারে, কীভাবে সুরক্ষা?",
+      "reply": "মেশিন চালু থাকা অবস্থায় বাচ্চারা বেল্ট বা পুলির কাছে গেলে হাত বা আঙুল কেটে যাওয়ার মারাত্মক দুর্ঘটনা ঘটতে পারে। এই বিপদ এড়াতে মেশিনের মোটর ও বেল্ট সিস্টেমের চারপাশে নিরাপত্তা ঢাকনা বা গার্ড ব্যবহার করুন এবং কাজ করার সময় শিশুদের সবসময় মেশিন থেকে দূরে রাখুন।",
+      "reply_len": 255,
+      "images": [
+        "field_10.jpg",
+        "01_brri_winnower_motor_pulley_and_belt_system.jpg",
+        "27_v_belt_b65_marking_closeup.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": null,
+      "score_pct": 69.2,
+      "score_detail": {
+        "relevance": 2.8,
+        "grounded": 4.0,
+        "actionable": 3.0,
+        "language": 4.5,
+        "images": 3.0
+      },
+      "notes": "kw=1/expect; img: no image expectation"
+    },
+    {
+      "id": "transport_loose",
+      "question": "পিকআপে করে নিয়ে এসেছি, চালু করলে পুরো মেশিন কাঁপছে",
+      "reply": "সমস্যা: মেশিন চালু করলে অতিরিক্ত কাঁপা বা শব্দ হওয়ার মূল কারণ হলো বিয়ারিং নষ্ট হওয়া বা শ্যাফট এলাইনমেন্ট ঠিক না থাকা।\n\nসমাধান:\n১. পিলো বিয়ারিং ব্লক UCP206 এবং বল বিয়ারিং পরীক্ষা করে ক্ষয়প্রাপ্ত হলে পরিবর্তন করুন এবং নিয়মিত গ্রীজ দিন।\n২. মোটর মাউন্ট বোল্ট এবং শ্যাফটের সংযোগ বোল্টগুলো ভালোভাবে টাইট করুন।",
+      "reply_len": 309,
+      "images": [
+        "field_09.jpg",
+        "cad_02_bearing_support_plate.jpg",
+        "cad_18_zigzag_plate.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": "Fault sieve motion",
+      "score_pct": 92.4,
+      "score_detail": {
+        "relevance": 3.6,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 5.0
+      },
+      "notes": "kw=2/expect; img: matched: ['bearing']"
+    },
+    {
+      "id": "wrong_belt_size",
+      "question": "দোকানদার B-52 বেল্ট দিল, চলবে?",
+      "reply": "বিআরআরআই উইনোয়ার ২০২৪ (BRRI Win2024) মেশিনের B65 ভি-বেল্ট (১৬৫০ mm) নিচের অনুমোদিত ডিলার/দোকান থেকে পাওয়া যায়:\n\n১. এসি আই মোটরস\n   ডিলার পয়েন্ট: হরিংঘাটা মেশিনারীজ, পটুয়াখালী\n   মোবাইল: ০১৭১৮২৩২৪০৬\n   গুগল ম্যাপ: https://www.google.com/maps/search/?api=1&query=Haringhata+Machineries+Patuakhali+Bangladesh\n\n২. নিউ এগ্রো মেশিনারীজ\n   ঠিকানা: ৪২, টিপু সুলতান রোড, ওয়ারী, ঢাকা\n   মোবাইল: ০১৭১৮২৩১৪৯৬\n   গুগল ম্যাপ: https://www.google.com/maps/search/?api=1&query=42+Tipu+Sultan+Road+Wari+Dhaka+Bangladesh\n\nবেল্টের গায়ে B65 মার্কিং আছে কিনা কেনার সময় দেখে নিন।",
+      "reply_len": 564,
+      "images": [],
+      "show_gallery": false,
+      "field_fault_match": "Fault belt",
+      "score_pct": 78.0,
+      "score_detail": {
+        "relevance": 5.0,
+        "grounded": 5.0,
+        "actionable": 4.5,
+        "language": 4.5,
+        "images": 0.5
+      },
+      "notes": "kw=4/expect; img: no images attached"
+    },
+    {
+      "id": "visual_followup",
+      "question": "ছবি দিয়ে বুঝিয়ে দেন",
+      "reply": "সমস্যা: বিয়ারিং নষ্ট হলে বা ক্র্যাঙ্ক বোল্ট ঢিলা থাকলে ঝরনি কাঁপবে না।\n\nসমাধান:\n১. শ্যাফট বিয়ারিং (6203 × 2) ও সংযোগ বোল্ট পরীক্ষা করে টাইট করুন বা প্রয়োজনে পরিবর্তন করুন।\n২. শ্যাফটে নিয়মিত গ্রীজ দিন।\n\nসাবধান: কাজ করার আগে মোটর বন্ধ রাখুন।",
+      "reply_len": 243,
+      "images": [
+        "field_09.jpg",
+        "field_11.jpg",
+        "field_04.jpg"
+      ],
+      "show_gallery": true,
+      "field_fault_match": null,
+      "score_pct": 98.0,
+      "score_detail": {
+        "relevance": 5.0,
+        "grounded": 5.0,
+        "actionable": 5.0,
+        "language": 4.5,
+        "images": 5.0
+      },
+      "notes": "kw=4/expect; img: matched: ['field_09']"
+    }
+  ]
+}
