@@ -193,13 +193,19 @@ def _save_turn(
 
 @router.get("/reference-images/{filename}")
 def serve_reference_image(filename: str) -> FileResponse:
-    """Serve intact-part reference photos for the UI gallery."""
+    """Serve intact-part reference photos and field-collected photos for the UI gallery."""
     if not _safe_filename(filename):
         raise HTTPException(status_code=400, detail="Invalid filename.")
-    path = settings.reference_images_dir / filename
-    if not path.is_file():
-        raise HTTPException(status_code=404, detail="Image not found.")
-    return FileResponse(path)
+    for base in (
+        settings.reference_images_dir,
+        settings.collected_photos_dir,
+        settings.collected_cad_dir,
+        settings.collected_subassembly_dir,
+    ):
+        path = base / filename
+        if path.is_file():
+            return FileResponse(path)
+    raise HTTPException(status_code=404, detail="Image not found.")
 
 
 @router.get("/attachments/{path:path}")

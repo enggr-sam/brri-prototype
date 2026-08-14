@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from app.services.knowledge_base import get_knowledge_base
 from app.utils.reply_metadata import strip_leaked_metadata
 
 _CHAFF_TERMS = (
@@ -44,6 +45,55 @@ def format_chaff_wind_reply_bn() -> str:
     )
 
 
+def _tokenize(text: str) -> set[str]:
+    return {t for t in re.split(r"[^\w\u0980-\u09FF]+", text.lower()) if len(t) >= 2}
+
+
+def match_field_fault(user_text: str) -> dict | None:
+    """Return the best-matching field-collected fault entry, if any."""
+    kb = get_knowledge_base()
+    if not kb.fault_trees:
+        return None
+
+    ql = (user_text or "").lower()
+    tokens = _tokenize(ql)
+    best: dict | None = None
+    best_score = 0.0
+
+    for ft in kb.fault_trees:
+        score = 0.0
+        for kw in ft.get("keywords") or []:
+            if kw and kw in ql:
+                score += 3.0
+        symptom = (ft.get("symptom_local_bn") or "").lower()
+        part = (ft.get("part_local_bn") or "").lower()
+        for token in tokens:
+            if token in symptom:
+                score += 2.5
+            if token in part:
+                score += 1.5
+        if score > best_score:
+            best_score = score
+            best = ft
+
+    return best if best_score >= 4.0 else None
+
+
+def format_field_fault_reply_bn(fault: dict) -> str:
+    symptom = fault.get("symptom_local_bn") or fault.get("symptom_paper") or "সমস্যা"
+    solution = (fault.get("solution_bn") or "").strip()
+    part = fault.get("part_paper") or ""
+    lines = [f"সমস্যা: {symptom}"]
+    if part:
+        lines[0] += f" ({part})"
+    if solution:
+        lines += ["", "সমাধান:", solution]
+    photo_nums = fault.get("photo_numbers") or []
+    if photo_nums:
+        lines += ["", f"সংশ্লিষ্ট ছবি নং: {', '.join(photo_nums)}"]
+    return "\n".join(lines)
+
+
 def _reply_is_usable(text: str) -> bool:
     t = strip_leaked_metadata(text).strip()
     if len(t) < 25:
@@ -65,6 +115,11 @@ def ensure_canonical_reply(text: str, user_text: str) -> str:
     cleaned = strip_leaked_metadata(text).strip()
     if _reply_is_usable(cleaned):
         return cleaned
+
+    field_fault = match_field_fault(user_text)
+    if field_fault:
+        return format_field_fault_reply_bn(field_fault)
+
     if is_chaff_issue_query(user_text):
         return format_chaff_wind_reply_bn()
     if cleaned:

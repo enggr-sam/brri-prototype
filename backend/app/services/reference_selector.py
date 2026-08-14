@@ -11,7 +11,8 @@ import re
 from pathlib import Path
 
 from app.config import settings
-from app.services.knowledge_base import get_knowledge_base
+from app.services.knowledge_base import FIELD_PHOTO_BASE, get_knowledge_base
+from app.utils.drawing_queries import query_wants_assembly_diagram, query_wants_technical_drawing
 
 logger = logging.getLogger(__name__)
 
@@ -185,14 +186,34 @@ def _score_entry(entry: dict, query: str) -> float:
     if not query or not query.strip():
         return 0.0
 
-    haystack = f"{entry.get('image_name', '')} {entry.get('description', '')}".lower()
+    haystack = (
+        f"{entry.get('image_name', '')} {entry.get('description', '')} "
+        f"{entry.get('part_name', '')} {entry.get('title', '')} "
+        f"{' '.join(entry.get('keywords') or [])}"
+    ).lower()
     query_lower = query.lower()
     score = 0.0
+    source = entry.get("source")
 
     # Token overlap (description / filename contains query words).
     for token in _tokenize(query_lower):
         if token in haystack:
             score += 2.0
+
+    # Explicit keyword list on CAD / sub-assembly entries.
+    for kw in entry.get("keywords") or []:
+        if kw.lower() in query_lower:
+            score += 5.0
+
+    # Boost technical drawings when user asks for dimensions / fabrication.
+    if source == "cad_drawing" and query_wants_technical_drawing(query):
+        score += 8.0
+    if source == "subassembly_drawing" and query_wants_assembly_diagram(query):
+        score += 8.0
+    if source == "cad_drawing" and not query_wants_assembly_diagram(query):
+        for token in _tokenize((entry.get("part_name") or "").lower()):
+            if token in query_lower:
+                score += 6.0
 
     # Topic-level boost when both query and entry relate to the same subsystem.
     for keywords in _TOPIC_KEYWORDS.values():
@@ -204,9 +225,101 @@ def _score_entry(entry: dict, query: str) -> float:
     return score
 
 
+def _collected_issue_numbers(query: str) -> list[int]:
+    """Map user text to field-collected photo catalogue numbers (#101–120)."""
+    kb = get_knowledge_base()
+    if not kb.fault_trees:
+        return []
+
+    ql = query.lower()
+    query_tokens = _tokenize(query)
+    seen: set[int] = set()
+    ordered: list[int] = []
+
+    for ft in kb.fault_trees:
+        matched = False
+        for kw in ft.get("keywords") or []:
+            if kw and kw in ql:
+                matched = True
+                break
+        if not matched:
+            symptom = (ft.get("symptom_local_bn") or "").lower()
+            part = (ft.get("part_local_bn") or ft.get("part_paper") or "").lower()
+            for token in query_tokens:
+                if token in symptom or token in part:
+                    matched = True
+                    break
+        if not matched:
+            continue
+        for pno in ft.get("photo_numbers") or []:
+            try:
+                num = FIELD_PHOTO_BASE + int(pno)
+            except (TypeError, ValueError):
+                continue
+            if num not in seen:
+                seen.add(num)
+                ordered.append(num)
+    return ordered
+
+
+def _technical_drawing_numbers(query: str, entries: list[dict]) -> list[int]:
+    """Rank CAD / sub-assembly catalogue numbers for drawing-related queries."""
+    ql = query.lower()
+    tokens = _tokenize(query)
+    wants_cad = query_wants_technical_drawing(query)
+    wants_asm = query_wants_assembly_diagram(query)
+    scored: list[tuple[float, int]] = []
+
+    for entry in entries:
+        source = entry.get("source")
+        if source not in ("cad_drawing", "subassembly_drawing"):
+            continue
+        num = entry.get("image_number")
+        if num is None:
+            continue
+
+        score = 0.0
+        label = f"{entry.get('part_name', '')} {entry.get('title', '')}".lower()
+        for kw in entry.get("keywords") or []:
+            if kw.lower() in ql:
+                score += 5.0
+        for token in tokens:
+            if token in label or token in (entry.get("description") or "").lower():
+                score += 3.0
+
+        if source == "cad_drawing":
+            if wants_cad:
+                score += 6.0
+            if wants_asm and not wants_cad:
+                score *= 0.5
+        if source == "subassembly_drawing":
+            if wants_asm:
+                score += 6.0
+
+        if score >= 5.0:
+            scored.append((score, num))
+
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    seen: set[int] = set()
+    ordered: list[int] = []
+    for _, num in scored:
+        if num not in seen:
+            seen.add(num)
+            ordered.append(num)
+    return ordered
+
+
 def _resolve_path(image_name: str) -> Path | None:
-    path = settings.reference_images_dir / image_name
-    return path if path.is_file() else None
+    for base in (
+        settings.reference_images_dir,
+        settings.collected_photos_dir,
+        settings.collected_cad_dir,
+        settings.collected_subassembly_dir,
+    ):
+        path = base / image_name
+        if path.is_file():
+            return path
+    return None
 
 
 def _rank_entries(entries: list[dict], query: str) -> list[tuple[float, dict]]:
@@ -291,7 +404,19 @@ def select_reference_images(
         chosen_names.add(name)
         return True
 
-    # Curated images for known farmer symptoms (Bangla + English).
+    # Field-collected fault → photo slot matches (#101–120) — prefer over PDF refs.
+    for num in _collected_issue_numbers(query):
+        entry = _entry_by_number(entries, num)
+        if entry:
+            _add(entry)
+
+    # CAD cutting drawings + sub-assembly diagrams (#201+, #301+).
+    for num in _technical_drawing_numbers(query, entries):
+        entry = _entry_by_number(entries, num)
+        if entry:
+            _add(entry)
+
+    # Curated PDF reference images for known farmer symptoms (Bangla + English).
     for num in _issue_matched_numbers(query):
         entry = _entry_by_number(entries, num)
         if entry:

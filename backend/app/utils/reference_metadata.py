@@ -36,6 +36,9 @@ def reference_images_metadata(
                 "label": _short_label(path.name),
                 "description": desc,
                 "contextual_note": contextual_note,
+                "drive_folder_url": entry.get("drive_folder_url"),
+                "source": entry.get("source"),
+                "photo_no": entry.get("photo_no"),
             }
         )
     return items

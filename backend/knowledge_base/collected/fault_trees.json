@@ -1,0 +1,202 @@
+[
+  {
+    "id": "fault.belt",
+    "field_key": "Fault belt",
+    "part_paper": "POWER PULLEY BELT",
+    "part_local_bn": "ভি-বেল্ট",
+    "symptom_paper": "Slip / crack / wrong tension",
+    "symptom_local_bn": "বেল্ট পিছলে যায়",
+    "solution_bn": "১. মোটর মাউন্ট বোল্ট দিয়ে বেল্ট টেনশন ঠিক করুন। \n২. বেল্ট cracked হলে B65 (65 inch) বসান।",
+    "photo_numbers": [
+      "10"
+    ],
+    "fault_image": "fault_fault_belt.jpg",
+    "keywords": [
+      "বেল্ট",
+      "যায়",
+      "ভি",
+      "পিছলে"
+    ]
+  },
+  {
+    "id": "fault.air",
+    "field_key": "Fault air",
+    "part_paper": "AIR CONTROL PLATE",
+    "part_local_bn": "এয়ার কন্ট্রোল পাত",
+    "symptom_paper": "Too much wind — grain loss with chaff",
+    "symptom_local_bn": "বাতাসের চাপ বেশি, তুষের সাথে ধান উড়ে যায়",
+    "solution_bn": "১. এয়ার কন্ট্রোল প্লেট নামিয়ে বাতাসের পরিমাণ কমান। \n২. ব্লোয়ার পুলির RPM কমাতে ছোট পুলি ব্যবহার করুন। \n৩. ধান ভেজা/আর্দ্র হলে বাতাস কিছুটা বাড়িয়ে সমন্বয় করুন।",
+    "photo_numbers": [
+      "03"
+    ],
+    "fault_image": "fault_fault_air.jpg",
+    "keywords": [
+      "তুষের",
+      "উড়ে",
+      "এয়ার",
+      "পাত",
+      "সাথে",
+      "ধান",
+      "বাতাসের",
+      "বেশি",
+      "কন্ট্রোল",
+      "চাপ",
+      "যায়"
+    ]
+  },
+  {
+    "id": "fault.sieve.motion",
+    "field_key": "Fault sieve motion",
+    "part_paper": "SIEVE / SIEVE SHAFT",
+    "part_local_bn": "ঝরনি শ্যাফট",
+    "symptom_paper": "Sieve not oscillating",
+    "symptom_local_bn": "ঝরনি কাঁপছে না / নড়ছে না",
+    "solution_bn": "১. শ্যাফট বিয়ারিং (6203 × 2) পরীক্ষা করে প্রয়োজনে পরিবর্তন করুন। \n২. ক্র্যাঙ্ক/সংযোগ বোল্ট ঢিলা থাকলে টাইট করুন। ৩. শ্যাফটে নিয়মিত গ্রীজ/অয়েল দিন।",
+    "photo_numbers": [
+      "09"
+    ],
+    "fault_image": "fault_fault_sieve_motion.jpg",
+    "keywords": [
+      "শ্যাফট",
+      "না",
+      "ঝরনি",
+      "কাঁপছে",
+      "নড়ছে"
+    ]
+  },
+  {
+    "id": "fault.sieve.motion",
+    "field_key": "Fault sieve motion",
+    "part_paper": "SIEVE / SIEVE SHAFT",
+    "part_local_bn": "ঝরনি শ্যাফট",
+    "symptom_paper": "Sieve not oscillating",
+    "symptom_local_bn": "ঝরনি কাঁপছে না / নড়ছে না",
+    "solution_bn": "১. শ্যাফট বিয়ারিং (6203 × 2) পরীক্ষা করে প্রয়োজনে পরিবর্তন করুন। \n২. ক্র্যাঙ্ক/সংযোগ বোল্ট ঢিলা থাকলে টাইট করুন। ৩. শ্যাফটে নিয়মিত গ্রীজ/অয়েল দিন।",
+    "photo_numbers": [],
+    "fault_image": "fault_fault_sieve_motion.jpg",
+    "keywords": [
+      "শ্যাফট",
+      "না",
+      "ঝরনি",
+      "কাঁপছে",
+      "নড়ছে"
+    ]
+  },
+  {
+    "id": "fault.motor",
+    "field_key": "Fault motor",
+    "part_paper": "MOTOR",
+    "part_local_bn": "মোটর",
+    "symptom_paper": "Motor not running / low speed",
+    "symptom_local_bn": "মোটর চলছে না / স্পিড কম",
+    "solution_bn": "১. বিদ্যুৎ লাইন, সুইচ ও ফিউজ পরীক্ষা করুন। \n২. ক্যাপাসিটর নষ্ট হলে পরিবর্তন করুন। \n৩. মোটর গরম/ওভারলোড হলে বন্ধ রেখে ঠান্ডা হতে দিন। \n৪. প্রয়োজনে মোটর (HP-1.5, kW-1.1, RPM-1400) মেরামত বা পরিবর্তন করুন।",
+    "photo_numbers": [
+      "11"
+    ],
+    "fault_image": "fault_fault_motor.jpg",
+    "keywords": [
+      "কম",
+      "না",
+      "চলছে",
+      "মোটর",
+      "স্পিড"
+    ]
+  },
+  {
+    "id": "fault.bearing",
+    "field_key": "Fault bearing",
+    "part_paper": "PILLOW BEARING BLOCK-206 / BALL BEARING-6302",
+    "part_local_bn": "বিয়ারিং ব্লক (UCP206) / বল বিয়ারিং (6302)",
+    "symptom_paper": "Noise / vibration / heat",
+    "symptom_local_bn": "শব্দ হয়, কাঁপে, গরম হয়ে যায়",
+    "solution_bn": "১. বিয়ারিংয়ে নিয়মিত গ্রীজ দিন। ২. ক্ষয়প্রাপ্ত হলে UCP206 বা 6302 বিয়ারিং পরিবর্তন করুন। \n৩. শ্যাফট এলাইনমেন্ট ঠিক আছে কিনা পরীক্ষা করুন।",
+    "photo_numbers": [
+      "14",
+      "15"
+    ],
+    "fault_image": "fault_fault_bearing.jpg",
+    "keywords": [
+      "বল",
+      "হয়",
+      "শব্দ",
+      "ব্লক",
+      "গরম",
+      "ucp206",
+      "যায়",
+      "6302",
+      "হয়ে",
+      "কাঁপে",
+      "বিয়ারিং"
+    ]
+  },
+  {
+    "id": "fault.blower",
+    "field_key": "Fault blower",
+    "part_paper": "BLOWER UNITE",
+    "part_local_bn": "ব্লোয়ার (পাখা)",
+    "symptom_paper": "Weak air blast",
+    "symptom_local_bn": "বাতাসের বেগ কম",
+    "solution_bn": "১. ব্লোয়ার ফ্যানের ব্লেডে জমে থাকা ধুলা/তুষ পরিষ্কার করুন। \n২. বেল্ট টেনশন ও পুলির মাপ ঠিক আছে কিনা দেখুন। ৩. ব্লোয়ার বিয়ারিং (6302 × 8) ক্ষয় হলে পরিবর্তন করুন।",
+    "photo_numbers": [
+      "05"
+    ],
+    "fault_image": "fault_fault_blower.jpg",
+    "keywords": [
+      "কম",
+      "পাখা",
+      "বাতাসের",
+      "বেগ",
+      "ব্লোয়ার"
+    ]
+  },
+  {
+    "id": "fault.feed",
+    "field_key": "Fault feed",
+    "part_paper": "GRAIN CONTROL PLATE",
+    "part_local_bn": "ধান নিয়ন্ত্রণ পাত (ফিড গেট)",
+    "symptom_paper": "Uneven or jammed grain feed",
+    "symptom_local_bn": "ধান সমানভাবে পড়ছে না / আটকে যাচ্ছে",
+    "solution_bn": "১. গ্রেইন কন্ট্রোল প্লেটের ফাঁক সমানভাবে সেট করুন। ২. হপারে ভেজা/আটকে থাকা ধান বা খড়কুটা পরিষ্কার করুন।",
+    "photo_numbers": [
+      "04"
+    ],
+    "fault_image": "fault_fault_feed.jpg",
+    "keywords": [
+      "পড়ছে",
+      "না",
+      "আটকে",
+      "ফিড",
+      "পাত",
+      "নিয়ন্ত্রণ",
+      "ধান",
+      "সমানভাবে",
+      "গেট",
+      "যাচ্ছে"
+    ]
+  },
+  {
+    "id": "fault.multicrop",
+    "field_key": "Fault multicrop",
+    "part_paper": "SIEVE (THREE TYPE)",
+    "part_local_bn": "ঝরনি জাল (তিন প্রকার)",
+    "symptom_paper": "Wrong cleaning — change sieve net",
+    "symptom_local_bn": "ভুল জাল ব্যবহারে পরিষ্কার ঠিকমতো হয় না",
+    "solution_bn": "ফসল/দানার আকার অনুযায়ী সঠিক জাল বেছে নিন — মোটা দানার জন্য Large, মাঝারি দানার জন্য Medium, চিকন/ছোট দানার জন্য Small জাল ব্যবহার করুন।",
+    "photo_numbers": [
+      "08"
+    ],
+    "fault_image": "fault_fault_multicrop.jpg",
+    "keywords": [
+      "পরিষ্কার",
+      "না",
+      "ব্যবহারে",
+      "ঠিকমতো",
+      "হয়",
+      "ঝরনি",
+      "জাল",
+      "প্রকার",
+      "ভুল",
+      "তিন"
+    ]
+  }
+]

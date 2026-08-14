@@ -107,6 +107,22 @@ class Settings(BaseSettings):
     def reference_images_dir(self) -> Path:
         return self.KNOWLEDGE_BASE_DIR / "reference_images"
 
+    @property
+    def collected_dir(self) -> Path:
+        return self.KNOWLEDGE_BASE_DIR / "collected"
+
+    @property
+    def collected_photos_dir(self) -> Path:
+        return self.collected_dir / "photos"
+
+    @property
+    def collected_cad_dir(self) -> Path:
+        return self.collected_dir / "cad"
+
+    @property
+    def collected_subassembly_dir(self) -> Path:
+        return self.collected_dir / "subassembly"
+
 
 @lru_cache
 def get_settings() -> Settings:
