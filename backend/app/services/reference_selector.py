@@ -26,8 +26,8 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "বেল্ট", "ভি-বেল্ট",
     ),
     "motor": (
-        "motor", "electric", "220v", "0.5 hp", "hp", "rpm", "capacitor", "burn",
-        "মোটর", "বিদ্যুৎ", "জ্বল", "ধোঁয়া",
+        "motor", "electric", "220v", "1.5 hp", "1.1 kw", "hp", "rpm", "capacitor", "burn",
+        "generator", "kva", "মোটর", "বিদ্যুৎ", "জ্বল", "ধোঁয়া", "জেনারেটর",
     ),
     "sieve": (
         "sieve", "screen", "mesh", "net", "perforated", "shake", "shaking",
@@ -35,13 +35,13 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "ঝরন", "চালুনি", "জাল", "ঝাঁক", "আটক",
     ),
     "blower": (
-        "blower", "fan", "blade", "air blast", "wind", "intake",
-        "ব্লোয়ার", "পাখা", "বাতাস", "হাওয়া",
+        "blower", "fan", "blade", "air blast", "wind", "intake", "weak air", "দুর্বল",
+        "ব্লোয়ার", "পাখা", "বাতাস", "হাওয়া", "ধুল",
     ),
     "bearing": (
-        "bearing", "6306", "p-206", "p206", "p-207", "pillow", "block", "grinding",
-        "noise", "vibrat", "grease",
-        "বিয়ারিং", "শব্দ", "কম্পন",
+        "bearing", "6203", "6302", "ucp206", "p-206", "p206", "p-207", "pillow", "block",
+        "grinding", "noise", "vibrat", "grease", "shake", "কাঁপ", "কম্পন",
+        "বিয়ারিং", "শব্দ",
     ),
     "hopper": (
         "hopper", "feed", "gate", "flap", "grain flow", "pour",
@@ -105,12 +105,20 @@ _ISSUE_IMAGE_NUMBERS: list[tuple[tuple[str, ...], tuple[int, ...]]] = [
         (28, 16, 31, 30),
     ),
     (
-        ("motor", "মোটর", "220v", "0.5 hp", "ধোঁয়া", "জ্বল"),
-        (1, 20, 23, 5),
+        ("motor", "মোটর", "220v", "1.5 hp", "1.1 kw", "generator", "kva", "ধোঁয়া", "জ্বল"),
+        (1, 20, 23, 5, 111),
     ),
     (
-        ("bearing", "বিয়ারিং", "6306", "p-206", "pillow", "grinding", "কম্পন"),
-        (31, 30, 13, 6),
+        ("bearing", "বিয়ারিং", "6203", "6302", "ucp206", "pillow", "grinding", "কম্পন", "কাঁপ"),
+        (314, 315, 31, 30, 13, 6),
+    ),
+    (
+        ("blower", "ব্লোয়ার", "weak air", "দুর্বল", "হাওয়া কম", "air blast", "fan blade"),
+        (105, 6, 7),
+    ),
+    (
+        ("hopper", "হপার", "feed gate", "grain control", "আটক", "খড়", "straw"),
+        (104, 11, 12),
     ),
 ]
 
@@ -118,6 +126,41 @@ _IMAGE_REQUEST_MARKERS = (
     "ছবি", "photo", "picture", "image", "দেখান", "দেখিয়", "দেখাই",
     "বুঝিয়", "বুঝাই", "visual", "diagram",
 )
+
+# Weak tokens from auto-generated fault keywords — must not alone trigger a match.
+_STOP_FAULT_KEYWORDS = frozenset({
+    "na", "না", "yes", "the", "and", "for", "with",
+    "যায়", "যায়", "হয়", "হয়", "হয়ে", "কম", "ধান", "সাথে", "বেশি",
+    "পাত", "নিয়ন্ত্রণ", "সমানভাবে", "যাচ্ছে", "পড়ছে", "ঠিকমতো",
+    "ব্যবহারে", "পরিষ্কার", "ভুল", "তিন", "প্রকার", "বল", "হয়",
+})
+
+# Which query topics must appear before attaching a field photo for that fault.
+_FAULT_TOPIC_HINTS: dict[str, tuple[str, ...]] = {
+    "Fault belt": ("belt",),
+    "Fault air": ("air_control", "grain_loss", "blower"),
+    "Fault sieve motion": ("sieve", "linkage"),
+    "Fault motor": ("motor",),
+    "Fault bearing": ("bearing",),
+    "Fault blower": ("blower", "air_control"),
+    "Fault feed": ("hopper", "grain_control"),
+    "Fault multicrop": ("sieve",),
+}
+
+_MIN_FAULT_MATCH_SCORE = 8.0
+
+# Field photo slot → acceptable query topics (blocks sieve/motor on hopper/blower queries).
+_PHOTO_SLOT_TOPICS: dict[str, frozenset[str]] = {
+    "03": frozenset({"air_control", "grain_loss", "blower"}),
+    "04": frozenset({"hopper", "grain_control"}),
+    "05": frozenset({"blower", "air_control"}),
+    "08": frozenset({"sieve"}),
+    "09": frozenset({"sieve", "linkage"}),
+    "10": frozenset({"belt", "pulley"}),
+    "11": frozenset({"motor", "pulley"}),
+    "14": frozenset({"bearing"}),
+    "15": frozenset({"bearing"}),
+}
 
 
 from app.utils.parts_suppliers import is_belt_price_query, is_belt_supplier_query
@@ -225,40 +268,111 @@ def _score_entry(entry: dict, query: str) -> float:
     return score
 
 
+def _detect_query_topics(query: str) -> set[str]:
+    ql = query.lower()
+    found: set[str] = set()
+    for topic, keywords in _TOPIC_KEYWORDS.items():
+        if any(kw in ql for kw in keywords):
+            found.add(topic)
+    return found
+
+
+def _score_fault_match(fault: dict, query: str) -> float:
+    """Score how well a field-collected fault entry matches the user query."""
+    ql = query.lower()
+    tokens = _tokenize(query)
+    score = 0.0
+
+    symptom = (fault.get("symptom_local_bn") or "").lower()
+    part_paper = (fault.get("part_paper") or "").lower()
+    part_local = (fault.get("part_local_bn") or "").lower()
+    field_key = fault.get("field_key") or ""
+
+    # Strong: distinctive symptom phrase present in query.
+    for phrase in (symptom, part_local):
+        if len(phrase) >= 8 and phrase in ql:
+            score += 12.0
+
+    for kw in fault.get("keywords") or []:
+        kw_l = kw.lower()
+        if len(kw_l) < 3 or kw_l in _STOP_FAULT_KEYWORDS:
+            continue
+        if kw_l in ql:
+            score += 5.0 if len(kw_l) >= 5 else 3.0
+
+    for token in tokens:
+        if len(token) < 3 or token in _STOP_FAULT_KEYWORDS:
+            continue
+        if token in part_paper or token in part_local:
+            score += 4.0
+        elif token in symptom:
+            score += 2.0
+
+    query_topics = _detect_query_topics(query)
+    hints = _FAULT_TOPIC_HINTS.get(field_key, ())
+    if hints and query_topics & set(hints):
+        score += 7.0
+    elif hints and query_topics and not (query_topics & set(hints)):
+        score -= 6.0
+
+    # Whole-machine vibration ≠ sieve not shaking.
+    if field_key == "Fault sieve motion":
+        sieve_words = ("ঝরন", "ঝরনি", "চালুনি", "sieve", "screen", "শ্যাফট", "shaft")
+        if "কাঁপ" in ql and not any(w in ql for w in sieve_words):
+            score -= 10.0
+
+    # Motor fault needs motor/generator context, not generic "slow/weak".
+    if field_key == "Fault motor":
+        if not (query_topics & {"motor"} or "মোটর" in ql or "generator" in ql or "জেনারেটর" in ql):
+            if "কম" in ql or "slow" in ql:
+                score -= 6.0
+
+    # Blower weak air should not attach motor/sieve photos.
+    if field_key == "Fault blower":
+        if query_topics & {"blower"} or "ব্লোয়ার" in ql or "দুর্বল" in ql:
+            score += 4.0
+
+    # Whole-machine shake/vibration → bearings, not sieve motion.
+    if field_key == "Fault bearing":
+        if ("কাঁপ" in ql or "vibrat" in ql or "shake" in ql) and not any(
+            w in ql for w in ("ঝরন", "ঝরনি", "sieve", "screen", "চালুনi")
+        ):
+            score += 9.0
+
+    return score
+
+
 def _collected_issue_numbers(query: str) -> list[int]:
     """Map user text to field-collected photo catalogue numbers (#101–120)."""
     kb = get_knowledge_base()
     if not kb.fault_trees:
         return []
 
-    ql = query.lower()
-    query_tokens = _tokenize(query)
-    seen: set[int] = set()
-    ordered: list[int] = []
+    seen_fault: set[str] = set()
+    scored: list[tuple[float, int]] = []
 
     for ft in kb.fault_trees:
-        matched = False
-        for kw in ft.get("keywords") or []:
-            if kw and kw in ql:
-                matched = True
-                break
-        if not matched:
-            symptom = (ft.get("symptom_local_bn") or "").lower()
-            part = (ft.get("part_local_bn") or ft.get("part_paper") or "").lower()
-            for token in query_tokens:
-                if token in symptom or token in part:
-                    matched = True
-                    break
-        if not matched:
+        fault_id = ft.get("id") or ft.get("field_key") or ""
+        if fault_id in seen_fault:
             continue
+        match_score = _score_fault_match(ft, query)
+        if match_score < _MIN_FAULT_MATCH_SCORE:
+            continue
+        seen_fault.add(fault_id)
         for pno in ft.get("photo_numbers") or []:
             try:
                 num = FIELD_PHOTO_BASE + int(pno)
             except (TypeError, ValueError):
                 continue
-            if num not in seen:
-                seen.add(num)
-                ordered.append(num)
+            scored.append((match_score, num))
+
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    seen_nums: set[int] = set()
+    ordered: list[int] = []
+    for _, num in scored:
+        if num not in seen_nums:
+            seen_nums.add(num)
+            ordered.append(num)
     return ordered
 
 
@@ -286,6 +400,20 @@ def _technical_drawing_numbers(query: str, entries: list[dict]) -> list[int]:
         for token in tokens:
             if token in label or token in (entry.get("description") or "").lower():
                 score += 3.0
+
+        if source == "cad_drawing":
+            pn = (entry.get("part_name") or "").lower()
+            if pn:
+                pn_norm = pn.replace("-", " ").replace("  ", " ")
+                ql_norm = ql.replace("-", " ").replace("  ", " ")
+                if pn in ql or pn_norm in ql_norm:
+                    score += 14.0
+                if "hopper" in pn and ("hopper" in ql or "হপার" in ql):
+                    score += 6.0
+                    if ("part-2" in pn or "part 2" in pn) and (
+                        "2" in ql or "২" in ql or "part" in ql or "পার্ট" in ql
+                    ):
+                        score += 12.0
 
         if source == "cad_drawing":
             if wants_cad:
@@ -423,9 +551,15 @@ def select_reference_images(
             _add(entry)
 
     if query:
+        query_topics = _detect_query_topics(query)
         for score, entry in ranked:
             if score < min_score:
                 break
+            if entry.get("source") == "field_collection":
+                slot = entry.get("photo_no") or ""
+                allowed = _PHOTO_SLOT_TOPICS.get(slot)
+                if allowed and query_topics and not (query_topics & allowed):
+                    continue
             _add(entry)
     elif has_user_image:
         for score, entry in ranked:

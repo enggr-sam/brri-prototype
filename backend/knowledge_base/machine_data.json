@@ -10,27 +10,38 @@
     "height_mm": 1310
   },
   "motor": {
-    "power_hp": 0.5,
+    "power_hp": 1.5,
+    "power_kw": 1.1,
     "phase": "Single phase",
     "voltage_v": 220,
-    "speed_rpm": 1450
+    "speed_rpm": 1400
   },
   "power_transmission": {
     "type": "V-belt drive",
     "belt": {
       "profile": "B-belt",
+      "length_inch": 65,
       "length_mm": 1650,
       "marking": "B65"
     },
+    "motor_pulley_diameter_mm": 125,
     "description": "The motor drives the main shaft through the B65 V-belt."
   },
   "bearings": {
-    "ball_bearing": "6306",
-    "pillow_block_bearing": "P-206"
+    "sieve": "6203 × 2",
+    "pillow_block": "UCP206 × 2",
+    "blower_ball": "6302 × 8"
+  },
+  "blower": {
+    "diameter_mm": 270
+  },
+  "sieve_types": {
+    "description": "Three interchangeable perforated nets — large, medium, and small hole sizes for different crops.",
+    "hole_sizes_mm": [6, 10, 13]
   },
   "core_mechanism": {
     "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the sieve.",
-    "main_shaft": "Driven by the motor through the B65 V-belt; supported by 6306 ball bearings and P-206 pillow block bearings.",
+    "main_shaft": "Driven by the motor through the B65 V-belt; sieve shaft uses 6203×2 bearings; blower uses UCP206×2 pillow blocks and 6302×8 ball bearings.",
     "blower_unit": {
       "diameter_mm": 270,
       "function": "Generates the air blast that separates light chaff and dust from heavier grain."
@@ -45,20 +56,21 @@
     "hoppers": "Plain Carbon Steel",
     "structural_components": "Some ASTM A36 components",
     "fasteners": "Stainless steel",
-    "angle_bar_spec_mm": "38 x 38 x 3"
+    "angle_bar_spec_mm": "38 x 38 x 3",
+    "flat_bar_spec_mm": "20 x 4"
   },
   "common_issues": [
     "V-belt (B65) slipping, cracking, or over/under tension causing low shaft speed.",
-    "Worn or noisy 6306 / P-206 bearings causing vibration and heat.",
+    "Worn or noisy UCP206 / 6302 / 6203 bearings causing vibration and heat.",
     "Blower imbalance or blade damage reducing air blast and cleaning quality.",
     "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
-    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 0.5 HP single-phase motor).",
+    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 1.5 HP / 1.1 kW single-phase motor).",
     "Frame or hopper corrosion / cracked welds on the carbon steel angle bars.",
     "Too much air/wind causing good grain to blow away with chaff — adjust air control lever and feed gate."
   ],
   "parts_suppliers": {
     "v_belt_b65": {
-      "part": "B65 V-belt (B-belt, 1650 mm)",
+      "part": "B65 V-belt (B-belt, 65 inch / 1650 mm)",
       "note_bn": "বেল্ট (B65) পাওয়া যাবে নিম্নোল্লিখিত ডিলার/দোকান থেকে। অন্য ঠিকানা বানিয়ে বলবেন না — শুধু এই তালিকা দিন।",
       "dealers": [
         {
