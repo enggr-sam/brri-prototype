@@ -1,0 +1,87 @@
+[
+  {
+    "field_key": "Machine Model",
+    "label_bn": "মেশিন মডেল",
+    "value": "BRRI Win2024"
+  },
+  {
+    "field_key": "Machine Name",
+    "label_bn": "মেশিনের নাম",
+    "value": "BRRI Winnower"
+  },
+  {
+    "field_key": "Dimensions Overall Mm",
+    "label_bn": "সামগ্রিক মাপ (mm)",
+    "value": "1350 × 835 × 1310"
+  },
+  {
+    "field_key": "Weight",
+    "label_bn": "ওজন (g)",
+    "value": "97861.75"
+  },
+  {
+    "field_key": "Motor",
+    "label_bn": "মোটর — HP",
+    "value": "1.5"
+  },
+  {
+    "field_key": "Motor",
+    "label_bn": "মোটর — kW",
+    "value": "1.1"
+  },
+  {
+    "field_key": "Motor",
+    "label_bn": "মোটর — RPM",
+    "value": "1400"
+  },
+  {
+    "field_key": "Belt Type",
+    "label_bn": "পাওয়ার পুলি বেল্ট — TYPE",
+    "value": "B"
+  },
+  {
+    "field_key": "Belt Length",
+    "label_bn": "পাওয়ার পুলি বেল্ট — LENGTH",
+    "value": "65 inch (B65)"
+  },
+  {
+    "field_key": "Motor Pulley",
+    "label_bn": "মোটর পুলি — OD (mm)",
+    "value": "125"
+  },
+  {
+    "field_key": "Blower Diameter",
+    "label_bn": "ব্লোয়ার কভার — Ø (mm)",
+    "value": "270"
+  },
+  {
+    "field_key": "Bearing Sieve",
+    "label_bn": "ঝরনি বিয়ারিং",
+    "value": "6203 × 2"
+  },
+  {
+    "field_key": "Bearing Pillow",
+    "label_bn": "পিলো বিয়ারিং ব্লক",
+    "value": "UCP206 × 2"
+  },
+  {
+    "field_key": "Bearing Blower",
+    "label_bn": "বল বিয়ারিং (ব্লোয়ার)",
+    "value": "6302 × 8"
+  },
+  {
+    "field_key": "Frame Angle Bar",
+    "label_bn": "মূল ফ্রেম — ANGLE",
+    "value": "38 × 38 × 3 mm"
+  },
+  {
+    "field_key": "Frame Flat Bar",
+    "label_bn": "মূল ফ্রেম — FLAT BAR",
+    "value": "20 × 4 mm"
+  },
+  {
+    "field_key": "Sieve Types",
+    "label_bn": "ঝরনির ধরন (THREE TYPE OF SIEVE)",
+    "value": "Large / Medium / Small holes net"
+  }
+]

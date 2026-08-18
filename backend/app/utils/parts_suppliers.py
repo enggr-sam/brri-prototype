@@ -138,8 +138,20 @@ def should_skip_belt_images(
     return is_belt_price_query(query, history) or is_belt_supplier_query(query)
 
 
+def _belt_dealers() -> list[dict]:
+    kb = get_knowledge_base()
+    block = kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {})
+    return block.get("dealers") or []
+
+
 def _dealers_complete(text: str) -> bool:
-    return "০১৭১৮২৩২৪০৬" in text and "০১৭১৮২৩১৪৯৬" in text
+    """Every verified dealer's mobile number is already in the reply."""
+    dealers = _belt_dealers()
+    if not dealers:
+        return False
+    return all(
+        (d.get("mobile_bn") or d.get("mobile") or "") in text for d in dealers
+    )
 
 
 def _reply_looks_truncated(text: str) -> bool:
@@ -178,9 +190,7 @@ def _format_dealer_lines(dealers: list[dict]) -> list[str]:
 
 
 def format_belt_suppliers_bn(*, heading: str | None = None) -> str:
-    kb = get_knowledge_base()
-    block = kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {})
-    dealers = block.get("dealers") or []
+    dealers = _belt_dealers()
 
     if heading is not None:
         lines = [heading, ""] if heading else []
@@ -197,11 +207,7 @@ def format_belt_suppliers_bn(*, heading: str | None = None) -> str:
 
 
 def format_belt_price_reply_bn() -> str:
-    kb = get_knowledge_base()
-    dealers = (
-        kb.machine_data.get("parts_suppliers", {}).get("v_belt_b65", {}).get("dealers")
-        or []
-    )
+    dealers = _belt_dealers()
 
     lines = [
         "B65 ভি-বেল্ট (১৬৫০ mm) এর দাম সময় ও বাজার অনুযায়ী বদলায়; "

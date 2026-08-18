@@ -208,21 +208,22 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
         if kind:
             tables_by_kind.setdefault(kind, []).append(table)
 
-    # --- Specs & meta (first table of each kind) ---
-    specs: dict[str, str] = {}
+    # --- Specs & meta ---
+    # Field keys repeat (Motor = HP, kW and RPM), so keep rows as a list and use the
+    # Bangla label to disambiguate instead of collapsing into a dict.
+    specs: list[dict[str, str]] = []
     meta: dict[str, str] = {}
-    for table in tables_by_kind.get("specs", []):
+    for table in tables_by_kind.get("specs", []) + tables_by_kind.get("meta", []):
         for row in table.rows[1:]:
             key = _cell_text(row.cells[0])
+            label = _cell_text(row.cells[1]) if len(row.cells) > 1 else ""
             val = _cell_text(row.cells[2]) if len(row.cells) > 2 else ""
-            if key:
-                specs[key] = val
-    for table in tables_by_kind.get("meta", []):
-        for row in table.rows[1:]:
-            key = _cell_text(row.cells[0])
-            val = _cell_text(row.cells[2]) if len(row.cells) > 2 else ""
-            if key:
+            if not key:
+                continue
+            if key.lower().startswith("meta"):
                 meta[key] = val
+            else:
+                specs.append({"field_key": key, "label_bn": label, "value": val})
 
     root_link = ""
     if "root" in csv_links:
@@ -233,6 +234,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
     # --- Problems + fault images ---
     fault_trees: list[dict] = []
     fault_images_by_slot: dict[str, str] = {}
+    seen_fault_ids: dict[str, int] = {}
     for table in tables_by_kind.get("problems", []):
         for ri in range(1, len(table.rows)):
             row = table.rows[ri]
@@ -240,6 +242,13 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
             field_key = _pick_key(rec, "Field key", "field_key")
             if not field_key:
                 continue
+
+            # The form can repeat a field key on two rows; keep both distinguishable
+            # so neither the record nor its image is overwritten by the other.
+            base_id = field_key.replace(" ", ".").lower()
+            seen_fault_ids[base_id] = seen_fault_ids.get(base_id, 0) + 1
+            occurrence = seen_fault_ids[base_id]
+            fault_id = base_id if occurrence == 1 else f"{base_id}.{occurrence}"
 
             photo_raw = _pick_key(rec, "ছবি নং", "photo_no")
             photo_numbers = _parse_photo_numbers(photo_raw)
@@ -249,7 +258,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
             if not blobs and len(row.cells) > 6:
                 blobs = _extract_cell_images(row.cells[6], doc.part)
             if blobs:
-                slug = _slug(field_key, f"fault_{ri}")
+                slug = _slug(fault_id, f"fault_{ri}")
                 fname = f"fault_{slug}.jpg"
                 _save_image(blobs[0], photos_dir / fname)
                 fault_image = fname
@@ -261,7 +270,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
 
             symptom_local = _pick_key(rec, "স্থানীয় ভাষায় সমস্যার নাম", "স্থানীয় ভাষায় সমস্যার নাম")
             part_local = _pick_key(rec, "স্থানীয় নাম", "স্থানীয় নাম")
-            keywords = list(
+            keywords = sorted(
                 {
                     t
                     for t in re.split(r"[^\w\u0980-\u09FF]+", f"{symptom_local} {part_local}".lower())
@@ -271,7 +280,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
 
             fault_trees.append(
                 {
-                    "id": field_key.replace(" ", ".").lower(),
+                    "id": fault_id,
                     "field_key": field_key,
                     "part_paper": _pick_key(rec, "অংশ (পেপার)", "part_paper"),
                     "part_local_bn": part_local,
@@ -353,23 +362,29 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
             part_desc = _pick_key(rec, "বিবরণ", "description")
             sheet = _pick_key(rec, "DRG / Sheet", "sheet")
             row = table.rows[ri]
-            blobs = _extract_cell_images(row.cells[1], doc.part) if len(row.cells) > 1 else []
-            if not blobs:
+            blobs: list[bytes] = []
+            for cell in row.cells[1:]:
+                blobs = _extract_cell_images(cell, doc.part)
+                if blobs:
+                    break
+            if not (blobs or current_title or part_desc):
                 continue
 
-            meta = lookup_subassembly(current_title)
-            slug = _slug(current_title or part_desc or f"subasm_{ri}")
-            fname = f"subasm_{ri:02d}_{slug}.jpg"
-            _save_image(blobs[0], subasm_dir / fname)
+            entry_meta = lookup_subassembly(current_title)
+            fname = ""
+            if blobs:
+                slug = _slug(current_title or part_desc or f"subasm_{ri}")
+                fname = f"subasm_{ri:02d}_{slug}.jpg"
+                _save_image(blobs[0], subasm_dir / fname)
 
             idx = len(subassembly) + 1
-            subsystem = meta.get("subsystem", "")
+            subsystem = entry_meta.get("subsystem", "")
             keywords = list(dict.fromkeys(
-                (meta.get("keywords") or [])
+                (entry_meta.get("keywords") or [])
                 + list(subsystem_keywords(subsystem))
                 + _tokenize_keywords(current_title)
             ))
-            desc = meta.get("description") or (
+            desc = entry_meta.get("description") or (
                 f"Sub-assembly diagram: {current_title}. {part_desc}".strip()
             )
             subassembly.append(
@@ -383,7 +398,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
                     "subsystem": subsystem,
                     "keywords": keywords,
                     "catalog_description": desc,
-                    "field_photo_no": meta.get("field_photo_no"),
+                    "field_photo_no": entry_meta.get("field_photo_no"),
                     "source": "subassembly_drawing",
                 }
             )
@@ -395,23 +410,29 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
             rec = _row_dict(table, ri)
             part_name = _pick_key(rec, "Parts name", "part_name")
             row = table.rows[ri]
-            blobs = _extract_cell_images(row.cells[0], doc.part)
-            if not blobs:
+            blobs: list[bytes] = []
+            for cell in row.cells:
+                blobs = _extract_cell_images(cell, doc.part)
+                if blobs:
+                    break
+            if not (blobs or part_name):
                 continue
 
-            meta = lookup_cad_part(part_name)
-            slug = _slug(part_name or f"cad_{ri}")
-            fname = f"cad_{ri:02d}_{slug}.jpg"
-            _save_image(blobs[0], cad_dir / fname)
+            entry_meta = lookup_cad_part(part_name)
+            fname = ""
+            if blobs:
+                slug = _slug(part_name or f"cad_{ri}")
+                fname = f"cad_{ri:02d}_{slug}.jpg"
+                _save_image(blobs[0], cad_dir / fname)
 
             idx = len(cad_drawings) + 1
-            subsystem = meta.get("subsystem", "")
+            subsystem = entry_meta.get("subsystem", "")
             keywords = list(dict.fromkeys(
-                (meta.get("keywords") or [])
+                (entry_meta.get("keywords") or [])
                 + list(subsystem_keywords(subsystem))
                 + _tokenize_keywords(part_name)
             ))
-            desc = meta.get("description") or (
+            desc = entry_meta.get("description") or (
                 f"CAD cutting drawing for {part_name} (BRRI Win2024 winnower)."
             )
             cad_drawings.append(
@@ -423,7 +444,7 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
                     "subsystem": subsystem,
                     "keywords": keywords,
                     "catalog_description": desc,
-                    "field_photo_no": meta.get("field_photo_no"),
+                    "field_photo_no": entry_meta.get("field_photo_no"),
                     "source": "cad_drawing",
                 }
             )
@@ -434,16 +455,22 @@ def import_docx(doc_path: Path, csv_path: Path | None, out_dir: Path) -> dict:
         "drive_root_url": root_link,
         "collector_meta": meta,
         "counts": {
+            "specs": len(specs),
             "fault_trees": len(fault_trees),
             "field_photos": len(field_photos),
             "field_photos_with_local_image": sum(1 for p in field_photos if p["local_image"]),
             "dealers": len(dealers),
             "cad_drawings": len(cad_drawings),
+            "cad_drawings_without_image": sum(1 for c in cad_drawings if not c["image_name"]),
             "subassembly_drawings": len(subassembly),
+            "subassembly_without_image": sum(1 for s in subassembly if not s["image_name"]),
         },
     }
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "specs.json").write_text(
+        json.dumps(specs, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     (out_dir / "fault_trees.json").write_text(
         json.dumps(fault_trees, ensure_ascii=False, indent=2), encoding="utf-8"
     )

@@ -532,7 +532,7 @@
       "জাল",
       "frame"
     ],
-    "catalog_description": "CAD cutting drawing: SIEVE FRAME-1 — primary structural frame holding the perforated sieve net. Three sieve types (6/10/13 mm holes) mount in this frame.",
+    "catalog_description": "CAD cutting drawing: SIEVE FRAME-1 — primary structural frame holding the perforated sieve net. Three sieve types (large / medium / small hole nets) mount in this frame.",
     "field_photo_no": "08",
     "source": "cad_drawing"
   },

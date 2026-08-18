@@ -12,8 +12,6 @@
   "motor": {
     "power_hp": 1.5,
     "power_kw": 1.1,
-    "phase": "Single phase",
-    "voltage_v": 220,
     "speed_rpm": 1400
   },
   "power_transmission": {
@@ -36,8 +34,7 @@
     "diameter_mm": 270
   },
   "sieve_types": {
-    "description": "Three interchangeable perforated nets — large, medium, and small hole sizes for different crops.",
-    "hole_sizes_mm": [6, 10, 13]
+    "description": "Three interchangeable perforated nets — large, medium, and small hole sizes for different crops."
   },
   "core_mechanism": {
     "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the sieve.",
@@ -64,7 +61,7 @@
     "Worn or noisy UCP206 / 6302 / 6203 bearings causing vibration and heat.",
     "Blower imbalance or blade damage reducing air blast and cleaning quality.",
     "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
-    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 1.5 HP / 1.1 kW single-phase motor).",
+    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 1.5 HP / 1.1 kW, 1400 rpm motor).",
     "Frame or hopper corrosion / cracked welds on the carbon steel angle bars.",
     "Too much air/wind causing good grain to blow away with chaff — adjust air control lever and feed gate."
   ],
@@ -78,14 +75,9 @@
           "dealer_point_bn": "হরিংঘাটা মেশিনারীজ, পটুয়াখালী",
           "mobile": "01718232406",
           "mobile_bn": "০১৭১৮২৩২৪০৬",
+          "parts": "B65 V-belt, UCP206, 6203",
+          "note_bn": "B65 মার্কিংসহ বেল্ট রাখে",
           "maps_url": "https://www.google.com/maps/search/?api=1&query=Haringhata+Machineries+Patuakhali+Bangladesh"
-        },
-        {
-          "name_bn": "নিউ এগ্রো মেশিনারীজ",
-          "address_bn": "৪২, টিপু সুলতান রোড, ওয়ারী, ঢাকা",
-          "mobile": "01718231496",
-          "mobile_bn": "০১৭১৮২৩১৪৯৬",
-          "maps_url": "https://www.google.com/maps/search/?api=1&query=42+Tipu+Sultan+Road+Wari+Dhaka+Bangladesh"
         }
       ]
     }

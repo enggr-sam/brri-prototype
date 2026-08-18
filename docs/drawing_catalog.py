@@ -206,7 +206,7 @@ CAD_PARTS: dict[str, dict] = {
         "field_photo_no": "08",
         "description": (
             "CAD cutting drawing: SIEVE FRAME-1 — primary structural frame holding the perforated sieve net. "
-            "Three sieve types (6/10/13 mm holes) mount in this frame."
+            "Three sieve types (large / medium / small hole nets) mount in this frame."
         ),
     },
     "sieve frame-2": {

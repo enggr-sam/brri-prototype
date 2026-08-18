@@ -3,7 +3,7 @@
     "image_number": 1,
     "image_name": "01_brri_winnower_motor_pulley_and_belt_system.jpg",
     "original_image_name": "IMG-20260718-WA0030.jpg",
-    "description": "A close-up view of the external power transmission system of the orange BRRI Winnower machine. It shows a gray 0.5 HP electric motor mounted on the bottom frame, connected to a larger upper cast-iron pulley via a black rubber V-belt (B-belt). This system drives the machine's blower and sieve mechanisms. Troubleshooting context: If the machine is powered on but the internal parts are not moving, the AI bot should advise the farmer to check if this belt is loose, slipped off, or broken, and ensure the motor is running properly."
+    "description": "A close-up view of the external power transmission system of the orange BRRI Winnower machine. It shows a gray 1.5 HP / 1.1 kW electric motor mounted on the bottom frame, connected to a larger upper cast-iron pulley via a black rubber V-belt (B-belt). This system drives the machine's blower and sieve mechanisms. Troubleshooting context: If the machine is powered on but the internal parts are not moving, the AI bot should advise the farmer to check if this belt is loose, slipped off, or broken, and ensure the motor is running properly."
   },
   {
     "image_number": 2,
@@ -27,7 +27,7 @@
     "image_number": 5,
     "image_name": "05_brri_winnower_technical_specifications_table.jpg",
     "original_image_name": "IMG-20260718-WA0001.jpg",
-    "description": "The master 'Technical specifications' sheet for the BRRI Winnower (Model: BRRI Win2024). It lists 29 critical parameters including overall dimensions (1350x835x1310 mm), motor power (0.5 hp, 220V, 1450 rpm), V-belt size (B-belt, 1650mm), sieve hole diameters (6, 10, 13 mm), and specific bearing numbers (6306, P-206). Troubleshooting context: This is the most vital data source for the AI. If a farmer's motor burns out or a bearing breaks, the bot can tell them exactly what specification (e.g., bearing 6306 or a 220V 0.5hp motor) to buy at the local hardware store."
+    "description": "The master 'Technical specifications' sheet for the BRRI Winnower (Model: BRRI Win2024). It lists the critical parameters including overall dimensions (1350x835x1310 mm), motor power (1.5 HP / 1.1 kW, 1400 rpm), V-belt size (B-belt, B65, 1650mm), three sieve types (large / medium / small hole nets), and specific bearing numbers (6203 × 2 sieve, UCP206 × 2 pillow block, 6302 × 8 blower). Troubleshooting context: This is the most vital data source for the AI. If a farmer's motor burns out or a bearing breaks, the bot can tell them exactly what specification (e.g., bearing 6203 or the 1.5 HP / 1.1 kW motor) to buy at the local hardware store."
   },
   {
     "image_number": 6,
@@ -117,7 +117,7 @@
     "image_number": 20,
     "image_name": "20_brri_winnower_motor_bottom_pulley.jpg",
     "original_image_name": "IMG-20260718-WA0029.jpg",
-    "description": "A top-down close-up view of the 0.5 HP electric motor bolted to the bottom frame, focusing on the small driving pulley and the V-belt attached to it. Troubleshooting context: If the machine loses power or smells like burning rubber, the bot should tell the farmer to check if this specific small bottom pulley is jammed or if the belt is misaligned and rubbing against the frame."
+    "description": "A top-down close-up view of the 1.5 HP electric motor bolted to the bottom frame, focusing on the small driving pulley and the V-belt attached to it. Troubleshooting context: If the machine loses power or smells like burning rubber, the bot should tell the farmer to check if this specific small bottom pulley is jammed or if the belt is misaligned and rubbing against the frame."
   },
   {
     "image_number": 21,
@@ -177,13 +177,13 @@
     "image_number": 30,
     "image_name": "30_sieve_drive_arm_and_pillow_bearing_side_view.jpg",
     "original_image_name": "IMG-20260718-WA0024.jpg",
-    "description": "An angled side view (beneath the blue 'BRRI Win2024' logo) showing the sieve driving/linkage arm connected to a blue P-206 pillow block bearing on the side plate, with the 0.5 HP motor mounted below. Troubleshooting context: This is the mechanism that shakes the sieve. If the sieve does not oscillate, the bot should tell the farmer to check the bolts on this blue P-206 pillow bearing and that the drive arm is securely connected."
+    "description": "An angled side view (beneath the blue 'BRRI Win2024' logo) showing the sieve driving/linkage arm connected to a blue UCP206 pillow block bearing on the side plate, with the 1.5 HP motor mounted below. Troubleshooting context: This is the mechanism that shakes the sieve. If the sieve does not oscillate, the bot should tell the farmer to check the bolts on this blue UCP206 pillow bearing and that the drive arm is securely connected."
   },
   {
     "image_number": 31,
     "image_name": "31_sieve_crank_eccentric_and_pillow_bearing.jpg",
     "original_image_name": "IMG-20260718-WA0025.jpg",
-    "description": "A close-up of the sieve crank/eccentric mechanism: a blue P-206 pillow block bearing mounted on the side plate driving a horizontal connecting arm, with the eccentric disc and the blower opening partly visible and the motor below. Troubleshooting context: This converts shaft rotation into the back-and-forth shaking of the sieve. If shaking is weak or noisy, the bot should advise checking this pillow bearing for wear/grease and the tightness of the crank-arm bolts."
+    "description": "A close-up of the sieve crank/eccentric mechanism: a blue UCP206 pillow block bearing mounted on the side plate driving a horizontal connecting arm, with the eccentric disc and the blower opening partly visible and the motor below. Troubleshooting context: This converts shaft rotation into the back-and-forth shaking of the sieve. If shaking is weak or noisy, the bot should advise checking this pillow bearing for wear/grease and the tightness of the crank-arm bolts."
   },
   {
     "image_number": 32,

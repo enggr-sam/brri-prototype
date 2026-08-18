@@ -3,22 +3,22 @@
   "csv_file": "photo_folder_links.csv",
   "drive_root_url": "https://drive.google.com/drive/folders/1RuTAClVee3t4AIWcLUUkFllufLXqHqqb",
   "collector_meta": {
-    "subsystem": "hopper",
-    "keywords": [
-      "hopper bottom",
-      "bottom plate",
-      "hopper outlet",
-      "হপার নিচ"
-    ],
-    "field_photo_no": "02",
-    "description": "CAD cutting drawing: WINNOWER HOPPER BOTTOM SIDE — bottom/side panel where hopper meets the sieve."
+    "Meta collector name": "",
+    "Meta organization": "",
+    "Meta district": "",
+    "Meta date": "",
+    "Meta drive root link": "https://drive.google.com/drive/folders/1RuTAClVee3t4AIWcLUUkFllufLXqHqqb",
+    "Meta notes": ""
   },
   "counts": {
+    "specs": 17,
     "fault_trees": 9,
     "field_photos": 20,
     "field_photos_with_local_image": 9,
     "dealers": 1,
     "cad_drawings": 29,
-    "subassembly_drawings": 30
+    "cad_drawings_without_image": 0,
+    "subassembly_drawings": 33,
+    "subassembly_without_image": 3
   }
 }
