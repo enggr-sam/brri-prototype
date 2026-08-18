@@ -7,7 +7,8 @@
     "overall_mm": "1350 x 835 x 1310",
     "length_mm": 1350,
     "width_mm": 835,
-    "height_mm": 1310
+    "height_mm": 1310,
+    "weight_kg": 97.86
   },
   "motor": {
     "power_hp": 1.5,
