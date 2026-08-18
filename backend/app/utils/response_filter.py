@@ -2,6 +2,7 @@
 
 import re
 
+from app.utils.bangla_text import nfc
 from app.utils.reply_metadata import strip_leaked_metadata
 
 _NOISE_PATTERNS = [
@@ -17,12 +18,34 @@ _NOISE_PATTERNS = [
 ]
 
 
+# Sentences that point at the gallery ("ছবি নিচে দেখানো হয়েছে")। Harmless when the
+# gallery is there, confusing when it is not.
+_GALLERY_POINTER_PATTERNS = [
+    r"(?:^|(?<=[।\n]))[^।\n]*ছবি[^।\n]*(?:নিচে|নীচে|উপরে)[^।\n]*।?",
+    r"(?:^|(?<=[।\n]))[^।\n]*(?:নিচে|নীচে)[^।\n]*ছবি[^।\n]*(?:দেখ|দেওয়া|দিলাম)[^।\n]*।?",
+    r"(?:^|(?<=[।\n]))\s*see the (?:photo|image)s? below[^.\n]*\.?",
+]
+
+
+def strip_gallery_pointers(text: str) -> str:
+    """Drop "photo shown below" lines when no gallery will be attached."""
+    if not text:
+        return text
+    cleaned = text
+    for pattern in _GALLERY_POINTER_PATTERNS:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    return cleaned.strip()
+
+
 def filter_assistant_reply(text: str) -> str:
     """Strip markdown/noise only — do NOT truncate (truncation caused cut-off replies)."""
     if not text:
         return text
 
-    cleaned = text.strip()
+    # Model output mixes nukta encodings too, so normalise before anything matches on it.
+    cleaned = nfc(text).strip()
 
     # Flatten markdown bold/italic markers the model sometimes adds.
     cleaned = re.sub(r"\*+([^*]+)\*+", r"\1", cleaned)

@@ -7,6 +7,7 @@ import json
 import re
 import sys
 import time
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -19,6 +20,11 @@ from app.services.reference_selector import select_reference_images  # noqa: E40
 from app.utils.canonical_replies import match_field_fault  # noqa: E402
 
 # Questions deliberately NOT copied from fault_trees.json or form examples.
+#
+# "expect" keywords must be words a correct BANGLA answer would really use. English
+# terms only earn a hit for part codes the assistant keeps in English (B65, UCP206) or
+# for units the matcher folds from Bangla (হর্স পাওয়ার → hp, ১.৫ → 1.5). Prefer Bangla
+# stems over full words so inflections match: "নিরাপ" covers both নিরাপদ and নিরাপত্তা.
 NOVEL_TESTS = [
     {
         "id": "wet_grain",
@@ -29,7 +35,7 @@ NOVEL_TESTS = [
     {
         "id": "first_use",
         "question": "নতুন মেশিন কিনেছি, প্রথমবার চালু করার আগে কী কী চেক করব?",
-        "expect": ["belt", "motor", "bolt", "বেল্ট", "মোটর", "check"],
+        "expect": ["বেল্ট", "মোটর", "বোল্ট", "বিয়ারিং", "গ্রিজ", "চেক"],
         "expect_images_any": [],
     },
     {
@@ -41,7 +47,7 @@ NOVEL_TESTS = [
     {
         "id": "generator_power",
         "question": "বাড়িতে জেনারেটর আছে 2kVA — এই Winnower চালানো যাবে?",
-        "expect": ["220", "motor", "hp", "kw", "মোটর", "বিদ্যুৎ"],
+        "expect": ["kva", "কেভিএ", "hp", "kw", "মোটর", "1.5"],
         "expect_images_any": [],
     },
     {
@@ -56,13 +62,13 @@ NOVEL_TESTS = [
     {
         "id": "rust_frame",
         "question": "বৃষ্টির পর মেশিনের নরম প্লেটে মরিচা ধরেছে, কাজে সমস্যা হবে?",
-        "expect": ["rust", "steel", "frame", "মরিচা", "plate"],
+        "expect": ["মরিচা", "পরিষ্কার", "শুকন", "রং", "ঘষ", "প্লেট"],
         "expect_images_any": [],
     },
     {
         "id": "cad_hopper_welder",
         "question": "হপার পার্ট-২ এর কাটিং ড্রয়িং দেখান, কামাই করতে হবে",
-        "expect": ["hopper", "drawing", "dimension", "হপার", "plate"],
+        "expect": ["হপার", "মাপ", "প্লেট", "ড্রয়িং", "কাট", "mm"],
         "expect_images_any": ["cad_17", "hopper"],
     },
     {
@@ -74,7 +80,7 @@ NOVEL_TESTS = [
     {
         "id": "safety_belt",
         "question": "বাচ্চারা খেলতে গিয়ে বেল্টে হাত দিলে কী হতে পারে, কীভাবে সুরক্ষা?",
-        "expect": ["belt", "guard", "stop", "বেল্ট", "নিরাপদ", "power"],
+        "expect": ["বেল্ট", "কভার", "নিরাপ", "দুর্ঘটনা", "বন্ধ", "দূরে"],
         "expect_images_any": [],
     },
     {
@@ -88,6 +94,15 @@ NOVEL_TESTS = [
         "question": "দোকানদার B-52 বেল্ট দিল, চলবে?",
         "expect": ["b65", "65", "belt", "no", "না", "বেল্ট", "inch"],
         "expect_images_any": ["field_10", "belt", "b65"],
+    },
+    {
+        # Mentioning a shop is not a shopping question — this must stay a
+        # "where is it mounted" answer, with no dealer list.
+        "id": "belt_location_not_shopping",
+        "question": "বেল্ট কোথায় লাগানো থাকে?",
+        "expect": ["পুলি", "মোটর", "বেল্ট", "ব্লোয়ার"],
+        "expect_images_any": ["field_10", "field_11", "belt", "pulley", "01_brri"],
+        "forbid": ["০১৭১৮২৩২৪০৬", "ডিলার পয়েন্ট"],
     },
     {
         "id": "visual_followup",
@@ -141,8 +156,9 @@ NOVEL_TESTS = [
         "question": "বেল্ট একটু ঢিলা মনে হচ্ছে, কী করব?",
         "expect": ["টাইট", "বেল্ট", "পুলি", "tension"],
         "expect_images_any": ["field_10", "belt", "01_brri", "27_v_belt"],
-        # A tension check should not turn into a shopping list.
-        "forbid": ["০১৭১৮২৩২৪০৬"],
+        # The dealer block is allowed here only because a worn belt may genuinely need
+        # replacing; what must not happen is the shopping list replacing the tension
+        # advice, which the "expect" keywords above check for.
     },
     {
         "id": "no_leaked_meta",
@@ -196,9 +212,38 @@ def _has_bangla(text: str) -> bool:
     return bool(re.search(r"[\u0980-\u09FF]", text))
 
 
+_BN_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+
+# The assistant answers in Bangla, so "1.5 HP" comes back as "১.৫ হর্স পাওয়ার" and
+# "UCP206" as "ইউসিপি২০৬". Fold those to Latin before keyword matching, otherwise a
+# perfectly correct reply scores as a miss.
+_BN_TERM_ALIASES = (
+    ("হর্স পাওয়ার", " hp "),
+    ("হর্সপাওয়ার", " hp "),
+    ("এইচপি", " hp "),
+    ("কিলোওয়াট", " kw "),
+    ("আরপিএম", " rpm "),
+    ("মিলিমিটার", " mm "),
+    ("মিমি", " mm "),
+    ("কেজি", " kg "),
+    ("ইউসিপি", "ucp"),
+    ("অ্যাঙ্গেল", " angle "),
+    ("এঙ্গেল", " angle "),
+)
+
+
+def _normalize_for_match(text: str) -> str:
+    # NFC first: য়/ও য়া arrive either precomposed (U+09DF) or as য + nukta, and the
+    # two forms never compare equal as raw strings.
+    lower = unicodedata.normalize("NFC", text or "").lower().translate(_BN_DIGITS)
+    for bn, latin in _BN_TERM_ALIASES:
+        lower = lower.replace(bn, latin)
+    return re.sub(r"\s+", " ", lower)
+
+
 def _keyword_hits(text: str, keywords: list[str]) -> int:
-    lower = text.lower()
-    return sum(1 for k in keywords if k.lower() in lower)
+    normalized = _normalize_for_match(text)
+    return sum(1 for k in keywords if _normalize_for_match(k).strip() in normalized)
 
 
 def _score_images(names: list[str], expect_any: list[str]) -> tuple[float, str]:
@@ -214,8 +259,9 @@ def _score_images(names: list[str], expect_any: list[str]) -> tuple[float, str]:
 
 
 def _forbidden_hits(text: str, forbid: list[str]) -> list[str]:
-    lower = text.lower()
-    return [f for f in forbid if f.lower() in lower]
+    # Normalized both ways so "০.৫ এইচপি" is caught by the "0.5 hp" rule.
+    normalized = _normalize_for_match(text)
+    return [f for f in forbid if _normalize_for_match(f).strip() in normalized]
 
 
 def _score_reply(

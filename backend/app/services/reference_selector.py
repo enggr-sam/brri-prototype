@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import re
+from functools import lru_cache
 from pathlib import Path
 
 from app.config import settings
@@ -135,12 +136,29 @@ def _tokenize(text: str) -> set[str]:
     return {t for t in re.split(r"[^\w\u0980-\u09FF]+", text) if len(t) >= 2}
 
 
+@lru_cache(maxsize=512)
+def _keyword_pattern(keyword: str) -> re.Pattern[str]:
+    """Match ``keyword`` only at the start of a word.
+
+    Plain substring matching misreads Bangla: হাওয়া (wind) hides inside আবহাওয়া
+    (weather), so a weather question used to score blower photos. Bangla attaches
+    suffixes rather than prefixes (বাতাস → বাতাসের), so guarding the left edge alone
+    keeps inflected forms matching while dropping accidental hits — the same guard
+    stops "arm" from firing on "farmer".
+    """
+    return re.compile(rf"(?<![\w\u0980-\u09FF]){re.escape(keyword.lower())}")
+
+
+def _keyword_in_text(keyword: str, text: str) -> bool:
+    return bool(_keyword_pattern(keyword).search(text))
+
+
 def _detect_query_topics(query: str) -> set[str]:
     ql = query.lower()
     return {
         topic
         for topic, keywords in _TOPIC_KEYWORDS.items()
-        if any(kw in ql for kw in keywords)
+        if any(_keyword_in_text(kw, ql) for kw in keywords)
     }
 
 

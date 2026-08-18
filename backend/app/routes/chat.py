@@ -27,6 +27,7 @@ from app.services.knowledge_base import get_knowledge_base
 from app.services.reference_selector import (
     order_reference_images_by_relevance,
 )
+from app.utils.bangla_text import nfc
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
     IMAGE_CONTENT_TYPES,
@@ -134,7 +135,7 @@ async def _prepare_user_input(
     if not user_content:
         user_content = "এই যন্ত্রাংশে কী সমস্যা হতে পারে?" if user_image_path else "সাহায্য করুন।"
 
-    return user_content, modality, attachment_path, user_image_path
+    return nfc(user_content), modality, attachment_path, user_image_path
 
 
 def _save_turn(

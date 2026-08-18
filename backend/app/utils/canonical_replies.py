@@ -32,6 +32,33 @@ def is_chaff_issue_query(text: str) -> bool:
     return any(term in lower for term in _CHAFF_TERMS)
 
 
+# A refusal is phrased freely by the model, so match on the scope statement plus a
+# decline. Both are required: "সাহায্য করতে পারি" alone appears in real answers too.
+_REFUSAL_SCOPE_MARKERS = ("শুধুমাত্র", "কেবল", "শুধু ")
+_REFUSAL_DECLINE_MARKERS = (
+    "সাহায্য করতে পারি",
+    "দিতে পারব না",
+    "দিতে পারি না",
+    "উত্তর দিতে পারব না",
+    "বলতে পারব না",
+    "আমার আওতার বাইরে",
+)
+
+
+def is_off_topic_refusal(reply: str) -> bool:
+    """True when the reply declines an off-topic question.
+
+    Machine photos under a "I only help with this winnower" answer look like a bug to
+    the farmer, so the gallery is suppressed for these turns.
+    """
+    text = (reply or "").strip()
+    if not text or len(text) > 600:
+        return False
+    return any(m in text for m in _REFUSAL_SCOPE_MARKERS) and any(
+        m in text for m in _REFUSAL_DECLINE_MARKERS
+    )
+
+
 def format_chaff_wind_reply_bn() -> str:
     return (
         "সমস্যা: ব্লোয়ারের বাতাস বেশি থাকলে চিটা/তুষ বেশি উড়ে যায়; "

@@ -20,7 +20,35 @@ _PRICE_TERMS = (
     "টাকা কত",
 )
 
-_SUPPLIER_TERMS = (
+# Wanting to obtain a belt.
+_ACQUIRE_TERMS = (
+    "পাব",
+    "পাও",
+    "pawa",
+    "paowa",
+    "kinbo",
+    "কিনব",
+    "কিনতে",
+    "কেনা",
+    "কেনার",
+    "buy",
+    "purchase",
+    "order",
+    "অর্ডার",
+)
+
+# Asking for a seller by name.
+_DEALER_NOUNS = (
+    "ডিলার",
+    "dealer",
+    "supplier",
+    "বিক্রেতা",
+)
+
+# Where/shop words. These hint at shopping but do not establish it on their own:
+# "বেল্ট কোথায় লাগানো থাকে?" asks for a location, and "দোকানদার B-52 বেল্ট দিল,
+# চলবে?" asks whether a wrong-size belt will work.
+_SHOP_CONTEXT_TERMS = (
     "কোথায়",
     "কোথায়",
     "kothai",
@@ -98,7 +126,11 @@ def is_belt_supplier_query(text: str) -> bool:
     lower = (text or "").lower()
     if not _has_belt(lower):
         return False
-    return any(term in lower for term in _SUPPLIER_TERMS)
+    if any(term in lower for term in _ACQUIRE_TERMS + _DEALER_NOUNS):
+        return True
+    # A bare "বেল্ট কোথায়?" is a shopping question; the same words inside a longer
+    # sentence are usually part of a different question.
+    return len(lower) <= 24 and any(term in lower for term in _SHOP_CONTEXT_TERMS)
 
 
 def clearly_needs_new_belt(user_text: str, reply_text: str) -> bool:
@@ -239,11 +271,21 @@ def ensure_belt_dealers_in_reply(
             return text.strip()
         return format_belt_price_reply_bn()
 
-    if _dealers_complete(text) and not _reply_looks_truncated(text):
+    # Contact details already present: never append a second copy. A dealer line ending
+    # in a phone number trips the truncation heuristic, and printing the same shop twice
+    # is worse for the farmer than an abrupt ending.
+    if _dealers_complete(text):
         return text.strip()
 
     if is_belt_supplier_query(user_text):
-        return format_belt_suppliers_bn()
+        # Append rather than replace, so a draft that answered something else as well
+        # (say, whether a B-52 belt fits) is not thrown away.
+        if len(text.strip()) < 40 or _reply_looks_truncated(text):
+            return format_belt_suppliers_bn()
+        return (
+            f"{text.rstrip()}\n\n"
+            f"{format_belt_suppliers_bn(heading='B65 বেল্ট কেনার জায়গা:')}"
+        )
 
     # Clear new-belt need: append quietly under the diagnosis.
     return (

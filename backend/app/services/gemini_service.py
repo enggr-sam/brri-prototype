@@ -24,7 +24,7 @@ from app.services.reference_selector import (
     select_reference_images,
     user_requests_visual_help,
 )
-from app.utils.canonical_replies import ensure_canonical_reply
+from app.utils.canonical_replies import ensure_canonical_reply, is_off_topic_refusal
 from app.utils.parts_suppliers import (
     ensure_belt_dealers_in_reply,
     is_belt_price_query,
@@ -35,7 +35,7 @@ from app.utils.follow_ups import local_suggestions
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
 from app.utils.reply_polish import needs_polish, polish_prompt
-from app.utils.response_filter import filter_assistant_reply
+from app.utils.response_filter import filter_assistant_reply, strip_gallery_pointers
 
 logger = logging.getLogger(__name__)
 
@@ -52,9 +52,12 @@ def _resolve_show_reference_images(
     reference_images: list[Path],
     meta: dict,
     history: list[dict[str, str]] | None = None,
+    reply_text: str = "",
 ) -> bool:
     """Decide whether to show the reference gallery in the UI."""
     if not reference_images:
+        return False
+    if is_off_topic_refusal(reply_text):
         return False
     if is_belt_supplier_query(user_text):
         return False
@@ -371,8 +374,10 @@ class GeminiService:
             main_text = ensure_belt_dealers_in_reply("", user_text, history)
 
         show_images = _resolve_show_reference_images(
-            user_text, reference_images, meta, history
+            user_text, reference_images, meta, history, reply_text=main_text
         )
+        if not show_images:
+            main_text = strip_gallery_pointers(main_text)
         suggestions = meta.get("suggestions") or []
         if not suggestions:
             suggestions = local_suggestions(user_text, history)
