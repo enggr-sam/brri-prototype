@@ -4,14 +4,7 @@ import json
 from pathlib import Path
 
 from app.services.knowledge_base import get_knowledge_base
-
-
-def _short_label(image_name: str) -> str:
-    """Human-readable label from filename (strip number prefix and extension)."""
-    name = image_name
-    if "_" in name and name[:2].isdigit():
-        name = name.split("_", 1)[1]
-    return name.rsplit(".", 1)[0].replace("_", " ").title()
+from app.utils.image_labels import display_label
 
 
 def reference_images_metadata(
@@ -33,7 +26,7 @@ def reference_images_metadata(
                 "image_number": image_number,
                 "image_name": path.name,
                 "url": f"/api/reference-images/{path.name}",
-                "label": _short_label(path.name),
+                "label": display_label(entry, path.name),
                 "description": desc,
                 "contextual_note": contextual_note,
                 "drive_folder_url": entry.get("drive_folder_url"),
@@ -53,6 +46,15 @@ def loads_reference_images(raw: str | None) -> list[dict]:
         return []
     try:
         data = json.loads(raw)
-        return data if isinstance(data, list) else []
     except json.JSONDecodeError:
         return []
+    if not isinstance(data, list):
+        return []
+    # Labels are recomputed on read so older messages, saved when captions came from
+    # filenames, show the current Bangla wording too.
+    kb = get_knowledge_base()
+    for item in data:
+        name = item.get("image_name")
+        if name:
+            item["label"] = display_label(kb._by_name.get(name, {}), name)
+    return data

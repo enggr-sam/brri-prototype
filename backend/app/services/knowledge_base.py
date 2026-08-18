@@ -281,6 +281,7 @@ def _field_photos_as_reference(field_photos: list[dict[str, Any]]) -> list[dict[
                 "description": desc.strip(),
                 "source": "field_collection",
                 "photo_no": fp.get("photo_no"),
+                "part_paper": part,
                 "drive_folder_url": fp.get("drive_folder_url"),
                 "related_symptoms_bn": related,
             }

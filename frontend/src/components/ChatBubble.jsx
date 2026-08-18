@@ -44,8 +44,8 @@ function ReferenceGallery({ images }) {
               loading="lazy"
             />
             <figcaption className="px-3 py-2.5">
-              <p className="text-sm font-semibold text-brri-dark">
-                #{img.image_number} {img.label}
+              <p className="font-bengali text-sm font-semibold text-brri-dark">
+                {img.label}
               </p>
               {img.contextual_note ? (
                 <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-700">

@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 from app.services.knowledge_base import get_knowledge_base
-from app.utils.reference_metadata import _short_label
+from app.utils.image_labels import display_label
 
 _CAPTION_LINE = re.compile(r"^IMG#(\d+):\s*(.+)$", re.IGNORECASE)
 
@@ -34,7 +34,7 @@ def caption_prompt(
         num = entry.get("image_number")
         if num is None:
             continue
-        label = _short_label(path.name)
+        label = display_label(entry, path.name)
         desc = entry.get("description") or ""
         hook = desc.split("Troubleshooting context:", 1)[-1].strip() if desc else ""
         photo_lines.append(f"- ছবি #{num} ({label}): {hook[:160]}")
