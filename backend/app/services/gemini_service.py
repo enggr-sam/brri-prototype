@@ -11,10 +11,18 @@ from pathlib import Path
 
 from app.config import settings
 from app.services.knowledge_base import KnowledgeBase, get_knowledge_base
+from app.utils.conversation_focus import (
+    build_conversation_focus,
+    conversation_wants_visuals,
+)
+from app.utils.image_reasoner import (
+    build_image_reason_prompt,
+    parse_image_reason_response,
+)
 from app.services.reference_selector import (
-    build_image_selection_query,
+    retrieve_image_candidates,
+    select_reference_images,
     user_requests_visual_help,
-    _issue_matched_numbers,
 )
 from app.utils.canonical_replies import ensure_canonical_reply
 from app.utils.parts_suppliers import (
@@ -49,18 +57,17 @@ def _resolve_show_reference_images(
         return False
     if is_belt_supplier_query(user_text):
         return False
-    query = build_image_selection_query(user_text, history)
-    if is_belt_price_query(query, history):
+    if is_belt_price_query(user_text, history):
         return False
-    if user_requests_visual_help(user_text):
+    if conversation_wants_visuals(user_text, history):
         return True
-    query = build_image_selection_query(user_text, history)
-    if _issue_matched_numbers(query):
+    if user_requests_visual_help(user_text):
         return True
     if meta.get("show_images") is True:
         return True
     if meta.get("show_images") is False:
         return False
+    # Images were pre-selected for this focus — show them.
     return True
 
 
@@ -166,6 +173,60 @@ class GeminiService:
     @property
     def is_configured(self) -> bool:
         return self._client is not None
+
+    def pick_reference_images(
+        self,
+        user_text: str,
+        history: list[dict[str, str]] | None = None,
+        *,
+        has_user_image: bool = False,
+    ) -> list[Path]:
+        """Focus → retrieve shortlist → reason which images fit → return paths."""
+        candidates = retrieve_image_candidates(user_text, history)
+        if not candidates:
+            return []
+
+        preferred: list[int] = []
+        wants = conversation_wants_visuals(user_text, history) or has_user_image
+        focus = build_conversation_focus(user_text, history)
+        allowed = {
+            int(c["image_number"])
+            for c in candidates
+            if c.get("image_number") is not None
+        }
+
+        if self.is_configured and candidates:
+            try:
+                prompt = build_image_reason_prompt(
+                    focus, user_text, candidates, wants_photos=wants
+                )
+                raw, _usage = self._generate_with_fallback(
+                    [self._types.Part.from_text(text=prompt)],
+                    config=self._types.GenerateContentConfig(
+                        system_instruction=(
+                            "You are a careful image picker for BRRI Winnower support. "
+                            "Match photos to the conversation topic only. JSON only."
+                        ),
+                        max_output_tokens=256,
+                        temperature=0.1,
+                    ),
+                )
+                preferred = parse_image_reason_response(raw, allowed)
+                logger.info(
+                    "Image reasoner focus=%r wants_photos=%s picked=%s",
+                    focus[:80],
+                    wants,
+                    preferred,
+                )
+            except Exception:
+                logger.exception("Image reasoner failed; using ranked shortlist.")
+
+        return select_reference_images(
+            user_text=user_text,
+            has_user_image=has_user_image,
+            history=history,
+            preferred_numbers=preferred or None,
+        )
 
     def _image_part(self, path: Path):
         mime, _ = mimetypes.guess_type(str(path))

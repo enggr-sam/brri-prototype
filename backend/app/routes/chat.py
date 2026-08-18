@@ -26,7 +26,6 @@ from app.services.gemini_service import ChatReplyResult, QuotaExceededError, gem
 from app.services.knowledge_base import get_knowledge_base
 from app.services.reference_selector import (
     order_reference_images_by_relevance,
-    select_reference_images,
 )
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
@@ -261,10 +260,10 @@ async def chat_message_stream(
 
     reference_paths: list[Path] = []
     if _should_attach_reference_images(user_content, user_image_path is not None):
-        reference_paths = select_reference_images(
-            user_text=user_content,
+        reference_paths = gemini_service.pick_reference_images(
+            user_content,
+            history,
             has_user_image=user_image_path is not None,
-            history=history,
         )
 
     def event_stream():
@@ -357,10 +356,10 @@ async def chat_message(
 
     reference_paths: list[Path] = []
     if _should_attach_reference_images(user_content, user_image_path is not None):
-        reference_paths = select_reference_images(
-            user_text=user_content,
+        reference_paths = gemini_service.pick_reference_images(
+            user_content,
+            history,
             has_user_image=user_image_path is not None,
-            history=history,
         )
 
     try:

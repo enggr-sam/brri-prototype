@@ -95,7 +95,8 @@ def polish_prompt(user_text: str, draft: str) -> str:
         "---META---\n"
         '{"suggestions":["q1","q2","q3"],"show_images":true_or_false}\n'
         "7. Never put show_images / suggestions / ---META--- inside the visible Bangla text.\n"
-        "8. If the draft is already complete and good, keep it (light cleanup only) then add META.\n\n"
+        "8. Never paste Google Drive or external folder links. Photos appear in the app.\n"
+        "9. If the draft is already complete and good, keep it (light cleanup only) then add META.\n\n"
         f"QUESTION:\n{user}\n\n"
         f"DRAFT:\n{draft_clean}\n\n"
         "FINAL REPLY (complete Bangla first, then ---META---):"

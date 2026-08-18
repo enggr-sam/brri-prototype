@@ -27,6 +27,19 @@ def filter_assistant_reply(text: str) -> str:
     # Flatten markdown bold/italic markers the model sometimes adds.
     cleaned = re.sub(r"\*+([^*]+)\*+", r"\1", cleaned)
 
+    # Never show Google Drive folder links to farmers in chat — gallery is in-app.
+    cleaned = re.sub(
+        r"https?://(?:drive|docs)\.google\.com/\S+",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"(?i)(গুগল\s*ড্রাইভ|google\s*drive)[^\n।.]*[।.]?",
+        "",
+        cleaned,
+    )
+
     kept: list[str] = []
     for line in cleaned.splitlines():
         stripped = line.strip()
@@ -39,4 +52,5 @@ def filter_assistant_reply(text: str) -> str:
 
     cleaned = "\n".join(kept).strip()
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
     return strip_leaked_metadata(cleaned)

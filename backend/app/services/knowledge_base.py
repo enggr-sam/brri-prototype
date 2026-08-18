@@ -101,15 +101,12 @@ class KnowledgeBase:
             return ""
         lines = []
         for fp in self.field_photos:
-            drive = fp.get("drive_folder_url") or ""
             local = "yes" if fp.get("local_image") else "pending upload"
             related = ", ".join(fp.get("related_symptoms_bn") or [])
             line = (
                 f"- Photo #{fp.get('photo_no')} {fp.get('part_paper')}: "
                 f"local preview={local}"
             )
-            if drive:
-                line += f"; Drive folder={drive}"
             if related:
                 line += f"; symptoms={related}"
             lines.append(line)
@@ -187,9 +184,11 @@ class KnowledgeBase:
         if photos:
             parts += [
                 "",
-                "=== FIELD PHOTO SLOTS (01–20, Google Drive folders) ===",
-                "Each slot has a Drive folder for high-res uploads. When a farmer asks "
-                "for a part photo, mention the matching slot number if known.",
+                "=== FIELD PHOTO SLOTS (01–20) ===",
+                "Local preview photos may be attached in the chat gallery. "
+                "NEVER paste Google Drive folder links in farmer-facing replies. "
+                "If the farmer asks for a photo, say the matching part will appear "
+                "below this message (or ask them to tap for photos).",
                 photos,
                 "=== END FIELD PHOTO SLOTS ===",
             ]
@@ -231,10 +230,10 @@ def _field_photos_as_reference(field_photos: list[dict[str, Any]]) -> list[dict[
                 f"Troubleshooting context: relates to local symptoms "
                 f"({', '.join(related)}). "
             )
-        drive = fp.get("drive_folder_url")
-        if drive:
-            desc += f"More photos in Google Drive folder: {drive}. "
-        desc += "Use this to show the farmer what the part looks like on a real machine."
+        desc += (
+            "Show this in the in-app gallery so the farmer can see the part "
+            "on a real machine. Never paste Google Drive links in the reply."
+        )
         entries.append(
             {
                 "image_number": fp.get("image_number"),
@@ -242,7 +241,7 @@ def _field_photos_as_reference(field_photos: list[dict[str, Any]]) -> list[dict[
                 "description": desc.strip(),
                 "source": "field_collection",
                 "photo_no": fp.get("photo_no"),
-                "drive_folder_url": drive,
+                "drive_folder_url": fp.get("drive_folder_url"),
                 "related_symptoms_bn": related,
             }
         )
