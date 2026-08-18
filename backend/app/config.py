@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.0-flash"
     # Tried automatically when the primary model returns 429/404/503.
     GEMINI_FALLBACK_MODEL: str = "gemini-flash-latest"
+    # Cheap/fast model for the helper stages (image picking, gallery captions) that
+    # produce short output and do not need the answer model. Empty = use the main chain.
+    GEMINI_FAST_MODEL: str = "gemini-flash-lite-latest"
 
     @property
     def model_chain(self) -> list[str]:
@@ -33,6 +36,17 @@ class Settings(BaseSettings):
         chain = [self.GEMINI_MODEL]
         if self.GEMINI_FALLBACK_MODEL and self.GEMINI_FALLBACK_MODEL not in chain:
             chain.append(self.GEMINI_FALLBACK_MODEL)
+        return chain
+
+    @property
+    def fast_model_chain(self) -> list[str]:
+        """Models for helper stages, falling back to the main chain."""
+        chain: list[str] = []
+        if self.GEMINI_FAST_MODEL:
+            chain.append(self.GEMINI_FAST_MODEL)
+        for model in self.model_chain:
+            if model not in chain:
+                chain.append(model)
         return chain
 
     # --- Database ---------------------------------------------------------
@@ -73,6 +87,17 @@ class Settings(BaseSettings):
     MAX_REFERENCE_IMAGES: int = 3
     # Minimum relevance score (see reference_selector) to attach an image.
     REFERENCE_IMAGE_MIN_SCORE: float = 4.0
+
+    # --- Latency / cost controls ------------------------------------------
+    # Each turn costs one model call per stage. These skip stages that are not
+    # needed for the current turn.
+    # Only run the polish/editor pass when the streamed draft looks incomplete.
+    POLISH_ONLY_WHEN_NEEDED: bool = True
+    # Generate per-image gallery captions (extra call; UI has a Bangla default).
+    ENABLE_IMAGE_CAPTIONS: bool = True
+    # Skip the LLM image picker when the top-ranked image already wins clearly.
+    # Ratio of best score to runner-up above which the ranking is trusted as-is.
+    IMAGE_REASONER_SKIP_MARGIN: float = 1.6
 
     # --- Filesystem locations --------------------------------------------
     KNOWLEDGE_BASE_DIR: Path = BACKEND_DIR / "knowledge_base"

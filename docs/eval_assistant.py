@@ -45,10 +45,13 @@ NOVEL_TESTS = [
         "expect_images_any": [],
     },
     {
+        # The form lists three sieve types by size class only; exact hole diameters
+        # are NOT in the collected data, so the assistant must not quote mm figures.
         "id": "mustard_sieve",
-        "question": "সরিষা পরিষ্কার করতে 6mm নাকি 10mm ঝরনি লাগবে?",
-        "expect": ["sieve", "6", "10", "13", "mm", "ঝরন", "net"],
+        "question": "সরিষা পরিষ্কার করতে কোন ঝরনি লাগবে?",
+        "expect": ["sieve", "ঝরন", "ছোট", "small", "net", "তিন"],
         "expect_images_any": ["sieve", "cad_22", "field_08"],
+        "forbid": ["6mm", "6 mm", "10mm", "10 mm", "13mm", "13 mm"],
     },
     {
         "id": "rust_frame",
@@ -93,6 +96,81 @@ NOVEL_TESTS = [
         "expect": ["6203", "bearing", "shaft", "ঝরন", "বিয়ারিং", "শ্যাফট"],
         "expect_images_any": ["field_09", "sieve", "cad_26", "6203"],
     },
+    # --- Regression cases: data integrity against the collection form ---------
+    {
+        # The form has exactly ONE filled dealer row. Any other shop is invented.
+        "id": "dealer_only_verified",
+        "question": "নতুন B65 বেল্ট কিনতে হবে, কোথায় পাওয়া যাবে?",
+        "expect": ["এসি আই মোটরস", "০১৭১৮২৩২৪০৬", "পটুয়াখালী", "b65"],
+        "expect_images_any": [],
+        "forbid": ["নিউ এগ্রো", "টিপু সুলতান", "০১৭১৮২৩১৪৯৬", "01718231496"],
+    },
+    {
+        "id": "belt_price_no_gallery",
+        "question": "বেল্টের দাম কত?",
+        "expect": ["দাম", "ডিলার", "০১৭১৮২৩২৪০৬"],
+        "expect_images_any": [],
+        "expect_no_gallery": True,
+        "forbid": ["নিউ এগ্রো", "টিপু সুলতান"],
+    },
+    {
+        # Form says 1.5 HP / 1.1 kW / 1400 rpm. Older catalogue text said 0.5 HP.
+        "id": "motor_rating",
+        "question": "মোটরের ক্ষমতা কত এইচপি?",
+        "expect": ["1.5", "১.৫", "hp", "kw", "1400"],
+        "expect_images_any": [],
+        "forbid": ["0.5 hp", "0.5hp", "০.৫"],
+    },
+    {
+        # Form lists 6203 (sieve), UCP206 (pillow), 6302 (blower). Not 6306 / P-206.
+        "id": "bearing_numbers",
+        "question": "ঝরনি আর ব্লোয়ারে কোন কোন বিয়ারিং লাগে?",
+        "expect": ["6203", "ucp206", "6302", "বিয়ারিং"],
+        "expect_images_any": ["field_14", "field_15", "bearing"],
+        "forbid": ["6306", "p-206"],
+    },
+    {
+        "id": "no_drive_links",
+        "question": "এয়ার কন্ট্রোল প্লেটের ছবি দেখান",
+        "expect": ["এয়ার", "প্লেট", "বাতাস"],
+        "expect_images_any": ["field_03", "cad_11", "air_control", "13_air_control"],
+        "forbid": ["drive.google.com", "গুগল ড্রাইভ", "ড্রাইভ লিংক"],
+    },
+    {
+        "id": "belt_tension_no_dealer_dump",
+        "question": "বেল্ট একটু ঢিলা মনে হচ্ছে, কী করব?",
+        "expect": ["টাইট", "বেল্ট", "পুলি", "tension"],
+        "expect_images_any": ["field_10", "belt", "01_brri", "27_v_belt"],
+        # A tension check should not turn into a shopping list.
+        "forbid": ["০১৭১৮২৩২৪০৬"],
+    },
+    {
+        "id": "no_leaked_meta",
+        "question": "চিটা এত উড়ে যায় কেন?",
+        "expect": ["বাতাস", "এয়ার", "কমা"],
+        "expect_images_any": ["field_03", "air_control", "13_air_control", "field_05"],
+        "forbid": ["show_images", "---meta", "suggestions", "{\"", "true (since"],
+    },
+    {
+        "id": "weight_spec",
+        "question": "মেশিনের ওজন কত?",
+        "expect": ["৯৭", "97", "কেজি", "kg", "ওজন"],
+        "expect_images_any": [],
+    },
+    {
+        "id": "off_topic_refusal",
+        "question": "আজকের আবহাওয়া কেমন থাকবে?",
+        "expect": ["উইনোয়ার", "মেশিন", "সাহায্য", "প্রশ্ন"],
+        "expect_images_any": [],
+        "expect_no_gallery": True,
+        "forbid": ["বৃষ্টি হবে", "তাপমাত্রা"],
+    },
+    {
+        "id": "frame_material",
+        "question": "মূল ফ্রেমের অ্যাঙ্গেল বারের মাপ কত?",
+        "expect": ["38", "৩৮", "angle", "অ্যাঙ্গেল", "mm"],
+        "expect_images_any": [],
+    },
 ]
 
 
@@ -135,7 +213,21 @@ def _score_images(names: list[str], expect_any: list[str]) -> tuple[float, str]:
     return 0.5, "no images attached"
 
 
-def _score_reply(question: str, reply: str, image_names: list[str], expect: list[str], expect_img: list[str]) -> Score:
+def _forbidden_hits(text: str, forbid: list[str]) -> list[str]:
+    lower = text.lower()
+    return [f for f in forbid if f.lower() in lower]
+
+
+def _score_reply(
+    question: str,
+    reply: str,
+    image_names: list[str],
+    expect: list[str],
+    expect_img: list[str],
+    forbid: list[str] | None = None,
+    show_gallery: bool | None = None,
+    expect_no_gallery: bool = False,
+) -> Score:
     if not reply or len(reply.strip()) < 20:
         return Score(0, 0, 0, 0, 0, "empty or too short")
 
@@ -147,6 +239,12 @@ def _score_reply(question: str, reply: str, image_names: list[str], expect: list
     if hits >= 2:
         grounded = min(5.0, grounded + 1.0)
 
+    # Forbidden strings are data-integrity failures (invented dealers, wrong part
+    # numbers, leaked prompt text). They zero out groundedness rather than nudge it.
+    banned = _forbidden_hits(reply, forbid or [])
+    if banned:
+        grounded = 0.0
+
     actionable = 3.0
     if re.search(r"[১২৩456789]|^\s*[1-9]\.", reply, re.MULTILINE):
         actionable = 4.5
@@ -157,8 +255,15 @@ def _score_reply(question: str, reply: str, image_names: list[str], expect: list
     if len(reply) > 80 and _has_bangla(reply):
         language = min(5.0, language + 0.5)
 
-    img_score, img_note = _score_images(image_names, expect_img)
+    if expect_no_gallery:
+        img_score = 5.0 if not show_gallery else 1.0
+        img_note = "gallery correctly hidden" if not show_gallery else "GALLERY SHOWN but should be hidden"
+    else:
+        img_score, img_note = _score_images(image_names, expect_img)
+
     notes = f"kw={hits}/expect; img: {img_note}"
+    if banned:
+        notes += f"; FORBIDDEN: {banned}"
     return Score(rel, grounded, actionable, language, img_score, notes)
 
 
@@ -186,7 +291,16 @@ def run_eval() -> dict:
             reply = f"API ERROR: {exc}"
             show = False
 
-        score = _score_reply(q, reply, img_names, test["expect"], test["expect_images_any"])
+        score = _score_reply(
+            q,
+            reply,
+            img_names,
+            test["expect"],
+            test["expect_images_any"],
+            forbid=test.get("forbid"),
+            show_gallery=show,
+            expect_no_gallery=test.get("expect_no_gallery", False),
+        )
         row = {
             "id": test["id"],
             "question": q,
@@ -194,6 +308,7 @@ def run_eval() -> dict:
             "reply_len": len(reply),
             "images": img_names,
             "show_gallery": show,
+            "forbidden_hits": _forbidden_hits(reply, test.get("forbid") or []),
             "field_fault_match": fault.get("field_key") if fault else None,
             "score_pct": score.pct,
             "score_detail": {
@@ -210,12 +325,19 @@ def run_eval() -> dict:
         time.sleep(1.2)
 
     avg_pct = round(sum(r["score_pct"] for r in results) / len(results), 1)
+    violations = [r["id"] for r in results if r["forbidden_hits"]]
+
+    def _passes(row: dict, threshold: float) -> bool:
+        # A forbidden string means wrong data reached the farmer — never a pass.
+        return row["score_pct"] >= threshold and not row["forbidden_hits"]
+
     summary = {
         "tests": len(results),
         "average_score_pct": avg_pct,
-        "pass_rate_60pct": round(100 * sum(1 for r in results if r["score_pct"] >= 60) / len(results), 1),
-        "pass_rate_70pct": round(100 * sum(1 for r in results if r["score_pct"] >= 70) / len(results), 1),
+        "pass_rate_60pct": round(100 * sum(1 for r in results if _passes(r, 60)) / len(results), 1),
+        "pass_rate_70pct": round(100 * sum(1 for r in results if _passes(r, 70)) / len(results), 1),
         "with_images": sum(1 for r in results if r["images"]),
+        "forbidden_violations": violations,
         "results": results,
     }
     return summary
@@ -230,4 +352,8 @@ if __name__ == "__main__":
     print(f"Pass rate (≥60%): {summary['pass_rate_60pct']}%")
     print(f"Pass rate (≥70%): {summary['pass_rate_70pct']}%")
     print(f"Tests with images: {summary['with_images']}/{summary['tests']}")
+    if summary["forbidden_violations"]:
+        print(f"DATA INTEGRITY FAILURES: {summary['forbidden_violations']}")
+    else:
+        print("Data integrity: no forbidden strings in any reply")
     print(f"Full report → {out}")

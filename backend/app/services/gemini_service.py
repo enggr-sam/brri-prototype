@@ -20,7 +20,7 @@ from app.utils.image_reasoner import (
     parse_image_reason_response,
 )
 from app.services.reference_selector import (
-    retrieve_image_candidates,
+    retrieve_scored_candidates,
     select_reference_images,
     user_requests_visual_help,
 )
@@ -31,6 +31,7 @@ from app.utils.parts_suppliers import (
     is_belt_supplier_query,
 )
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
+from app.utils.follow_ups import local_suggestions
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
 from app.utils.reply_polish import needs_polish, polish_prompt
@@ -69,6 +70,25 @@ def _resolve_show_reference_images(
         return False
     # Images were pre-selected for this focus — show them.
     return True
+
+
+def _ranking_is_decisive(scored: list[tuple[float, dict]]) -> bool:
+    """True when the shortlist needs no LLM arbitration.
+
+    Either there is nothing to choose between, or the winners are far enough ahead of
+    the first image we would not show that the reasoner cannot change the outcome.
+    """
+    limit = settings.MAX_REFERENCE_IMAGES
+    if len(scored) <= limit:
+        return True
+    margin = settings.IMAGE_REASONER_SKIP_MARGIN
+    if margin <= 0:
+        return False
+    worst_kept = scored[limit - 1][0]
+    best_dropped = scored[limit][0]
+    if best_dropped <= 0:
+        return True
+    return worst_kept >= best_dropped * margin
 
 
 class QuotaExceededError(Exception):
@@ -182,10 +202,11 @@ class GeminiService:
         has_user_image: bool = False,
     ) -> list[Path]:
         """Focus → retrieve shortlist → reason which images fit → return paths."""
-        candidates = retrieve_image_candidates(user_text, history)
-        if not candidates:
+        scored = retrieve_scored_candidates(user_text, history)
+        if not scored:
             return []
 
+        candidates = [c for _, c in scored]
         preferred: list[int] = []
         wants = conversation_wants_visuals(user_text, history) or has_user_image
         focus = build_conversation_focus(user_text, history)
@@ -195,7 +216,12 @@ class GeminiService:
             if c.get("image_number") is not None
         }
 
-        if self.is_configured and candidates:
+        if _ranking_is_decisive(scored):
+            logger.info(
+                "Ranking decisive (%s); skipped image reasoner call.",
+                [(c.get("image_number"), round(s, 1)) for s, c in scored[:3]],
+            )
+        elif self.is_configured and candidates:
             try:
                 prompt = build_image_reason_prompt(
                     focus, user_text, candidates, wants_photos=wants
@@ -210,6 +236,7 @@ class GeminiService:
                         max_output_tokens=256,
                         temperature=0.1,
                     ),
+                    fast=True,
                 )
                 preferred = parse_image_reason_response(raw, allowed)
                 logger.info(
@@ -260,14 +287,14 @@ class GeminiService:
 
     def _polish_generation_config(self, kb: KnowledgeBase):
         return self._types.GenerateContentConfig(
-            system_instruction=kb.build_system_instruction(),
+            system_instruction=kb.build_editor_instruction(),
             max_output_tokens=1024,
             temperature=0.2,
         )
 
     def _caption_generation_config(self, kb: KnowledgeBase):
         return self._types.GenerateContentConfig(
-            system_instruction=kb.build_system_instruction(),
+            system_instruction=kb.build_caption_instruction(),
             max_output_tokens=512,
             temperature=0.3,
         )
@@ -282,6 +309,13 @@ class GeminiService:
         kb = get_knowledge_base()
         draft_clean = filter_assistant_reply(draft)
         force = needs_polish(draft_clean)
+        if not force and settings.POLISH_ONLY_WHEN_NEEDED:
+            # Draft is already complete — skip a whole model call.
+            main, meta = split_reply_metadata(draft_clean)
+            main = filter_assistant_reply(main)
+            if main:
+                logger.info("Draft complete; skipped polish call (%d chars).", len(main))
+                return main, meta if meta else {}, usage
         try:
             polished_raw, polish_usage = self._generate_with_fallback(
                 [self._types.Part.from_text(text=polish_prompt(user_text, draft_clean))],
@@ -340,9 +374,17 @@ class GeminiService:
             user_text, reference_images, meta, history
         )
         suggestions = meta.get("suggestions") or []
+        if not suggestions:
+            suggestions = local_suggestions(user_text, history)
 
+        # Captions cost a model call and the gallery has a Bangla default line, so
+        # only generate them when the farmer actually asked to be shown photos.
+        caption_worthwhile = settings.ENABLE_IMAGE_CAPTIONS and (
+            conversation_wants_visuals(user_text, history)
+            or user_requests_visual_help(user_text)
+        )
         captions: dict[int, str] = {}
-        if show_images and reference_images:
+        if show_images and reference_images and caption_worthwhile:
             try:
                 cap_raw, cap_usage = self._generate_with_fallback(
                     [
@@ -351,6 +393,7 @@ class GeminiService:
                         )
                     ],
                     config=self._caption_generation_config(get_knowledge_base()),
+                    fast=True,
                 )
                 captions = parse_image_caption_lines(cap_raw)
                 usage.input_tokens += cap_usage.input_tokens
@@ -376,9 +419,12 @@ class GeminiService:
             model_used=model,
         )
 
-    def _generate_with_fallback(self, contents: list, config=None) -> tuple[str, UsageCost]:
+    def _generate_with_fallback(
+        self, contents: list, config=None, *, fast: bool = False
+    ) -> tuple[str, UsageCost]:
         last_exc: Exception | None = None
-        for model in settings.model_chain:
+        chain = settings.fast_model_chain if fast else settings.model_chain
+        for model in chain:
             try:
                 response = self._client.models.generate_content(
                     model=model,

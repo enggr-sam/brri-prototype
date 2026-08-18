@@ -92,6 +92,17 @@ _PHOTO_SLOT_TOPICS: dict[str, frozenset[str]] = {
 _MIN_FAULT_MATCH_SCORE = 8.0
 _CANDIDATE_POOL = 8
 
+# Photos of paperwork (spec sheet, BOM list). Useful when someone asks for specs or
+# dimensions, misleading when they describe a symptom.
+_PAPER_DOCUMENT_MARKERS = (
+    "technical document",
+    "technical specifications",
+    "bill of materials",
+    "specifications' sheet",
+    "master 'technical",
+    "parts list",
+)
+
 # Soft subsystem boosts inside descriptions (not rigid image-number maps).
 _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
     "air_control": (
@@ -204,6 +215,12 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         elif allowed and topics & allowed:
             score += 6.0
 
+    # A photo of the spec sheet answers "what size / which bearing", not "why is my
+    # grain blowing away".
+    if any(marker in haystack for marker in _PAPER_DOCUMENT_MARKERS):
+        wants_paper = bool(topics & {"blueprint"}) or query_wants_technical_drawing(query)
+        score += 6.0 if wants_paper else -14.0
+
     # Penalize clearly off-topic subassemblies when focus is air/belt/etc.
     if source == "subassembly_drawing" and topics:
         label = f"{entry.get('part_name', '')} {entry.get('title', '')}".lower()
@@ -303,13 +320,32 @@ def _fault_boosted_numbers(query: str) -> dict[int, float]:
     return boosts
 
 
-def retrieve_image_candidates(
+def _dedupe_near_identical(scored: list[tuple[float, dict]]) -> list[tuple[float, dict]]:
+    """Keep one entry per drawing title.
+
+    The form repeats a sub-assembly title across every row of that assembly, and all
+    those rows share one catalogue description — so they score identically and would
+    otherwise fill the shortlist with copies of the same label.
+    """
+    out: list[tuple[float, dict]] = []
+    seen_titles: set[str] = set()
+    for score, entry in scored:
+        title = (entry.get("title") or "").strip().lower()
+        if title and entry.get("source") == "subassembly_drawing":
+            if title in seen_titles:
+                continue
+            seen_titles.add(title)
+        out.append((score, entry))
+    return out
+
+
+def retrieve_scored_candidates(
     user_text: str | None = None,
     history: list[dict[str, str]] | None = None,
     *,
     pool: int = _CANDIDATE_POOL,
-) -> list[dict]:
-    """Rank catalogue entries for the conversation focus (shortlist for reasoner)."""
+) -> list[tuple[float, dict]]:
+    """Rank catalogue entries for the conversation focus, best first."""
     kb = get_knowledge_base()
     entries = kb.reference_images
     if not entries:
@@ -332,15 +368,25 @@ def retrieve_image_candidates(
             scored.append((score, entry))
 
     scored.sort(key=lambda item: (-item[0], item[1].get("image_number", 999)))
-    top = [e for _, e in scored[:pool]]
+    scored = _dedupe_near_identical(scored)[:pool]
     logger.info(
         "Image candidates (%d) for focus=%r topics=%s: %s",
-        len(top),
+        len(scored),
         focus[:90],
         sorted(topics),
-        [(e.get("image_number"), round(s, 1)) for s, e in scored[:pool]],
+        [(e.get("image_number"), round(s, 1)) for s, e in scored],
     )
-    return top
+    return scored
+
+
+def retrieve_image_candidates(
+    user_text: str | None = None,
+    history: list[dict[str, str]] | None = None,
+    *,
+    pool: int = _CANDIDATE_POOL,
+) -> list[dict]:
+    """Shortlist of catalogue entries for the conversation focus."""
+    return [e for _, e in retrieve_scored_candidates(user_text, history, pool=pool)]
 
 
 def select_reference_images(
@@ -360,8 +406,8 @@ def select_reference_images(
         min_score = max(1.5, min_score - 2.0)
 
     kb = get_knowledge_base()
-    candidates = retrieve_image_candidates(user_text, history)
-    if not candidates:
+    scored_candidates = retrieve_scored_candidates(user_text, history)
+    if not scored_candidates:
         return []
 
     by_number = {
@@ -370,7 +416,6 @@ def select_reference_images(
         if e.get("image_number") is not None
     }
     focus = build_conversation_focus(user_text or "", history)
-    topics = _detect_query_topics(focus)
 
     chosen: list[Path] = []
     chosen_names: set[str] = set()
@@ -396,17 +441,14 @@ def select_reference_images(
                 _add(entry)
 
     # Fill from ranked candidates above threshold.
-    for entry in candidates:
+    wants_visuals = conversation_wants_visuals(user_text or "", history)
+    for score, entry in scored_candidates:
         if len(chosen) >= limit:
             break
-        score = _score_entry(entry, focus, topics)
-        num = entry.get("image_number")
-        if num is not None:
-            score += _fault_boosted_numbers(focus).get(num, 0.0)
-        if score < min_score and not conversation_wants_visuals(user_text or "", history):
+        if not wants_visuals and score < min_score:
             continue
         # When farmer asked for photos, allow slightly weaker but on-topic hits.
-        if conversation_wants_visuals(user_text or "", history) and score < max(2.0, min_score - 1):
+        if wants_visuals and score < max(2.0, min_score - 1):
             continue
         _add(entry)
 

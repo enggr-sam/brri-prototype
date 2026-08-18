@@ -200,6 +200,46 @@ class KnowledgeBase:
             parts += ["", "=== SUB-ASSEMBLY DIAGRAMS ===", subasm, "=== END SUB-ASSEMBLY DIAGRAMS ==="]
         return "\n".join(parts) + "\n"
 
+    def build_editor_instruction(self) -> str:
+        """Trimmed instruction for the polish pass.
+
+        The editor rewrites an existing draft, so it needs the language/format rules
+        and the machine facts, but not the 104-entry image catalogue that makes up
+        roughly 70% of the full instruction.
+        """
+        parts = [
+            self.base_prompt.strip(),
+            "",
+            "=== MACHINE TECHNICAL SPECIFICATIONS (JSON) ===",
+            json.dumps(self.machine_data, ensure_ascii=False, indent=2),
+            "=== END SPECIFICATIONS ===",
+        ]
+        faults = self._fault_trees_text()
+        if faults:
+            parts += [
+                "",
+                "=== FIELD-COLLECTED FAULTS & SOLUTIONS (Patuakhali, Bangla) ===",
+                faults,
+                "=== END FIELD-COLLECTED FAULTS ===",
+            ]
+        return "\n".join(parts) + "\n"
+
+    def build_caption_instruction(self) -> str:
+        """Minimal instruction for gallery captions.
+
+        ``caption_prompt`` already embeds the description of each selected image, so
+        the captioner only needs the language and no-external-links rules.
+        """
+        return (
+            "You write short Bangla captions under reference photos of the BRRI "
+            "Winnower 2024 for Bangladeshi farmers.\n"
+            "- Natural spoken Bangla. Plain text. No markdown.\n"
+            "- Part codes stay in English: B65, UCP206, 6203, 6302.\n"
+            "- Complete sentences only — never cut off mid-sentence.\n"
+            "- NEVER paste Google Drive or any external links.\n"
+            "- Answer ONLY in the requested IMG#<number>: <text> format.\n"
+        )
+
 
 def _load_json_list(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
