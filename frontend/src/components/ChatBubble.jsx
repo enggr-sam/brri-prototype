@@ -51,10 +51,6 @@ function ReferenceGallery({ images }) {
                 <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-700">
                   {img.contextual_note}
                 </p>
-              ) : img.description ? (
-                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-600">
-                  এই ছবিতে ঠিক অংশ দেখানো হয়েছে — আপনার যন্ত্রাংশের সাথে মিলিয়ে দেখুন।
-                </p>
               ) : null}
             </figcaption>
           </figure>
