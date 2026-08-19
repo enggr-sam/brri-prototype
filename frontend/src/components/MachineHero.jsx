@@ -26,7 +26,7 @@ export default function MachineHero({ onStart }) {
         <p className="mt-4 max-w-md font-bengali text-base leading-relaxed text-white/85 sm:text-lg">
           ধান ঝাড়ার মেশিনের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।
         </p>
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+        <div className="mt-7">
           <button
             type="button"
             onClick={onStart}
@@ -34,12 +34,6 @@ export default function MachineHero({ onStart }) {
           >
             কথা শুরু করুন
           </button>
-          <a
-            href="#/history"
-            className="border border-white/25 bg-white/5 px-5 py-2.5 font-bengali text-sm font-medium text-white/90 backdrop-blur-sm transition hover:bg-white/10"
-          >
-            আগের কথোপকথন
-          </a>
         </div>
       </div>
     </section>

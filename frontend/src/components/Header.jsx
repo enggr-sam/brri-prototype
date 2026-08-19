@@ -1,6 +1,11 @@
 const LOGO_SRC = "/brri-logo.jpg";
 
-export default function Header({ compact = false, overlay = false }) {
+export default function Header({
+  compact = false,
+  overlay = false,
+  showHistory = false,
+  showChatHome = false,
+}) {
   const onDark = compact || overlay;
 
   return (
@@ -48,28 +53,34 @@ export default function Header({ compact = false, overlay = false }) {
           )}
         </a>
 
-        <nav className="flex shrink-0 items-center gap-1 text-sm">
-          <a
-            href="#/"
-            className={`px-3 py-1.5 font-bengali transition ${
-              onDark
-                ? "text-white/85 hover:text-white"
-                : "text-leaf-900/70 hover:text-leaf-950"
-            }`}
-          >
-            চ্যাট
-          </a>
-          <a
-            href="#/history"
-            className={`px-3 py-1.5 font-bengali transition ${
-              onDark
-                ? "text-white/85 hover:text-white"
-                : "text-leaf-900/70 hover:text-leaf-950"
-            }`}
-          >
-            ইতিহাস
-          </a>
-        </nav>
+        {showHistory && (
+          <nav className="flex shrink-0 items-center gap-1 text-sm">
+            <a
+              href="#/history"
+              className={`px-3 py-1.5 font-bengali transition ${
+                onDark
+                  ? "text-white/85 hover:text-white"
+                  : "text-leaf-900/70 hover:text-leaf-950"
+              }`}
+            >
+              ইতিহাস
+            </a>
+          </nav>
+        )}
+        {showChatHome && (
+          <nav className="flex shrink-0 items-center gap-1 text-sm">
+            <a
+              href="#/"
+              className={`px-3 py-1.5 font-bengali transition ${
+                onDark
+                  ? "text-white/85 hover:text-white"
+                  : "text-leaf-900/70 hover:text-leaf-950"
+              }`}
+            >
+              ← চ্যাট
+            </a>
+          </nav>
+        )}
       </div>
     </header>
   );

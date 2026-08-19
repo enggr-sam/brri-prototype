@@ -108,7 +108,7 @@ export default function ChatInput({ onSend, disabled }) {
       {audioBlob && (
         <div className="mb-2 flex items-center gap-2">
           <span className="font-bengali text-xs text-leaf-800/80">
-            কণ্ঠ রেকর্ড প্রস্তুত
+            🎙️ কণ্ঠ রেকর্ড প্রস্তুত
           </span>
           <button
             type="button"
@@ -126,23 +126,23 @@ export default function ChatInput({ onSend, disabled }) {
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={disabled || isRecording}
-            title="ছবি"
-            className="px-2.5 py-2 font-bengali text-xs font-medium text-leaf-800/80 transition hover:bg-leaf-100 disabled:opacity-40"
+            title="ছবি পাঠান"
+            aria-label="ছবি পাঠান"
+            className="rounded-lg p-2 text-lg leading-none transition hover:bg-leaf-100 disabled:opacity-40"
           >
-            ছবি
+            📷
           </button>
           <button
             type="button"
             onClick={isRecording ? stopRecording : startRecording}
             disabled={disabled}
-            title="কণ্ঠ"
-            className={`px-2.5 py-2 font-bengali text-xs font-medium transition hover:bg-leaf-100 disabled:opacity-40 ${
-              isRecording
-                ? "animate-soft-pulse text-red-700"
-                : "text-leaf-800/80"
+            title={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
+            aria-label={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
+            className={`rounded-lg p-2 text-lg leading-none transition hover:bg-leaf-100 disabled:opacity-40 ${
+              isRecording ? "animate-soft-pulse text-red-600" : ""
             }`}
           >
-            {isRecording ? "থামান" : "কণ্ঠ"}
+            {isRecording ? "⏹️" : "🎙️"}
           </button>
         </div>
 
