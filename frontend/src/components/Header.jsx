@@ -1,31 +1,75 @@
 const LOGO_SRC = "/brri-logo.jpg";
 
-export default function Header() {
+export default function Header({ compact = false, overlay = false }) {
+  const onDark = compact || overlay;
+
   return (
-    <header className="shrink-0 bg-gradient-to-r from-brri-dark to-brri-green text-white shadow-lg">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1">
+    <header
+      className={`shrink-0 ${
+        overlay
+          ? "absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-gradient-to-b from-leaf-950/55 to-transparent"
+          : compact
+            ? "relative border-b border-leaf-900/10 bg-leaf-950 text-white"
+            : "relative border-b border-leaf-900/10 bg-white/55 backdrop-blur-md"
+      }`}
+    >
+      <div
+        className={`mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 sm:px-6 ${
+          compact || overlay ? "py-3" : "py-4"
+        }`}
+      >
+        <a href="#/" className="flex min-w-0 items-center gap-3">
+          <div
+            className={`flex shrink-0 items-center justify-center overflow-hidden bg-white ${
+              compact || overlay ? "h-9 w-9" : "h-10 w-10"
+            }`}
+          >
             <img
               src={LOGO_SRC}
-              alt="BRRI logo"
+              alt="BRRI"
               className="h-full w-full object-contain"
             />
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                BRRI Winnower 2024 Support
-              </h1>
-              <span className="rounded-full bg-amber-300 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-brri-dark">
-                Prototype / Demo
-              </span>
+          {!overlay && (
+            <div className="min-w-0">
+              <p
+                className={`font-display font-semibold tracking-tight ${
+                  onDark ? "text-base text-white" : "text-lg text-leaf-950"
+                }`}
+              >
+                BRRI Winnower ২০২৪
+              </p>
+              {!compact && (
+                <p className="font-bengali text-xs text-leaf-800/70">
+                  মাঠ পর্যায়ের সহায়ক · Prototype
+                </p>
+              )}
             </div>
-            <p className="text-sm text-brri-light/90">
-              কথোপকথন · উত্তর বাংলা ভাষায়
-            </p>
-          </div>
-        </div>
+          )}
+        </a>
+
+        <nav className="flex shrink-0 items-center gap-1 text-sm">
+          <a
+            href="#/"
+            className={`px-3 py-1.5 font-bengali transition ${
+              onDark
+                ? "text-white/85 hover:text-white"
+                : "text-leaf-900/70 hover:text-leaf-950"
+            }`}
+          >
+            চ্যাট
+          </a>
+          <a
+            href="#/history"
+            className={`px-3 py-1.5 font-bengali transition ${
+              onDark
+                ? "text-white/85 hover:text-white"
+                : "text-leaf-900/70 hover:text-leaf-950"
+            }`}
+          >
+            ইতিহাস
+          </a>
+        </nav>
       </div>
     </header>
   );

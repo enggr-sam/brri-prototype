@@ -15,6 +15,48 @@ body,
 
 body {
   margin: 0;
-  background-color: #f8fafc;
   overflow: hidden;
+  color: #143d2c;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, #c5e4d0 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #e4f3ea 0%, transparent 50%),
+    linear-gradient(180deg, #f3faf5 0%, #eef5f1 45%, #e8f0eb 100%);
+  font-family: Sora, "Noto Sans Bengali", system-ui, sans-serif;
+}
+
+.app-shell {
+  background: transparent;
+}
+
+.machine-hero__veil {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 61, 46, 0.35) 0%,
+      rgba(15, 61, 46, 0.15) 35%,
+      rgba(15, 61, 46, 0.72) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(15, 61, 46, 0.55) 0%,
+      rgba(15, 61, 46, 0.2) 55%,
+      transparent 100%
+    );
+}
+
+.chat-panel {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(20, 61, 44, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .machine-hero video {
+    display: none;
+  }
+
+  .machine-hero {
+    background:
+      linear-gradient(160deg, #0f3d2e 0%, #1a4d36 55%, #1a7a45 100%);
+  }
 }

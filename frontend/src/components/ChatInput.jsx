@@ -83,23 +83,39 @@ export default function ChatInput({ onSend, disabled }) {
   };
 
   return (
-    <div className="shrink-0 border-t border-slate-200 bg-white p-3">
-      {error && <p className="mb-2 text-xs text-red-600">{error}</p>}
+    <div className="shrink-0 border-t border-leaf-900/8 bg-white/90 p-3">
+      {error && (
+        <p className="mb-2 font-bengali text-xs text-red-700">{error}</p>
+      )}
 
       {imagePreview && (
         <div className="mb-2 flex items-start gap-2">
-          <img src={imagePreview} alt="Preview" className="h-16 rounded-lg object-cover" />
-          <button type="button" onClick={clearImage} className="text-xs text-slate-500 hover:text-red-600">
-            ✕ Remove
+          <img
+            src={imagePreview}
+            alt="Preview"
+            className="h-16 object-cover"
+          />
+          <button
+            type="button"
+            onClick={clearImage}
+            className="font-bengali text-xs text-leaf-800/60 hover:text-red-700"
+          >
+            সরান
           </button>
         </div>
       )}
 
       {audioBlob && (
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs text-slate-600">🎙️ Voice ready</span>
-          <button type="button" onClick={clearAudio} className="text-xs text-slate-500 hover:text-red-600">
-            ✕ Remove
+          <span className="font-bengali text-xs text-leaf-800/80">
+            কণ্ঠ রেকর্ড প্রস্তুত
+          </span>
+          <button
+            type="button"
+            onClick={clearAudio}
+            className="font-bengali text-xs text-leaf-800/60 hover:text-red-700"
+          >
+            সরান
           </button>
         </div>
       )}
@@ -110,21 +126,23 @@ export default function ChatInput({ onSend, disabled }) {
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={disabled || isRecording}
-            title="Photo"
-            className="rounded-lg p-2 text-lg hover:bg-slate-100 disabled:opacity-40"
+            title="ছবি"
+            className="px-2.5 py-2 font-bengali text-xs font-medium text-leaf-800/80 transition hover:bg-leaf-100 disabled:opacity-40"
           >
-            📷
+            ছবি
           </button>
           <button
             type="button"
             onClick={isRecording ? stopRecording : startRecording}
             disabled={disabled}
-            title="Voice"
-            className={`rounded-lg p-2 text-lg hover:bg-slate-100 disabled:opacity-40 ${
-              isRecording ? "animate-pulse text-red-600" : ""
+            title="কণ্ঠ"
+            className={`px-2.5 py-2 font-bengali text-xs font-medium transition hover:bg-leaf-100 disabled:opacity-40 ${
+              isRecording
+                ? "animate-soft-pulse text-red-700"
+                : "text-leaf-800/80"
             }`}
           >
-            {isRecording ? "⏹" : "🎙️"}
+            {isRecording ? "থামান" : "কণ্ঠ"}
           </button>
         </div>
 
@@ -135,14 +153,14 @@ export default function ChatInput({ onSend, disabled }) {
           disabled={disabled}
           placeholder="বাংলায় সমস্যা লিখুন… (Enter = পাঠান)"
           rows={1}
-          className="max-h-28 min-h-[42px] flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm font-bengali focus:border-brri-green focus:outline-none focus:ring-1 focus:ring-brri-green disabled:opacity-50"
+          className="max-h-28 min-h-[42px] flex-1 resize-none border border-leaf-900/10 bg-white px-3 py-2 text-sm font-bengali text-leaf-950 focus:border-leaf-500 focus:outline-none focus:ring-1 focus:ring-leaf-500 disabled:opacity-50"
         />
 
         <button
           type="button"
           onClick={submit}
           disabled={disabled || (!text.trim() && !imageFile && !audioBlob)}
-          className="rounded-xl bg-brri-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brri-dark disabled:opacity-40"
+          className="bg-leaf-500 px-4 py-2.5 font-bengali text-sm font-semibold text-white transition hover:bg-leaf-950 disabled:opacity-40"
         >
           পাঠান
         </button>

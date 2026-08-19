@@ -22,16 +22,6 @@ export default function ChatWindow({
       className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4"
       style={{ WebkitOverflowScrolling: "touch" }}
     >
-      {messages.length === 0 && !loading && !streamingText && (
-        <div className="flex min-h-[200px] flex-col items-center justify-center py-8 text-center text-slate-400">
-          <div className="mb-2 text-4xl">🛠️</div>
-          <p className="font-bengali text-sm">
-            BRRI Winnower ২০২৪-এর সমস্যা জিজ্ঞেস করুন — ছবি, কণ্ঠ, বা লেখা।
-          </p>
-          <p className="mt-1 text-xs">উত্তর সংক্ষিপ্ত, বাংলায়, ধাপে ধাপে।</p>
-        </div>
-      )}
-
       {messages.map((msg) => (
         <ChatBubble key={msg.id ?? `${msg.role}-${msg.created_at}`} message={msg} />
       ))}
