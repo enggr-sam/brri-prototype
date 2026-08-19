@@ -12,6 +12,9 @@ class ReferenceImageOut(BaseModel):
     label: str
     description: str | None = None
     contextual_note: str | None = None
+    # Optional: lets the UI offer CAD downloads without guessing from filenames.
+    source: str | None = None
+    photo_no: str | None = None
 
 
 class ChatMessageOut(BaseModel):

@@ -2,16 +2,18 @@ export default function FollowUpSuggestions({ suggestions, onSelect, disabled })
   if (!suggestions?.length) return null;
 
   return (
-    <div className="mt-3 border-t border-slate-100 pt-3">
-      <p className="mb-2 text-xs font-medium text-slate-500">পরবর্তী প্রশ্ন:</p>
-      <div className="flex flex-wrap gap-2">
+    <div className="mt-3 border-t border-leaf-900/10 pt-3">
+      <p className="mb-2 font-bengali text-xs font-medium text-leaf-800/60">
+        পরবর্তী প্রশ্ন:
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {suggestions.map((q) => (
           <button
             key={q}
             type="button"
             disabled={disabled}
             onClick={() => onSelect(q)}
-            className="rounded-full border border-brri-green/30 bg-brri-green/5 px-3 py-1.5 text-left font-bengali text-xs leading-snug text-brri-dark hover:bg-brri-green/10 disabled:opacity-40"
+            className="w-full border border-leaf-500/25 bg-leaf-50 px-3 py-2.5 text-left font-bengali text-xs leading-snug text-leaf-950 transition hover:bg-leaf-100 disabled:opacity-40 sm:w-auto sm:py-1.5"
           >
             {q}
           </button>

@@ -192,7 +192,10 @@ def _save_turn(
 
 
 @router.get("/reference-images/{filename}")
-def serve_reference_image(filename: str) -> FileResponse:
+def serve_reference_image(
+    filename: str,
+    download: bool = False,
+) -> FileResponse:
     """Serve intact-part reference photos and field-collected photos for the UI gallery."""
     if not _safe_filename(filename):
         raise HTTPException(status_code=400, detail="Invalid filename.")
@@ -204,7 +207,10 @@ def serve_reference_image(filename: str) -> FileResponse:
     ):
         path = base / filename
         if path.is_file():
-            return FileResponse(path)
+            headers = {}
+            if download:
+                headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return FileResponse(path, headers=headers)
     raise HTTPException(status_code=404, detail="Image not found.")
 
 

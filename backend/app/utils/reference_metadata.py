@@ -29,7 +29,6 @@ def reference_images_metadata(
                 "label": display_label(entry, path.name),
                 "description": desc,
                 "contextual_note": contextual_note,
-                "drive_folder_url": entry.get("drive_folder_url"),
                 "source": entry.get("source"),
                 "photo_no": entry.get("photo_no"),
             }
@@ -50,11 +49,18 @@ def loads_reference_images(raw: str | None) -> list[dict]:
         return []
     if not isinstance(data, list):
         return []
-    # Labels are recomputed on read so older messages, saved when captions came from
-    # filenames, show the current Bangla wording too.
+    # Labels (and missing Drive/source fields on older rows) are refreshed from the KB
+    # so the gallery can show download / Drive actions consistently.
     kb = get_knowledge_base()
     for item in data:
         name = item.get("image_name")
-        if name:
-            item["label"] = display_label(kb._by_name.get(name, {}), name)
+        if not name:
+            continue
+        entry = kb._by_name.get(name, {})
+        item["label"] = display_label(entry, name)
+        if not item.get("source") and entry.get("source"):
+            item["source"] = entry.get("source")
+        # Never surface Drive URLs to the client — folders are often empty and
+        # photos are served from the in-app gallery only.
+        item.pop("drive_folder_url", None)
     return data

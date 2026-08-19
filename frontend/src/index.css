@@ -50,6 +50,22 @@ body {
   border: 1px solid rgba(20, 61, 44, 0.08);
 }
 
+.composer {
+  padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 640px) {
+  .machine-hero__veil {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(15, 61, 46, 0.45) 0%,
+        rgba(15, 61, 46, 0.2) 40%,
+        rgba(15, 61, 46, 0.82) 100%
+      );
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .machine-hero video {
     display: none;

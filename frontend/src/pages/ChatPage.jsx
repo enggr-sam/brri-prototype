@@ -133,17 +133,17 @@ export default function ChatPage({ onCompactChange, onHeroVisibility }) {
           </div>
         </div>
       ) : (
-        <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-2 py-3 sm:px-4">
-          <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-            <p className="font-bengali text-xs text-leaf-800/70">
+        <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-1.5 py-2 sm:px-4 sm:py-3">
+          <div className="mb-2 flex shrink-0 items-center justify-between gap-2 px-1">
+            <p className="min-w-0 truncate font-bengali text-[11px] text-leaf-800/70 sm:text-xs">
               {formatSessionCostLabel(sessionCostUsd)}
             </p>
             <button
               type="button"
               onClick={newChat}
-              className="font-bengali text-xs text-leaf-800/70 transition hover:text-leaf-950"
+              className="shrink-0 font-bengali text-[11px] text-leaf-800/70 transition hover:text-leaf-950 sm:text-xs"
             >
-              + নতুন কথোপকথন
+              + নতুন
             </button>
           </div>
 
