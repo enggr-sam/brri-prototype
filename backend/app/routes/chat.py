@@ -28,6 +28,7 @@ from app.services.reference_selector import (
     order_reference_images_by_relevance,
 )
 from app.utils.bangla_text import nfc
+from app.utils.fast_path import try_fast_path
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
     IMAGE_CONTENT_TYPES,
@@ -265,8 +266,13 @@ async def chat_message_stream(
         text, image, audio
     )
 
+    fast_hit = try_fast_path(
+        user_content, history, has_user_image=user_image_path is not None
+    )
     reference_paths: list[Path] = []
-    if _should_attach_reference_images(user_content, user_image_path is not None):
+    if not fast_hit and _should_attach_reference_images(
+        user_content, user_image_path is not None
+    ):
         reference_paths = gemini_service.pick_reference_images(
             user_content,
             history,
@@ -361,8 +367,13 @@ async def chat_message(
         text, image, audio
     )
 
+    fast_hit = try_fast_path(
+        user_content, history, has_user_image=user_image_path is not None
+    )
     reference_paths: list[Path] = []
-    if _should_attach_reference_images(user_content, user_image_path is not None):
+    if not fast_hit and _should_attach_reference_images(
+        user_content, user_image_path is not None
+    ):
         reference_paths = gemini_service.pick_reference_images(
             user_content,
             history,

@@ -82,22 +82,20 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     # --- Reference images (Gemini grounding) -----------------------------
-    # How many intact-part photos to attach per request (descriptions for all
-    # 36 parts are still injected as text in the system instruction).
+    # How many intact-part photos the in-app gallery can show per turn.
     MAX_REFERENCE_IMAGES: int = 3
     # Minimum relevance score (see reference_selector) to attach an image.
     REFERENCE_IMAGE_MIN_SCORE: float = 4.0
 
-    # --- Latency / cost controls ------------------------------------------
-    # Each turn costs one model call per stage. These skip stages that are not
-    # needed for the current turn.
-    # Only run the polish/editor pass when the streamed draft looks incomplete.
-    POLISH_ONLY_WHEN_NEEDED: bool = True
-    # Generate per-image gallery captions (extra call; UI has a Bangla default).
-    ENABLE_IMAGE_CAPTIONS: bool = True
-    # Skip the LLM image picker when the top-ranked image already wins clearly.
-    # Ratio of best score to runner-up above which the ranking is trusted as-is.
-    IMAGE_REASONER_SKIP_MARGIN: float = 1.6
+    # --- Latency / cost (production defaults; .env is optional override) --
+    # Deploying this code is enough. Do not add these to the server .env
+    # unless you want to turn a stage back on.
+    POLISH_ONLY_WHEN_NEEDED: bool = True  # polish only if the draft looks cut off
+    ENABLE_IMAGE_CAPTIONS: bool = False  # extra Gemini call; UI has Bangla defaults
+    ENABLE_IMAGE_REASONER: bool = False  # extra Gemini call; keyword ranking is used
+    IMAGE_REASONER_SKIP_MARGIN: float = 1.6  # unused while the reasoner is off
+    ATTACH_CATALOG_IMAGES_TO_GEMINI: bool = False  # text Qs are text-only to Gemini
+    ENABLE_LOCAL_FAST_PATH: bool = True  # hello / HP / weight / belt price-dealer
 
     # --- Filesystem locations --------------------------------------------
     KNOWLEDGE_BASE_DIR: Path = BACKEND_DIR / "knowledge_base"

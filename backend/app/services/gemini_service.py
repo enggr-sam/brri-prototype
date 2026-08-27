@@ -25,6 +25,7 @@ from app.services.reference_selector import (
     user_requests_visual_help,
 )
 from app.utils.canonical_replies import ensure_canonical_reply, is_off_topic_refusal
+from app.utils.fast_path import FastPathHit, try_fast_path
 from app.utils.parts_suppliers import (
     ensure_belt_dealers_in_reply,
     is_belt_price_query,
@@ -219,7 +220,9 @@ class GeminiService:
             if c.get("image_number") is not None
         }
 
-        if _ranking_is_decisive(scored):
+        if not settings.ENABLE_IMAGE_REASONER:
+            logger.debug("Image reasoner disabled; using ranked shortlist.")
+        elif _ranking_is_decisive(scored):
             logger.info(
                 "Ranking decisive (%s); skipped image reasoner call.",
                 [(c.get("image_number"), round(s, 1)) for s, c in scored[:3]],
@@ -256,6 +259,28 @@ class GeminiService:
             has_user_image=has_user_image,
             history=history,
             preferred_numbers=preferred or None,
+        )
+
+    def _catalog_images_for_gemini(
+        self,
+        reference_images: list[Path],
+        user_image_path: Path | None,
+    ) -> list[Path]:
+        """Intact-part JPEGs actually sent to Gemini (gallery can still use the full list)."""
+        refs = list(reference_images or [])
+        if user_image_path is not None:
+            # Farmer photo + one known-good part for comparison.
+            return refs[:1]
+        if settings.ATTACH_CATALOG_IMAGES_TO_GEMINI:
+            return refs
+        return []
+
+    @staticmethod
+    def _result_from_fast_path(hit: FastPathHit) -> ChatReplyResult:
+        return ChatReplyResult(
+            text=hit.text,
+            suggestions=hit.suggestions[:3],
+            show_reference_images=hit.show_reference_images,
         )
 
     def _image_part(self, path: Path):
@@ -504,13 +529,25 @@ class GeminiService:
         user_image_path: Path | None = None,
     ) -> Iterator[str]:
         """Yield visible reply tokens only (stops before ---META--- block)."""
+        self._last_fast_path = None
         kb = get_knowledge_base()
+        hit = try_fast_path(
+            user_text, history, has_user_image=user_image_path is not None
+        )
+        if hit:
+            self._last_fast_path = hit
+            self._last_stream_buffer = hit.text
+            self._last_stream_usage = UsageCost()
+            yield hit.text
+            return
+
         if not self.is_configured:
             yield _NO_KEY_MESSAGE
             return
 
+        gemini_refs = self._catalog_images_for_gemini(reference_images, user_image_path)
         contents = self._build_chat_contents(
-            history, user_text, reference_images, user_image_path
+            history, user_text, gemini_refs, user_image_path
         )
 
         last_exc: Exception | None = None
@@ -569,6 +606,11 @@ class GeminiService:
         history: list[dict[str, str]] | None = None,
     ) -> ChatReplyResult:
         """Polish streamed draft (Q+A review) into a complete final reply."""
+        hit = getattr(self, "_last_fast_path", None)
+        if isinstance(hit, FastPathHit):
+            self._last_fast_path = None
+            return self._result_from_fast_path(hit)
+
         raw = getattr(self, "_last_stream_buffer", "") or ""
         usage = getattr(self, "_last_stream_usage", None) or UsageCost(
             model_used=getattr(self, "_last_stream_model", settings.GEMINI_MODEL)
@@ -618,12 +660,19 @@ class GeminiService:
         reference_images: list[Path],
         user_image_path: Path | None = None,
     ) -> ChatReplyResult:
+        hit = try_fast_path(
+            user_text, history, has_user_image=user_image_path is not None
+        )
+        if hit:
+            return self._result_from_fast_path(hit)
+
         kb = get_knowledge_base()
         if not self.is_configured:
             return ChatReplyResult(text=_NO_KEY_MESSAGE)
 
+        gemini_refs = self._catalog_images_for_gemini(reference_images, user_image_path)
         contents = self._build_chat_contents(
-            history, user_text, reference_images, user_image_path
+            history, user_text, gemini_refs, user_image_path
         )
 
         try:
