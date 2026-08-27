@@ -515,9 +515,9 @@ def build_grounding_context(
         return "\n".join(
             [
                 "=== THIS TURN (farmer asks what the LAST shown photo is) ===",
-                "Previous gallery (answer from these labels; do not guess another part): "
+                "Previous gallery labels (official name of those photos): "
                 + ("; ".join(labels) or "(none shown)"),
-                "If the label is a V-belt / B65 / ভি-বেল্ট, it is a BELT, not a pulley.",
+                "Name the object in the photo. Do not rename it to a neighbouring part.",
                 "=== END THIS TURN ===",
             ]
         )

@@ -584,12 +584,17 @@ class GeminiService:
                 usage.cost_usd = estimate_cost_usd(
                     model, usage.input_tokens, usage.output_tokens
                 )
+                if model != settings.GEMINI_MODEL:
+                    logger.warning("Primary model failed; streamed with fallback %s.", model)
                 self._last_stream_buffer = buffer
                 self._last_stream_model = model
                 self._last_stream_usage = usage
                 return
             except Exception as exc:
                 if _should_fallback(exc):
+                    logger.warning(
+                        "Model %s unavailable, trying next: %s", model, str(exc)[:160]
+                    )
                     last_exc = exc
                     continue
                 raise
@@ -648,9 +653,9 @@ class GeminiService:
             build_grounding_context(user_text, history, reference_images)
         )
         prompt_parts.append(
-            "Reply in concise natural Bangla. Follow prompts.txt format rules. "
-            "Stay on the farmer's part/topic. Write a COMPLETE answer — never stop "
-            "mid-sentence. Do NOT write ---META---, show_images, suggestions, or JSON."
+            "Reply in concise spoken Bangla. Follow the system instruction. "
+            "THIS TURN is the topic lock. Complete sentences only. "
+            "No ---META---, show_images, suggestions, or JSON in the visible text."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
         return contents

@@ -21,9 +21,9 @@ class Settings(BaseSettings):
 
     # --- Secrets / external services -------------------------------------
     GEMINI_API_KEY: str = ""
-    # Primary multimodal model. gemini-2.0-flash works on paid API keys.
-    # gemini-2.5-pro may 404 for newer accounts — use gemini-2.5-flash instead.
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    # Primary multimodal model. gemini-2.0-flash was shut down 1 Jun 2026.
+    # gemini-flash-latest is Google's current Flash alias (this key can serve it).
+    GEMINI_MODEL: str = "gemini-flash-latest"
     # Tried automatically when the primary model returns 429/404/503.
     GEMINI_FALLBACK_MODEL: str = "gemini-flash-lite-latest"
     # Cheap/fast model for the helper stages (image picking, gallery captions) that

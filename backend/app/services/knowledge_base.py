@@ -71,14 +71,14 @@ class KnowledgeBase:
         return self._by_number.get(number)
 
     def _reference_catalog_text(self) -> str:
+        """Compact index only — long descriptions drown the system instruction."""
         if not self.reference_images:
             return ""
         lines = []
         for entry in self.reference_images:
-            lines.append(
-                f"#{entry.get('image_number')} [{entry.get('image_name')}]: "
-                f"{entry.get('description')}"
-            )
+            num = entry.get("image_number")
+            name = entry.get("image_name") or ""
+            lines.append(f"#{num} {name}")
         return "\n".join(lines)
 
     def _fault_trees_text(self) -> str:
@@ -155,6 +155,11 @@ class KnowledgeBase:
         parts = [
             self.base_prompt.strip(),
             "",
+            "=== EVIDENCE APPENDIX (facts only; the instruction above is law) ===",
+            "Ground numbers, codes, and dealers here. Do not recite this appendix.",
+            "Do not mention extra parts just because they appear below.",
+            "THIS TURN in the user message is the topic lock for this answer.",
+            "",
             "=== MACHINE TECHNICAL SPECIFICATIONS (JSON) ===",
             machine_json,
             "=== END SPECIFICATIONS ===",
@@ -163,12 +168,10 @@ class KnowledgeBase:
         if catalog:
             parts += [
                 "",
-                "=== REFERENCE IMAGE CATALOGUE (intact parts) ===",
-                "The following are known-good reference images of the machine's "
-                "parts. Use them to recognise parts and compare against the user's "
-                "photo. Some of these images may also be attached to this request.",
+                "=== REFERENCE IMAGE INDEX (filenames only) ===",
+                "Attached JPEGs + THIS TURN labels are what the farmer sees.",
                 catalog,
-                "=== END REFERENCE IMAGE CATALOGUE ===",
+                "=== END REFERENCE IMAGE INDEX ===",
             ]
         faults = self._fault_trees_text()
         if faults:
@@ -185,10 +188,7 @@ class KnowledgeBase:
             parts += [
                 "",
                 "=== FIELD PHOTO SLOTS (01–20) ===",
-                "Local preview photos may be attached in the chat gallery. "
-                "NEVER paste Google Drive folder links in farmer-facing replies. "
-                "If the farmer asks for a photo, say the matching part will appear "
-                "below this message (or ask them to tap for photos).",
+                "Index only. Never paste Drive links. Mention photos only if THIS TURN says a gallery will show.",
                 photos,
                 "=== END FIELD PHOTO SLOTS ===",
             ]
@@ -201,15 +201,11 @@ class KnowledgeBase:
         return "\n".join(parts) + "\n"
 
     def build_editor_instruction(self) -> str:
-        """Trimmed instruction for the polish pass.
-
-        The editor rewrites an existing draft, so it needs the language/format rules
-        and the machine facts, but not the 104-entry image catalogue that makes up
-        roughly 70% of the full instruction.
-        """
+        """Polish pass: same mechanic instruction + specs/faults, no image index."""
         parts = [
             self.base_prompt.strip(),
             "",
+            "=== EVIDENCE APPENDIX (facts only; the instruction above is law) ===",
             "=== MACHINE TECHNICAL SPECIFICATIONS (JSON) ===",
             json.dumps(self.machine_data, ensure_ascii=False, indent=2),
             "=== END SPECIFICATIONS ===",
