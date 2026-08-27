@@ -155,12 +155,14 @@ def display_label(entry: dict, image_name: str) -> str:
         return f"{label} ({_DRAWING_SUFFIX})" if label else _label_from_filename(image_name)
 
     if source == "subassembly_drawing":
+        # Sub-assembly files are photos of the real part. Do not add (নকশা) —
+        # that suffix is only for CAD cutting drawings.
         title = entry.get("title") or ""
         number = title.split("—")[0].strip() if "—" in title else ""
         label = _SUBASSEMBLY_BN.get(number)
         if not label:
             label = _english_fallback(title.split("—")[-1])
-        return f"{label} ({_DRAWING_SUFFIX})" if label else _label_from_filename(image_name)
+        return label or _label_from_filename(image_name)
 
     number = entry.get("image_number")
     if isinstance(number, int) and number in _CURATED_BN:

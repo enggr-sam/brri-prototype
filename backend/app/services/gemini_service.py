@@ -23,6 +23,7 @@ from app.services.reference_selector import (
     retrieve_scored_candidates,
     select_reference_images,
     user_requests_visual_help,
+    build_grounding_context,
 )
 from app.utils.canonical_replies import ensure_canonical_reply, is_off_topic_refusal
 from app.utils.fast_path import FastPathHit, try_fast_path
@@ -72,7 +73,7 @@ def _resolve_show_reference_images(
         return True
     if meta.get("show_images") is False:
         return False
-    # Images were pre-selected for this focus — show them.
+    # Only the on-topic shortlist is passed in — show it.
     return True
 
 
@@ -646,9 +647,12 @@ class GeminiService:
             prompt_parts.append("Previous conversation:\n" + history_block)
         prompt_parts.append(f"Current user message:\n{user_text.strip()}")
         prompt_parts.append(
+            build_grounding_context(user_text, history, reference_images)
+        )
+        prompt_parts.append(
             "Reply in concise natural Bangla. Follow prompts.txt format rules. "
-            "Write a COMPLETE answer — never stop mid-sentence. "
-            "Do NOT write ---META---, show_images, suggestions, or JSON."
+            "Stay on the farmer's part/topic. Write a COMPLETE answer — never stop "
+            "mid-sentence. Do NOT write ---META---, show_images, suggestions, or JSON."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))
         return contents

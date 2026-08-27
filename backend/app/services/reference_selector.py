@@ -22,6 +22,7 @@ from app.utils.conversation_focus import (
     conversation_wants_visuals,
 )
 from app.utils.drawing_queries import query_wants_assembly_diagram, query_wants_technical_drawing
+from app.utils.image_labels import display_label
 from app.utils.parts_suppliers import is_belt_price_query, is_belt_supplier_query
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,8 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "belt": ("belt", "v-belt", "vbelt", "b65", "b-belt", "বেল্ট", "ভি-বেল্ট"),
     "motor": (
         "motor", "electric", "220v", "1.5 hp", "1.1 kw", "hp", "rpm", "capacitor",
-        "burn", "generator", "kva", "মোটর", "বিদ্যুৎ", "জ্বল", "ধোঁয়া", "জেনারেটর",
+        "burn", "generator", "kva", "nosto", "noshto", "broken",
+        "মোটর", "বিদ্যুৎ", "জ্বল", "ধোঁয়া", "জেনারেটর",
     ),
     "sieve": (
         "sieve", "screen", "mesh", "net", "perforated", "shake", "shaking",
@@ -42,7 +44,7 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "bearing": (
         "bearing", "6203", "6302", "ucp206", "p-206", "pillow", "block", "grinding",
-        "noise", "vibrat", "grease", "কাঁপ", "কম্পন", "বিয়ারিং", "শব্দ",
+        "noise", "grease", "কম্পন", "বিয়ারিং", "শব্দ",
     ),
     "hopper": (
         "hopper", "feed", "gate", "flap", "grain flow", "হপার", "গেট", "ফিড", "ফ্লাপ",
@@ -53,8 +55,8 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
         "উড়ে", "batash", "control", "কন্ট্রোল", "এয়ার",
     ),
     "grain_loss": (
-        "blow away", "spill", "good rice", "clean grain",
-        "ধান", "চাল", "নষ্ট", "ঝর", "বের হয়",
+        "blow away", "spill", "good rice", "clean grain", "grain loss",
+        "ভালো ধান", "ধান উড়", "ধান উড়", "তুষের সাথে ধান",
     ),
     "pulley": ("pulley", "tension", "ratio", "পুলি", "অনুপাত"),
     "linkage": ("linkage", "connecting rod", "arm", "crank", "রড", "লিঙ্ক"),
@@ -82,12 +84,16 @@ _PHOTO_SLOT_TOPICS: dict[str, frozenset[str]] = {
     "03": frozenset({"air_control", "grain_loss", "blower"}),
     "04": frozenset({"hopper"}),
     "05": frozenset({"blower", "air_control"}),
+    "06": frozenset({"blower"}),
     "08": frozenset({"sieve"}),
     "09": frozenset({"sieve", "linkage"}),
     "10": frozenset({"belt", "pulley"}),
-    "11": frozenset({"motor", "pulley"}),
+    "11": frozenset({"motor"}),
+    "12": frozenset({"motor", "pulley"}),
+    "13": frozenset({"blower", "pulley"}),
     "14": frozenset({"bearing"}),
     "15": frozenset({"bearing"}),
+    "16": frozenset({"bearing", "sieve"}),
 }
 
 _MIN_FAULT_MATCH_SCORE = 8.0
@@ -162,6 +168,56 @@ def _detect_query_topics(query: str) -> set[str]:
     }
 
 
+def _entry_haystack(entry: dict) -> str:
+    return (
+        f"{entry.get('image_name', '')} {entry.get('description', '')} "
+        f"{entry.get('part_name', '')} {entry.get('title', '')} "
+        f"{entry.get('part_paper', '')} "
+        f"{' '.join(entry.get('keywords') or [])} "
+        f"{' '.join(entry.get('related_symptoms_bn') or [])}"
+    ).lower()
+
+
+def _entry_topics(entry: dict) -> set[str]:
+    haystack = _entry_haystack(entry)
+    found = {
+        topic
+        for topic, hints in _SUBSYSTEM_HINTS.items()
+        if any(h in haystack for h in hints)
+    }
+    slot = str(entry.get("photo_no") or "")
+    found |= set(_PHOTO_SLOT_TOPICS.get(slot, ()))
+    return found
+
+
+def _is_overview_shot(entry: dict) -> bool:
+    blob = f"{entry.get('image_name', '')} {entry.get('title', '')} {entry.get('part_paper', '')}".lower()
+    return any(
+        m in blob
+        for m in ("full machine", "full_exterior", "full front", "full side", "পুরো মেশিন")
+    )
+
+
+def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
+    """False when the catalogue row is clearly about a different subsystem."""
+    if not topics:
+        return not _is_overview_shot(entry)
+    if _is_overview_shot(entry) and not any(
+        w in query.lower() for w in ("full", "পুরো", "whole", "সমগ্র", "বাইর")
+    ):
+        return False
+    et = _entry_topics(entry)
+    if not et:
+        # Unknown row: keep only if the query asked for a drawing of that file type.
+        source = entry.get("source")
+        if source == "cad_drawing":
+            return query_wants_technical_drawing(query)
+        if source == "subassembly_drawing":
+            return query_wants_assembly_diagram(query)
+        return False
+    return bool(et & topics)
+
+
 def _entry_by_number(entries: list[dict], number: int) -> dict | None:
     for entry in entries:
         if entry.get("image_number") == number:
@@ -188,17 +244,23 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
     if not query or not query.strip():
         return 0.0
 
-    haystack = (
-        f"{entry.get('image_name', '')} {entry.get('description', '')} "
-        f"{entry.get('part_name', '')} {entry.get('title', '')} "
-        f"{' '.join(entry.get('keywords') or [])} "
-        f"{' '.join(entry.get('related_symptoms_bn') or [])}"
-    ).lower()
+    haystack = _entry_haystack(entry)
     query_lower = query.lower()
     score = 0.0
     source = entry.get("source")
 
+    if not entry_is_on_topic(entry, topics, query):
+        return 0.0
+    if not topics and not (
+        query_wants_technical_drawing(query)
+        or query_wants_assembly_diagram(query)
+        or asks_for_photos(query)
+    ):
+        return 0.0
+
     for token in _tokenize(query_lower):
+        if len(token) < 3:
+            continue
         if token in haystack:
             score += 2.0
 
@@ -216,8 +278,12 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         if hints and any(h in haystack for h in hints):
             score += 7.0
 
-    for keywords in _TOPIC_KEYWORDS.values():
-        if any(kw in query_lower for kw in keywords) and any(kw in haystack for kw in keywords):
+    for topic, keywords in _TOPIC_KEYWORDS.items():
+        if topic not in topics:
+            continue
+        if any(_keyword_in_text(kw, query_lower) for kw in keywords) and any(
+            _keyword_in_text(kw, haystack) for kw in keywords
+        ):
             score += 4.0
 
     if source == "cad_drawing" and query_wants_technical_drawing(query):
@@ -407,6 +473,62 @@ def retrieve_image_candidates(
     return [e for _, e in retrieve_scored_candidates(user_text, history, pool=pool)]
 
 
+def best_fault_for_query(query: str) -> dict | None:
+    """High-confidence field-fault match for grounding Gemini (not the eager fallback)."""
+    kb = get_knowledge_base()
+    best: dict | None = None
+    best_score = 0.0
+    for ft in kb.fault_trees or []:
+        score = _score_fault_match(ft, query)
+        if score > best_score:
+            best_score = score
+            best = ft
+    return best if best and best_score >= _MIN_FAULT_MATCH_SCORE else None
+
+
+def build_grounding_context(
+    user_text: str,
+    history: list[dict[str, str]] | None = None,
+    selected_paths: list[Path] | None = None,
+) -> str:
+    """Short on-topic brief for this turn — keeps the model off other subsystems."""
+    focus = build_conversation_focus(user_text or "", history)
+    topics = sorted(_detect_query_topics(focus))
+    lines = ["=== THIS TURN (stay on this topic only) ==="]
+    if topics:
+        lines.append("Farmer topic: " + ", ".join(topics))
+    fault = best_fault_for_query(focus)
+    if fault:
+        symptom = fault.get("symptom_local_bn") or fault.get("symptom_paper") or ""
+        part = fault.get("part_local_bn") or fault.get("part_paper") or ""
+        solution = (fault.get("solution_bn") or "").replace("\n", " ").strip()
+        lines.append(f"Matching field fault: {part} — {symptom}")
+        if solution:
+            lines.append(f"Field-team fix: {solution}")
+        lines.append("Follow that fix. Do not switch to a different part.")
+    kb = get_knowledge_base()
+    shown: list[str] = []
+    for path in selected_paths or []:
+        entry = kb._by_name.get(path.name, {})
+        label = (
+            entry.get("part_paper")
+            or entry.get("part_name")
+            or entry.get("title")
+            or path.name
+        )
+        shown.append(str(label).split("—")[-1].strip()[:60])
+    if shown:
+        lines.append("Gallery will show ONLY: " + "; ".join(shown))
+        lines.append("You may say ছবি নিচে দেখানো হয়েছে. Do not mention other photos.")
+    else:
+        lines.append("No gallery this turn — do not say photos are shown below.")
+    lines.append(
+        "If the farmer named a part (motor, belt, sieve, …), diagnose THAT part only."
+    )
+    lines.append("=== END THIS TURN ===")
+    return "\n".join(lines)
+
+
 def select_reference_images(
     user_text: str | None = None,
     limit: int | None = None,
@@ -417,11 +539,16 @@ def select_reference_images(
 ) -> list[Path]:
     """Return up to ``limit`` paths using focus ranking (+ optional reasoner picks)."""
     limit = limit or settings.MAX_REFERENCE_IMAGES
+    wants_visuals = conversation_wants_visuals(user_text or "", history)
+    # Symptom answers: at most 2 on-topic photos. Photo-asks can use the full limit.
+    if not wants_visuals and not has_user_image:
+        limit = min(limit, 2)
+
     min_score = settings.REFERENCE_IMAGE_MIN_SCORE
     if has_user_image:
-        min_score = max(2.0, min_score - 2.0)
-    if conversation_wants_visuals(user_text or "", history):
-        min_score = max(1.5, min_score - 2.0)
+        min_score = max(3.0, min_score - 1.0)
+    if wants_visuals:
+        min_score = max(3.5, min_score - 1.0)
 
     kb = get_knowledge_base()
     scored_candidates = retrieve_scored_candidates(user_text, history)
@@ -434,46 +561,53 @@ def select_reference_images(
         if e.get("image_number") is not None
     }
     focus = build_conversation_focus(user_text or "", history)
+    topics = _detect_query_topics(focus)
 
     chosen: list[Path] = []
     chosen_names: set[str] = set()
+    chosen_labels: set[str] = set()
 
-    def _add(entry: dict) -> bool:
+    def _add(entry: dict, score: float | None = None) -> bool:
         if len(chosen) >= limit:
+            return False
+        if score is not None and score < min_score:
+            return False
+        if not entry_is_on_topic(entry, topics, focus):
             return False
         name = entry.get("image_name")
         if not name or name in chosen_names:
+            return False
+        label = display_label(entry, name)
+        if label in chosen_labels:
             return False
         path = _resolve_path(name)
         if path is None:
             return False
         chosen.append(path)
         chosen_names.add(name)
+        chosen_labels.add(label)
         return True
 
-    # Prefer LLM / caller-selected numbers when provided.
+    # Prefer LLM / caller-selected numbers when provided — still on-topic only.
     if preferred_numbers:
+        score_by_num = {
+            e.get("image_number"): s for s, e in scored_candidates
+        }
         for num in preferred_numbers:
             entry = by_number.get(num)
             if entry:
-                _add(entry)
+                _add(entry, score_by_num.get(num, min_score))
 
-    # Fill from ranked candidates above threshold.
-    wants_visuals = conversation_wants_visuals(user_text or "", history)
     for score, entry in scored_candidates:
         if len(chosen) >= limit:
             break
-        if not wants_visuals and score < min_score:
-            continue
-        # When farmer asked for photos, allow slightly weaker but on-topic hits.
-        if wants_visuals and score < max(2.0, min_score - 1):
-            continue
-        _add(entry)
+        _add(entry, score)
 
     logger.info(
-        "Selected %d images for focus=%r: %s",
+        "Selected %d images for focus=%r topics=%s: %s",
         len(chosen),
         focus[:80],
+        sorted(topics),
         [p.name for p in chosen],
     )
     return chosen
