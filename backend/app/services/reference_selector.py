@@ -20,6 +20,8 @@ from app.utils.conversation_focus import (
     asks_for_photos,
     build_conversation_focus,
     conversation_wants_visuals,
+    is_asking_about_shown_image,
+    last_shown_gallery,
 )
 from app.utils.drawing_queries import query_wants_assembly_diagram, query_wants_technical_drawing
 from app.utils.image_labels import display_label
@@ -423,6 +425,21 @@ def _dedupe_near_identical(scored: list[tuple[float, dict]]) -> list[tuple[float
     return out
 
 
+def resolve_reference_image_paths(names: list[str] | None) -> list[Path]:
+    """Resolve catalogue file names to existing paths."""
+    paths: list[Path] = []
+    seen: set[str] = set()
+    for name in names or []:
+        if not name or name in seen:
+            continue
+        path = _resolve_path(name)
+        if path is None:
+            continue
+        paths.append(path)
+        seen.add(name)
+    return paths
+
+
 def retrieve_scored_candidates(
     user_text: str | None = None,
     history: list[dict[str, str]] | None = None,
@@ -492,6 +509,19 @@ def build_grounding_context(
     selected_paths: list[Path] | None = None,
 ) -> str:
     """Short on-topic brief for this turn — keeps the model off other subsystems."""
+    if is_asking_about_shown_image(user_text or "", history):
+        gallery = last_shown_gallery(history)
+        labels = [str(g.get("label") or "").strip() for g in gallery if g.get("label")]
+        return "\n".join(
+            [
+                "=== THIS TURN (farmer asks what the LAST shown photo is) ===",
+                "Previous gallery (answer from these labels; do not guess another part): "
+                + ("; ".join(labels) or "(none shown)"),
+                "If the label is a V-belt / B65 / ভি-বেল্ট, it is a BELT, not a pulley.",
+                "=== END THIS TURN ===",
+            ]
+        )
+
     focus = build_conversation_focus(user_text or "", history)
     topics = sorted(_detect_query_topics(focus))
     lines = ["=== THIS TURN (stay on this topic only) ==="]

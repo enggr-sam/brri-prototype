@@ -267,14 +267,12 @@ class GeminiService:
         reference_images: list[Path],
         user_image_path: Path | None,
     ) -> list[Path]:
-        """Intact-part JPEGs actually sent to Gemini (gallery can still use the full list)."""
+        """On-topic gallery JPEGs sent to Gemini (same photos the farmer sees)."""
         refs = list(reference_images or [])
-        if user_image_path is not None:
-            # Farmer photo + one known-good part for comparison.
-            return refs[:1]
-        if settings.ATTACH_CATALOG_IMAGES_TO_GEMINI:
-            return refs
-        return []
+        if not refs or not settings.ATTACH_CATALOG_IMAGES_TO_GEMINI:
+            return []
+        # Symptom turns already cap at 2; never dump the whole catalogue.
+        return refs[:2]
 
     @staticmethod
     def _result_from_fast_path(hit: FastPathHit) -> ChatReplyResult:
@@ -300,7 +298,7 @@ class GeminiService:
                 short = desc.split("Troubleshooting context:", 1)[-1].strip()
             else:
                 short = desc[:100].strip()
-            label = f"[Reference #{num}: {img.name}]"
+            label = f"[Reference #{num}: {img.name} — also shown in the app gallery]"
             if short:
                 label += f"\n{short[:120]}"
             parts.append(self._types.Part.from_text(text=label))
@@ -700,7 +698,17 @@ class GeminiService:
             if len(content) > 200:
                 content = content[:200].rstrip() + "…"
             if content:
-                lines.append(f"{role}: {content}")
+                line = f"{role}: {content}"
+                gallery = msg.get("gallery") or []
+                if gallery:
+                    labels = [
+                        str(g.get("label") or g.get("image_name") or "").strip()
+                        for g in gallery
+                    ]
+                    labels = [lab for lab in labels if lab]
+                    if labels:
+                        line += " [Photos shown: " + "; ".join(labels) + "]"
+                lines.append(line)
         return "\n".join(lines)
 
     def transcribe_audio(self, audio_path: Path, content_type: str | None = None) -> str:

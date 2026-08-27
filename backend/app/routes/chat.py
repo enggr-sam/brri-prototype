@@ -26,8 +26,10 @@ from app.services.gemini_service import ChatReplyResult, QuotaExceededError, gem
 from app.services.knowledge_base import get_knowledge_base
 from app.services.reference_selector import (
     order_reference_images_by_relevance,
+    resolve_reference_image_paths,
 )
 from app.utils.bangla_text import nfc
+from app.utils.conversation_focus import is_asking_about_shown_image, last_shown_gallery
 from app.utils.fast_path import try_fast_path
 from app.utils.files import (
     AUDIO_CONTENT_TYPES,
@@ -81,6 +83,16 @@ def _message_out(msg: ChatMessage, session_total: float | None = None) -> ChatMe
         model_used=msg.model_used,
         created_at=msg.created_at,
     )
+
+
+def _history_from_rows(history_rows) -> list[dict]:
+    history: list[dict] = []
+    for msg in history_rows:
+        item: dict = {"role": msg.role, "content": msg.content}
+        if msg.role == "assistant":
+            item["gallery"] = loads_reference_images(msg.reference_images_json)
+        history.append(item)
+    return history
 
 
 def _sse(payload: dict[str, Any]) -> str:
@@ -260,7 +272,7 @@ async def chat_message_stream(
         .where(ChatMessage.session_id == session_id_str)
         .order_by(ChatMessage.created_at)
     ).all()
-    history = [{"role": m.role, "content": m.content} for m in history_rows]
+    history = _history_from_rows(history_rows)
 
     user_content, modality, attachment_path, user_image_path = await _prepare_user_input(
         text, image, audio
@@ -270,7 +282,12 @@ async def chat_message_stream(
         user_content, history, has_user_image=user_image_path is not None
     )
     reference_paths: list[Path] = []
-    if not fast_hit and _should_attach_reference_images(
+    last_gallery = last_shown_gallery(history)
+    if is_asking_about_shown_image(user_content, history) and last_gallery:
+        reference_paths = resolve_reference_image_paths(
+            [str(item.get("image_name") or "") for item in last_gallery]
+        )
+    elif not fast_hit and _should_attach_reference_images(
         user_content, user_image_path is not None
     ):
         reference_paths = gemini_service.pick_reference_images(
@@ -361,7 +378,7 @@ async def chat_message(
         .where(ChatMessage.session_id == session.id)
         .order_by(ChatMessage.created_at)
     ).all()
-    history = [{"role": m.role, "content": m.content} for m in history_rows]
+    history = _history_from_rows(history_rows)
 
     user_content, modality, attachment_path, user_image_path = await _prepare_user_input(
         text, image, audio
@@ -371,7 +388,12 @@ async def chat_message(
         user_content, history, has_user_image=user_image_path is not None
     )
     reference_paths: list[Path] = []
-    if not fast_hit and _should_attach_reference_images(
+    last_gallery = last_shown_gallery(history)
+    if is_asking_about_shown_image(user_content, history) and last_gallery:
+        reference_paths = resolve_reference_image_paths(
+            [str(item.get("image_name") or "") for item in last_gallery]
+        )
+    elif not fast_hit and _should_attach_reference_images(
         user_content, user_image_path is not None
     ):
         reference_paths = gemini_service.pick_reference_images(

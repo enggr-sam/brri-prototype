@@ -224,7 +224,7 @@ def format_weight_bn() -> str:
     kg = dims.get("weight_kg", 97.86)
     return (
         f"বিআরআরআই উইনোয়ার ২০২৪ মেশিনের ওজন {_bn_num(kg)} কেজি ({kg} kg)।"
-    )
+        )
 
 
 def try_fast_path(

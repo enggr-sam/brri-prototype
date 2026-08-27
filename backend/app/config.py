@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     # gemini-2.5-pro may 404 for newer accounts — use gemini-2.5-flash instead.
     GEMINI_MODEL: str = "gemini-2.0-flash"
     # Tried automatically when the primary model returns 429/404/503.
-    GEMINI_FALLBACK_MODEL: str = "gemini-flash-latest"
+    GEMINI_FALLBACK_MODEL: str = "gemini-flash-lite-latest"
     # Cheap/fast model for the helper stages (image picking, gallery captions) that
     # produce short output and do not need the answer model. Empty = use the main chain.
     GEMINI_FAST_MODEL: str = "gemini-flash-lite-latest"
@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     ENABLE_IMAGE_CAPTIONS: bool = False  # extra Gemini call; UI has Bangla defaults
     ENABLE_IMAGE_REASONER: bool = False  # extra Gemini call; keyword ranking is used
     IMAGE_REASONER_SKIP_MARGIN: float = 1.6  # unused while the reasoner is off
-    ATTACH_CATALOG_IMAGES_TO_GEMINI: bool = False  # text Qs are text-only to Gemini
+    ATTACH_CATALOG_IMAGES_TO_GEMINI: bool = True  # send the 1–2 on-topic gallery JPEGs
     ENABLE_LOCAL_FAST_PATH: bool = True  # hello / HP / weight / belt price-dealer
 
     # --- Filesystem locations --------------------------------------------
