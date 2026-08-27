@@ -653,8 +653,8 @@ class GeminiService:
             build_grounding_context(user_text, history, reference_images)
         )
         prompt_parts.append(
-            "Reply in concise spoken Bangla. Follow the system instruction. "
-            "THIS TURN is the topic lock. Complete sentences only. "
+            "Reply in concise spoken Bangla. Answer THIS question only — "
+            "do not paste a field recipe. Complete sentences. "
             "No ---META---, show_images, suggestions, or JSON in the visible text."
         )
         contents.append(types.Part.from_text(text="\n\n".join(prompt_parts)))

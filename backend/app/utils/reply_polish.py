@@ -83,6 +83,8 @@ def polish_prompt(user_text: str, draft: str) -> str:
         "You are a quality editor for BRRI Winnower 2024 farmer support replies.\n\n"
         "TASK: Read the farmer QUESTION and the DRAFT. Emit ONE final reply.\n\n"
         "Keep the draft's meaning. Fix cutoff, leftover META, or invented shops.\n"
+        "If the draft dumped a whole repair list for a how-much / which-way / why "
+        "question, cut it to the one action that answers the question.\n"
         "Spoken Bangla. No markdown. Specs stay grounded. Parts stay the parts named.\n"
         "Diagnostic shape when useful: সমস্যা / সমাধান (max 2 steps) / সাবধান optional.\n"
         "After the FULL visible answer, append EXACTLY:\n"

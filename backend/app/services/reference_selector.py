@@ -531,11 +531,11 @@ def build_grounding_context(
     if fault:
         symptom = fault.get("symptom_local_bn") or fault.get("symptom_paper") or ""
         part = fault.get("part_local_bn") or fault.get("part_paper") or ""
-        solution = (fault.get("solution_bn") or "").replace("\n", " ").strip()
-        lines.append(f"Matching field fault: {part} — {symptom}")
-        if solution:
-            lines.append(f"Field-team fix: {solution}")
-        lines.append("Follow that fix. Do not switch to a different part.")
+        lines.append(f"Topic lock (not a script to paste): {part} — {symptom}")
+        lines.append(
+            "Answer the current question. Use a field-note step only if this "
+            "question needs it. Do not dump the whole field recipe."
+        )
     kb = get_knowledge_base()
     shown: list[str] = []
     for path in selected_paths or []:
@@ -552,9 +552,7 @@ def build_grounding_context(
         lines.append("You may say ছবি নিচে দেখানো হয়েছে. Do not mention other photos.")
     else:
         lines.append("No gallery this turn — do not say photos are shown below.")
-    lines.append(
-        "If the farmer named a part (motor, belt, sieve, …), diagnose THAT part only."
-    )
+    lines.append("Stay on the named part. Do not switch subsystems.")
     lines.append("=== END THIS TURN ===")
     return "\n".join(lines)
 
