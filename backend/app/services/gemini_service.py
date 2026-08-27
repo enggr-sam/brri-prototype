@@ -14,6 +14,11 @@ from app.services.knowledge_base import KnowledgeBase, get_knowledge_base
 from app.utils.conversation_focus import (
     build_conversation_focus,
     conversation_wants_visuals,
+    is_asking_about_shown_image,
+)
+from app.utils.drawing_queries import (
+    query_wants_assembly_diagram,
+    query_wants_technical_drawing,
 )
 from app.utils.image_reasoner import (
     build_image_reason_prompt,
@@ -127,7 +132,21 @@ def _is_quota_error(exc: Exception) -> bool:
     return "RESOURCE_EXHAUSTED" in text or "429" in text
 
 
+def _is_timeout_error(exc: Exception) -> bool:
+    """Hung / deadline errors — do not start a second model after a long wait."""
+    status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if status in (408, 504):
+        return True
+    text = str(exc).upper()
+    return any(
+        token in text
+        for token in ("DEADLINE", "TIMEOUT", "TIMED OUT", "TIMED_OUT", "GATEWAY TIME")
+    )
+
+
 def _should_fallback(exc: Exception) -> bool:
+    if _is_timeout_error(exc):
+        return False
     if _is_quota_error(exc):
         return True
     status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
@@ -266,13 +285,18 @@ class GeminiService:
         self,
         reference_images: list[Path],
         user_image_path: Path | None,
+        user_text: str = "",
+        history: list[dict[str, str]] | None = None,
     ) -> list[Path]:
-        """On-topic gallery JPEGs sent to Gemini (same photos the farmer sees)."""
+        """Send gallery JPEGs only when the question is about those pixels."""
         refs = list(reference_images or [])
         if not refs or not settings.ATTACH_CATALOG_IMAGES_TO_GEMINI:
             return []
-        # Symptom turns already cap at 2; never dump the whole catalogue.
-        return refs[:2]
+        if user_image_path is not None:
+            return refs[:2]
+        if is_asking_about_shown_image(user_text, history):
+            return refs[:2]
+        return []
 
     @staticmethod
     def _result_from_fast_path(hit: FastPathHit) -> ChatReplyResult:
@@ -305,10 +329,22 @@ class GeminiService:
             parts.append(self._image_part(img))
         return parts
 
-    def _chat_generation_config(self, kb: KnowledgeBase):
+    def _chat_generation_config(
+        self,
+        kb: KnowledgeBase,
+        user_text: str = "",
+        history: list[dict[str, str]] | None = None,
+    ):
+        focus = build_conversation_focus(user_text or "", history)
+        include_drawings = query_wants_technical_drawing(
+            focus
+        ) or query_wants_assembly_diagram(focus)
         return self._types.GenerateContentConfig(
-            system_instruction=kb.build_system_instruction(),
-            max_output_tokens=1536,
+            system_instruction=kb.build_system_instruction(
+                include_drawings=include_drawings,
+                include_image_index=False,
+            ),
+            max_output_tokens=768,
             temperature=0.35,
         )
 
@@ -544,11 +580,14 @@ class GeminiService:
             yield _NO_KEY_MESSAGE
             return
 
-        gemini_refs = self._catalog_images_for_gemini(reference_images, user_image_path)
+        gemini_refs = self._catalog_images_for_gemini(
+            reference_images, user_image_path, user_text, history
+        )
         contents = self._build_chat_contents(
             history, user_text, gemini_refs, user_image_path
         )
 
+        chat_config = self._chat_generation_config(kb, user_text, history)
         last_exc: Exception | None = None
         for model in settings.model_chain:
             try:
@@ -558,7 +597,7 @@ class GeminiService:
                 stream = self._client.models.generate_content_stream(
                     model=model,
                     contents=contents,
-                    config=self._chat_generation_config(kb),
+                    config=chat_config,
                 )
                 for chunk in stream:
                     inp, out = extract_usage(chunk)
@@ -677,14 +716,16 @@ class GeminiService:
         if not self.is_configured:
             return ChatReplyResult(text=_NO_KEY_MESSAGE)
 
-        gemini_refs = self._catalog_images_for_gemini(reference_images, user_image_path)
+        gemini_refs = self._catalog_images_for_gemini(
+            reference_images, user_image_path, user_text, history
+        )
         contents = self._build_chat_contents(
             history, user_text, gemini_refs, user_image_path
         )
 
         try:
             raw, usage = self._stream_generate_with_fallback(
-                contents, config=self._chat_generation_config(kb)
+                contents, config=self._chat_generation_config(kb, user_text, history)
             )
             draft, _ = split_reply_metadata(raw)
             return self._assemble_chat_result(

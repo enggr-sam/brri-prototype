@@ -150,7 +150,12 @@ class KnowledgeBase:
             lines.append(f"- #{num} {title}: {desc}")
         return "\n".join(lines)
 
-    def build_system_instruction(self) -> str:
+    def build_system_instruction(
+        self,
+        *,
+        include_drawings: bool = True,
+        include_image_index: bool = True,
+    ) -> str:
         machine_json = json.dumps(self.machine_data, ensure_ascii=False, indent=2)
         parts = [
             self.base_prompt.strip(),
@@ -165,7 +170,7 @@ class KnowledgeBase:
             "=== END SPECIFICATIONS ===",
         ]
         catalog = self._reference_catalog_text()
-        if catalog:
+        if include_image_index and catalog:
             parts += [
                 "",
                 "=== REFERENCE IMAGE INDEX (filenames only) ===",
@@ -192,12 +197,13 @@ class KnowledgeBase:
                 photos,
                 "=== END FIELD PHOTO SLOTS ===",
             ]
-        cad = self._cad_drawings_text()
-        if cad:
-            parts += ["", f"=== {cad.split(chr(10))[0]} ===", *cad.split("\n")[1:], "=== END CAD DRAWINGS ==="]
-        subasm = self._subassembly_text()
-        if subasm:
-            parts += ["", "=== SUB-ASSEMBLY DIAGRAMS ===", subasm, "=== END SUB-ASSEMBLY DIAGRAMS ==="]
+        if include_drawings:
+            cad = self._cad_drawings_text()
+            if cad:
+                parts += ["", f"=== {cad.split(chr(10))[0]} ===", *cad.split("\n")[1:], "=== END CAD DRAWINGS ==="]
+            subasm = self._subassembly_text()
+            if subasm:
+                parts += ["", "=== SUB-ASSEMBLY DIAGRAMS ===", subasm, "=== END SUB-ASSEMBLY DIAGRAMS ==="]
         return "\n".join(parts) + "\n"
 
     def build_editor_instruction(self) -> str:
