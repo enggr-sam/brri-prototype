@@ -137,7 +137,7 @@ _MOTOR_RATING_TERMS = (
     "power",
 )
 
-_QUESTION_MARKERS = ("কত", "কতো", "কী", "কি ", "what", "কতখানি", "কতটা")
+_QUESTION_MARKERS = ("কত", "কতো", "কী", "কি", " ki", "what", "কতখানি", "কতটা")
 
 _GREETING_REPLY_BN = (
     "আসসালামু আলাইকুম। আমি শুধু বিআরআরআই উইনোয়ার ২০২৪ (BRRI Win2024) "
@@ -227,6 +227,31 @@ def format_weight_bn() -> str:
         )
 
 
+def is_machine_name_query(text: str) -> bool:
+    """Ask for the machine's name — not a fault on the machine."""
+    lower = nfc(text or "").lower()
+    if any(term in lower for term in _PROBLEM_HINTS):
+        return False
+    has_name = any(term in lower for term in ("নাম", "name", " nam", "naam"))
+    has_machine = any(
+        term in lower
+        for term in ("মেশিন", "machine", "winnower", "win2024", "brri", "উইনোয়ার", "উইনোয়ার")
+    )
+    has_question = any(term in lower for term in _QUESTION_MARKERS)
+    return has_name and has_machine and has_question
+
+
+def format_machine_name_bn() -> str:
+    data = get_knowledge_base().machine_data
+    full = data.get("machine_name") or "BRRI Winnower Model 2024"
+    short = data.get("short_name") or "BRRI Win2024"
+    maker = data.get("manufacturer") or "Bangladesh Rice Research Institute (BRRI)"
+    return (
+        f"এই মেশিনের নাম {full} (সংক্ষেপে {short})। "
+        f"এটি {maker} তৈরি করেছে।"
+    )
+
+
 def try_fast_path(
     user_text: str,
     history: list[dict[str, str]] | None = None,
@@ -259,6 +284,12 @@ def try_fast_path(
     if is_belt_supplier_query(text):
         return FastPathHit(
             text=format_belt_suppliers_bn(),
+            suggestions=local_suggestions(text, history),
+        )
+
+    if is_machine_name_query(text):
+        return FastPathHit(
+            text=format_machine_name_bn(),
             suggestions=local_suggestions(text, history),
         )
 
