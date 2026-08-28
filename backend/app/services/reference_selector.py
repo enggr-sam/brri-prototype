@@ -26,6 +26,7 @@ from app.utils.conversation_focus import (
 from app.utils.drawing_queries import (
     query_is_how_it_works,
     query_wants_assembly_diagram,
+    query_wants_cutting_sheet,
     query_wants_technical_drawing,
 )
 from app.utils.image_labels import display_label
@@ -46,7 +47,7 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "blower": (
         "blower", "fan", "blade", "air blast", "wind", "intake", "weak air", "দুর্বল",
-        "ব্লোয়ার", "পাখা", "বাতাস", "হাওয়া", "ধুল", "batash", "batash",
+        "ব্লোয়ার", "পাখা", "ফ্যান", "বাতাস", "হাওয়া", "ধুল", "batash", "batash",
     ),
     "bearing": (
         "bearing", "6203", "6302", "ucp206", "p-206", "pillow", "block", "grinding",
@@ -127,10 +128,44 @@ _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
     "sieve": ("sieve", "ঝরন", "screen", "চালুনি", "চালনি", "সিভ"),
     "motor": ("motor", "মোটর", "generator"),
     "bearing": ("bearing", "বিয়ারিং", "pillow"),
-    "blower": ("blower", "ব্লোয়ার", "fan"),
+    "blower": ("blower", "ব্লোয়ার", "fan", "ফ্যান", "পাখা"),
     "hopper": ("hopper", "হপার", "feed gate"),
     "shaft": ("shaft", "শ্যাফট", "small shaft", "sieve small"),
 }
+
+# Synonym groups: Bangla "পার্ট-২" is the same modifier as English "part-2".
+_MODIFIER_GROUPS: tuple[frozenset[str], ...] = (
+    frozenset({"cover", "কভার", "ঢাকনা"}),
+    frozenset({"side", "সাইড"}),
+    frozenset({"front", "সামনে"}),
+    frozenset({"back", "rear", "পেছন"}),
+    frozenset({"plate", "পাত", "প্লেট"}),
+    frozenset({"pulley", "পুলি"}),
+    frozenset({"bearing", "বিয়ারিং"}),
+    frozenset({"house", "housing"}),
+    frozenset({"divider", "বিভাজক"}),
+    frozenset({"gate", "গেট"}),
+    frozenset({"frame", "ফ্রেম"}),
+    frozenset({"base", "বেস"}),
+    frozenset({"support", "সাপোর্ট"}),
+    frozenset({"dust", "ধুলা"}),
+    frozenset({"drain"}),
+    frozenset({"shaft", "শ্যাফট", "শ্যাফ্ট"}),
+    frozenset({"bottom", "নিচ"}),
+    frozenset({"top", "উপর"}),
+    frozenset({"part-1", "part 1", "part1", "পার্ট-1", "পার্ট-১", "পার্ট 1", "পার্ট ১"}),
+    frozenset({"part-2", "part 2", "part2", "পার্ট-2", "পার্ট-২", "পার্ট 2", "পার্ট ২"}),
+)
+
+_BN_DIGITS = str.maketrans("০১২৩৪৫৬৭৮৯", "0123456789")
+
+_GENERIC_KEYWORDS = frozenset(
+    kw.lower()
+    for keywords in _TOPIC_KEYWORDS.values()
+    for kw in keywords
+)
+
+_RANK_SKIP_TOPICS = frozenset({"blueprint", "grain_loss"})
 
 
 def user_requests_visual_help(text: str) -> bool:
@@ -186,15 +221,67 @@ def _entry_haystack(entry: dict) -> str:
     ).lower()
 
 
-def _entry_topics(entry: dict) -> set[str]:
-    haystack = _entry_haystack(entry)
+def _entry_identity(entry: dict) -> str:
+    """Official name of the asset — not the bloated keyword list."""
+    return " ".join(
+        str(entry.get(key) or "")
+        for key in ("part_name", "title", "part_paper", "image_name")
+    ).lower()
+
+
+def _fold_text(text: str) -> str:
+    return (text or "").lower().translate(_BN_DIGITS)
+
+
+def _component_modifiers_in(text: str) -> frozenset[int]:
+    folded = _fold_text(text)
+    return frozenset(
+        i for i, group in enumerate(_MODIFIER_GROUPS) if any(m in folded for m in group)
+    )
+
+
+def _is_unit_drawing_query(query: str) -> bool:
+    """'Drawing of the blower/hopper/…' — the unit, not a named plate."""
+    if not query_wants_technical_drawing(query):
+        return False
+    if query_wants_assembly_diagram(query) or query_wants_cutting_sheet(query):
+        return False
+    return not _component_modifiers_in(query)
+
+
+def _identity_mentions_topic(identity: str, topics: set[str]) -> bool:
+    for topic in topics - _RANK_SKIP_TOPICS:
+        hints = _SUBSYSTEM_HINTS.get(topic, (topic,))
+        if any(h in identity for h in hints):
+            return True
+        if topic in identity:
+            return True
+    return False
+
+
+def _entry_subsystem_matches(entry: dict, topics: set[str]) -> bool:
+    rank_topics = topics - _RANK_SKIP_TOPICS
+    if not rank_topics:
+        return False
+    sub = (entry.get("subsystem") or "").lower()
+    if sub and sub in rank_topics:
+        return True
+    return _identity_mentions_topic(_entry_identity(entry), rank_topics)
+
+
+def _entry_topics(entry: dict, *, strict: bool = False) -> set[str]:
+    blob = _entry_identity(entry) if strict else _entry_haystack(entry)
     found = {
         topic
         for topic, hints in _SUBSYSTEM_HINTS.items()
-        if any(h in haystack for h in hints)
+        if any(h in blob for h in hints)
     }
-    slot = str(entry.get("photo_no") or "")
-    found |= set(_PHOTO_SLOT_TOPICS.get(slot, ()))
+    sub = (entry.get("subsystem") or "").lower()
+    if sub:
+        found.add(sub)
+    if not strict:
+        slot = str(entry.get("photo_no") or "")
+        found |= set(_PHOTO_SLOT_TOPICS.get(slot, ()))
     return found
 
 
@@ -208,22 +295,29 @@ def _is_overview_shot(entry: dict) -> bool:
 
 def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
     """False when the catalogue row is clearly about a different subsystem."""
-    if not topics:
-        return not _is_overview_shot(entry)
+    machine_topics = topics - _RANK_SKIP_TOPICS
+    source = entry.get("source")
     if _is_overview_shot(entry) and not any(
         w in query.lower() for w in ("full", "পুরো", "whole", "সমগ্র", "বাইর")
     ):
         return False
-    et = _entry_topics(entry)
+    if not machine_topics:
+        if query_wants_assembly_diagram(query):
+            return source == "subassembly_drawing"
+        if query_wants_technical_drawing(query):
+            return source in {"cad_drawing", "subassembly_drawing"}
+        if query_is_how_it_works(query):
+            return source != "cad_drawing"
+        return not _is_overview_shot(entry)
+    drawing_ask = query_wants_technical_drawing(query) or query_wants_assembly_diagram(query)
+    et = _entry_topics(entry, strict=drawing_ask)
     if not et:
-        # Unknown row: keep only if the query asked for a drawing of that file type.
-        source = entry.get("source")
         if source == "cad_drawing":
             return query_wants_technical_drawing(query)
         if source == "subassembly_drawing":
             return query_wants_assembly_diagram(query)
         return False
-    return bool(et & topics)
+    return bool(et & machine_topics)
 
 
 def _entry_by_number(entries: list[dict], number: int) -> dict | None:
@@ -253,6 +347,7 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         return 0.0
 
     haystack = _entry_haystack(entry)
+    identity = _entry_identity(entry)
     query_lower = query.lower()
     score = 0.0
     source = entry.get("source")
@@ -263,6 +358,7 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         query_wants_technical_drawing(query)
         or query_wants_assembly_diagram(query)
         or asks_for_photos(query)
+        or query_is_how_it_works(query)
     ):
         return 0.0
 
@@ -273,24 +369,32 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
             score += 2.0
 
     for kw in entry.get("keywords") or []:
-        if kw.lower() in query_lower:
+        kw_l = kw.lower()
+        if kw_l not in query_lower:
+            continue
+        # Generic topic words ("blower", "fan") sit on every sibling CAD.
+        # Specific phrases ("blower cover", "fan plate") should win only when asked.
+        if kw_l in _GENERIC_KEYWORDS or len(kw_l) < 6:
+            score += 1.5
+        else:
             score += 5.0
 
     for symptom in entry.get("related_symptoms_bn") or []:
         if symptom and symptom.lower() in query_lower:
             score += 8.0
 
-    # Soft topic ↔ subsystem alignment (intelligent match, not hard ID maps).
+    drawing_ask = query_wants_technical_drawing(query) or query_wants_assembly_diagram(query)
+    topic_blob = identity if drawing_ask else haystack
     for topic in topics:
         hints = _SUBSYSTEM_HINTS.get(topic, ())
-        if hints and any(h in haystack for h in hints):
+        if hints and any(h in topic_blob for h in hints):
             score += 7.0
 
     for topic, keywords in _TOPIC_KEYWORDS.items():
         if topic not in topics:
             continue
         if any(_keyword_in_text(kw, query_lower) for kw in keywords) and any(
-            _keyword_in_text(kw, haystack) for kw in keywords
+            _keyword_in_text(kw, topic_blob) for kw in keywords
         ):
             score += 4.0
 
@@ -311,19 +415,37 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         if source == "cad_drawing":
             score += 6.0
         if source == "field_collection":
-            score -= 8.0
-    if "hopper" in topics and query_wants_technical_drawing(query):
-        if source == "cad_drawing" and "hopper" in haystack:
-            score += 16.0
-    if "shaft" in topics and query_wants_technical_drawing(query):
-        if source == "cad_drawing" and "shaft" in haystack:
-            score += 18.0
+            score -= 18.0
+
+    query_mods = _component_modifiers_in(query)
+    extra_mods = _component_modifiers_in(identity) - query_mods
+    if extra_mods:
+        score -= 10.0 * min(len(extra_mods), 3)
+    if query_mods and (query_mods & _component_modifiers_in(identity)):
+        score += 16.0
+    elif query_mods and extra_mods and query_wants_technical_drawing(query):
+        score -= 18.0
+
+    rank_topics = topics - _RANK_SKIP_TOPICS
+    if rank_topics and _identity_mentions_topic(identity, rank_topics):
+        score += 12.0
+
+    if _is_unit_drawing_query(query) and rank_topics:
+        if source == "subassembly_drawing" and _entry_subsystem_matches(entry, rank_topics):
+            score += 24.0
+        elif source == "cad_drawing" and _identity_mentions_topic(identity, rank_topics):
+            score += 8.0
         if source == "field_collection":
-            score -= 10.0
-    if query_is_how_it_works(query) and source == "field_collection":
-        if "hopper" in haystack:
+            score -= 12.0
+
+    if query_wants_cutting_sheet(query) and source == "cad_drawing":
+        if _identity_mentions_topic(identity, rank_topics or topics):
+            score += 14.0
+    if query_is_how_it_works(query) and source != "cad_drawing":
+        blob = f"{haystack} {identity}"
+        if any(h in blob for h in ("hopper", "হপার", "feed")):
             score += 16.0
-        if "belt" in haystack or "b65" in haystack:
+        if any(h in blob for h in ("belt", "b65", "বেল্ট")):
             score += 8.0
     if source == "field_collection":
         score += 3.0  # Prefer real photos when scores are close
@@ -490,7 +612,11 @@ def retrieve_scored_candidates(
         return []
 
     topics = _detect_query_topics(focus)
-    fault_boosts = _fault_boosted_numbers(focus)
+    # A drawing request is not a fault diagnosis — don't boost field-fault photos.
+    if query_wants_technical_drawing(focus) or query_wants_assembly_diagram(focus):
+        fault_boosts: dict[int, float] = {}
+    else:
+        fault_boosts = _fault_boosted_numbers(focus)
     scored: list[tuple[float, dict]] = []
 
     for entry in entries:
@@ -605,6 +731,21 @@ def select_reference_images(
     if not wants_visuals and not has_user_image:
         limit = min(limit, 2)
 
+    focus = build_conversation_focus(user_text or "", history)
+    topics = _detect_query_topics(focus)
+    unit_drawing = _is_unit_drawing_query(focus)
+    if unit_drawing:
+        limit = min(limit, 2)
+    if query_wants_assembly_diagram(focus) and not (topics - _RANK_SKIP_TOPICS):
+        # "complete assembly / exploded" with no named part → the BOM sheet only.
+        limit = min(limit, 1)
+    if (
+        query_wants_technical_drawing(focus)
+        and _component_modifiers_in(focus)
+        and not query_wants_assembly_diagram(focus)
+    ):
+        limit = min(limit, 2)
+
     min_score = settings.REFERENCE_IMAGE_MIN_SCORE
     if has_user_image:
         min_score = max(3.0, min_score - 1.0)
@@ -621,20 +762,30 @@ def select_reference_images(
         for e in kb.reference_images
         if e.get("image_number") is not None
     }
-    focus = build_conversation_focus(user_text or "", history)
-    topics = _detect_query_topics(focus)
 
     chosen: list[Path] = []
     chosen_names: set[str] = set()
     chosen_labels: set[str] = set()
+    picked_unit_subasm = False
 
     def _add(entry: dict, score: float | None = None) -> bool:
+        nonlocal picked_unit_subasm
         if len(chosen) >= limit:
+            return False
+        if picked_unit_subasm:
+            # The assembly drawing of the named unit is the answer — don't
+            # append sibling covers, blades, or floor photos.
             return False
         if score is not None and score < min_score:
             return False
         if not entry_is_on_topic(entry, topics, focus):
             return False
+        drawing_ask = query_wants_technical_drawing(focus) or query_wants_assembly_diagram(focus)
+        query_mods = _component_modifiers_in(focus)
+        if drawing_ask and query_mods:
+            entry_mods = _component_modifiers_in(_entry_identity(entry))
+            if entry_mods and not (query_mods & entry_mods):
+                return False
         name = entry.get("image_name")
         if not name or name in chosen_names:
             return False
@@ -647,6 +798,12 @@ def select_reference_images(
         chosen.append(path)
         chosen_names.add(name)
         chosen_labels.add(label)
+        if (
+            unit_drawing
+            and entry.get("source") == "subassembly_drawing"
+            and _entry_subsystem_matches(entry, topics)
+        ):
+            picked_unit_subasm = True
         return True
 
     # Prefer LLM / caller-selected numbers when provided — still on-topic only.

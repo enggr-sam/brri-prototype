@@ -64,6 +64,20 @@ _HOW_IT_WORKS_MARKERS = (
     "কাজ করে।",
 )
 
+# Cutting / fabrication of a named plate — not "show me the drawing of the fan".
+_CUTTING_SHEET_MARKERS = (
+    "cutting",
+    "কাটিং",
+    "কামাই",
+    "fabricat",
+    "weld",
+    "ওয়েল্ড",
+    "dimension",
+    "flat-pattern",
+    "flat pattern",
+    "মাপ",
+)
+
 
 def query_wants_technical_drawing(text: str) -> bool:
     """True when the farmer/mechanic asks for dimensions, fabrication, or assembly layout."""
@@ -74,6 +88,12 @@ def query_wants_technical_drawing(text: str) -> bool:
 def query_wants_assembly_diagram(text: str) -> bool:
     lower = (text or "").lower()
     return any(t in lower for t in _ASSEMBLY_QUERY_MARKERS)
+
+
+def query_wants_cutting_sheet(text: str) -> bool:
+    """True when they need a flat-pattern / welding sheet, not the unit view."""
+    lower = (text or "").lower()
+    return any(m in lower for m in _CUTTING_SHEET_MARKERS)
 
 
 def query_is_how_it_works(text: str) -> bool:
