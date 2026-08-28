@@ -144,6 +144,21 @@ def _is_timeout_error(exc: Exception) -> bool:
     )
 
 
+def classify_gemini_error(exc: Exception) -> str:
+    """Stable label for logs and /api/health/gemini — not shown to farmers."""
+    if _is_timeout_error(exc):
+        return "timeout"
+    if _is_quota_error(exc):
+        return "quota_429"
+    status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    text = str(exc).upper()
+    if status == 404 or "NOT_FOUND" in text:
+        return "not_found_404"
+    if status == 503 or "UNAVAILABLE" in text:
+        return "overloaded_503"
+    return "other"
+
+
 def _should_fallback(exc: Exception) -> bool:
     if _is_timeout_error(exc):
         return False
@@ -217,6 +232,32 @@ class GeminiService:
     @property
     def is_configured(self) -> bool:
         return self._client is not None
+
+    def probe_model(self, model: str | None = None) -> dict:
+        """Tiny generate — use to classify why Flash fails (consumes a few tokens)."""
+        target = (model or settings.GEMINI_MODEL).strip()
+        if not self.is_configured:
+            return {"ok": False, "model": target, "error_kind": "not_configured"}
+        try:
+            response = self._client.models.generate_content(
+                model=target,
+                contents="Reply with OK.",
+                config=self._types.GenerateContentConfig(
+                    max_output_tokens=8,
+                    temperature=0,
+                ),
+            )
+            text = (response.text or "").strip()
+            return {"ok": bool(text), "model": target, "error_kind": None}
+        except Exception as exc:
+            kind = classify_gemini_error(exc)
+            logger.warning("Gemini probe %s failed (%s): %s", target, kind, str(exc)[:200])
+            return {
+                "ok": False,
+                "model": target,
+                "error_kind": kind,
+                "detail": str(exc)[:240],
+            }
 
     def pick_reference_images(
         self,
@@ -510,7 +551,12 @@ class GeminiService:
                 return text, self._usage_from_response(response, model)
             except Exception as exc:
                 if _should_fallback(exc):
-                    logger.warning("Model %s unavailable, trying next: %s", model, str(exc)[:120])
+                    logger.warning(
+                        "Model %s failed (%s); trying next: %s",
+                        model,
+                        classify_gemini_error(exc),
+                        str(exc)[:160],
+                    )
                     last_exc = exc
                     continue
                 raise
@@ -547,7 +593,12 @@ class GeminiService:
                 return buffer.strip(), usage
             except Exception as exc:
                 if _should_fallback(exc):
-                    logger.warning("Model %s unavailable, trying next: %s", model, str(exc)[:120])
+                    logger.warning(
+                        "Model %s failed (%s); trying next: %s",
+                        model,
+                        classify_gemini_error(exc),
+                        str(exc)[:160],
+                    )
                     last_exc = exc
                     continue
                 raise
@@ -632,7 +683,10 @@ class GeminiService:
             except Exception as exc:
                 if _should_fallback(exc):
                     logger.warning(
-                        "Model %s unavailable, trying next: %s", model, str(exc)[:160]
+                        "Model %s failed (%s); trying next: %s",
+                        model,
+                        classify_gemini_error(exc),
+                        str(exc)[:160],
                     )
                     last_exc = exc
                     continue

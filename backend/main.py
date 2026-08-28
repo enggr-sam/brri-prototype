@@ -17,6 +17,7 @@ from app.config import settings
 from app.database import init_db
 from app.routes.chat import router as chat_router
 from app.routes.knowledge_base import router as knowledge_base_router
+from app.services.gemini_service import gemini_service
 from app.services.knowledge_base import get_knowledge_base
 
 logging.basicConfig(
@@ -74,4 +75,29 @@ def root() -> dict:
 
 @app.get("/api/health", tags=["health"])
 def health() -> dict:
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "primary_model": settings.GEMINI_MODEL,
+        "fallback_model": settings.GEMINI_FALLBACK_MODEL,
+        "gemini_configured": bool(settings.GEMINI_API_KEY),
+    }
+
+
+@app.get("/api/health/gemini", tags=["health"])
+def gemini_health() -> dict:
+    """Ping the primary model. Uses a few tokens — do not hammer this."""
+    primary = gemini_service.probe_model(settings.GEMINI_MODEL)
+    fallback = None
+    if not primary.get("ok") and settings.GEMINI_FALLBACK_MODEL:
+        fallback = gemini_service.probe_model(settings.GEMINI_FALLBACK_MODEL)
+    return {
+        "primary": primary,
+        "fallback": fallback,
+        "how_to_read": {
+            "quota_429": "This model's daily/minute quota is empty. Lite often still works. Wait or enable billing.",
+            "not_found_404": "This model id is dead or not on this key. Change GEMINI_MODEL.",
+            "overloaded_503": "Google is busy. Retry. Not a dead model.",
+            "timeout": "Call hung. Payload too heavy or network. Not quota.",
+            "not_configured": "GEMINI_API_KEY missing.",
+        },
+    }
