@@ -1,10 +1,11 @@
 {
-  "machine_name": "BRRI Winnower Model 2024",
+  "machine_name": "BRRI Winnower",
   "short_name": "BRRI Win2024",
+  "model": "BRRI Win2024",
   "manufacturer": "Bangladesh Rice Research Institute (BRRI)",
   "purpose": "Cleaning and separating rice grain from chaff, dust, and lighter impurities using a controlled air blast and an oscillating sieve.",
   "dimensions": {
-    "overall_mm": "1350 x 835 x 1310",
+    "overall_mm": "1350 × 835 × 1310",
     "length_mm": 1350,
     "width_mm": 835,
     "height_mm": 1310,
@@ -35,7 +36,7 @@
     "diameter_mm": 270
   },
   "sieve_types": {
-    "description": "Three interchangeable perforated nets — large, medium, and small hole sizes for different crops."
+    "description": "Three interchangeable sieves (চালনি / সিভ) — large, medium, and small hole sizes for different crops. Farmer word: চালনি, not জাল."
   },
   "core_mechanism": {
     "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the sieve.",
@@ -50,12 +51,13 @@
     }
   },
   "materials": {
-    "main_frame": "Plain Carbon Steel angle bars (38 x 38 x 3 mm)",
-    "hoppers": "Plain Carbon Steel",
+    "main_frame": "Mild steel (plain carbon steel) angle bars (38 × 38 × 3 mm)",
+    "shop_name_bn": "মাইল্ড স্টিল",
+    "hoppers": "Mild steel (plain carbon steel)",
     "structural_components": "Some ASTM A36 components",
     "fasteners": "Stainless steel",
-    "angle_bar_spec_mm": "38 x 38 x 3",
-    "flat_bar_spec_mm": "20 x 4"
+    "angle_bar_spec_mm": "38 × 38 × 3",
+    "flat_bar_spec_mm": "20 × 4"
   },
   "common_issues": [
     "V-belt (B65) slipping, cracking, or over/under tension causing low shaft speed.",
@@ -63,7 +65,7 @@
     "Blower imbalance or blade damage reducing air blast and cleaning quality.",
     "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
     "Motor not starting or running slow (voltage, capacitor, or winding issues on the 1.5 HP / 1.1 kW, 1400 rpm motor).",
-    "Frame or hopper corrosion / cracked welds on the carbon steel angle bars.",
+    "Frame or hopper corrosion / cracked welds on the mild steel angle bars.",
     "Too much air/wind causing good grain to blow away with chaff — adjust air control lever and feed gate."
   ],
   "parts_suppliers": {

@@ -25,3 +25,6 @@ dist-ssr/
 .idea/
 .DS_Store
 *.log
+
+# ---- Review dumps (keep product PDFs tracked) ----
+Winnower QnA issues*.pdf

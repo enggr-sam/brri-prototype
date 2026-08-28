@@ -41,11 +41,11 @@ export default function Header({
                   onDark ? "text-base text-white" : "text-lg text-leaf-950"
                 }`}
               >
-                BRRI Winnower ২০২৪
+                BRRI Winnower
               </p>
               {!compact && (
                 <p className="font-bengali text-xs text-leaf-800/70">
-                  মাঠ পর্যায়ের সহায়ক · Prototype
+                  BRRI Win2024 · মাঠ পর্যায়ের সহায়ক
                 </p>
               )}
             </div>

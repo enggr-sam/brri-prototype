@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="BRRI Winnower 2024 Support API",
     description=(
-        "Multimodal troubleshooting assistant for the BRRI Winnower Model 2024. "
+        "Multimodal troubleshooting assistant for the BRRI Winnower (model BRRI Win2024). "
         "Accepts image and voice inputs and returns step-by-step guidance in Bengali."
     ),
     version="1.0.0",

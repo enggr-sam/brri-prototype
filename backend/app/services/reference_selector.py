@@ -23,7 +23,11 @@ from app.utils.conversation_focus import (
     is_asking_about_shown_image,
     last_shown_gallery,
 )
-from app.utils.drawing_queries import query_wants_assembly_diagram, query_wants_technical_drawing
+from app.utils.drawing_queries import (
+    query_is_how_it_works,
+    query_wants_assembly_diagram,
+    query_wants_technical_drawing,
+)
 from app.utils.image_labels import display_label
 from app.utils.parts_suppliers import is_belt_price_query, is_belt_supplier_query
 
@@ -38,7 +42,7 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "sieve": (
         "sieve", "screen", "mesh", "net", "perforated", "shake", "shaking",
-        "vibrat", "oscillat", "clog", "jam", "ঝরন", "চালুনি", "জাল", "ঝাঁক", "আটক",
+        "vibrat", "oscillat", "clog", "jam", "ঝরন", "চালুনি", "চালনি", "সিভ", "জাল", "ঝাঁক", "আটক",
     ),
     "blower": (
         "blower", "fan", "blade", "air blast", "wind", "intake", "weak air", "দুর্বল",
@@ -63,7 +67,8 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "pulley": ("pulley", "tension", "ratio", "পুলি", "অনুপাত"),
     "linkage": ("linkage", "connecting rod", "arm", "crank", "রড", "লিঙ্ক"),
     "discharge": ("discharge", "outlet", "chute", "নল", "আউটলেট", "নিষ্কাশন"),
-    "blueprint": ("blueprint", "dimension", "drawing", "manufactur", "spec", "bom", "মাপ"),
+    "blueprint": ("blueprint", "dimension", "drawing", "manufactur", "spec", "bom", "মাপ", "নকশা", "ড্রয়িং"),
+    "shaft": ("shaft", "শ্যাফট", "শ্যাফ্ট"),
 }
 
 _STOP_FAULT_KEYWORDS = frozenset({
@@ -119,11 +124,12 @@ _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
         "control plate", "batash",
     ),
     "belt": ("belt", "b65", "v-belt", "বেল্ট"),
-    "sieve": ("sieve", "ঝরন", "screen", "চালুনি"),
+    "sieve": ("sieve", "ঝরন", "screen", "চালুনি", "চালনি", "সিভ"),
     "motor": ("motor", "মোটর", "generator"),
     "bearing": ("bearing", "বিয়ারিং", "pillow"),
     "blower": ("blower", "ব্লোয়ার", "fan"),
     "hopper": ("hopper", "হপার", "feed gate"),
+    "shaft": ("shaft", "শ্যাফট", "small shaft", "sieve small"),
 }
 
 
@@ -291,7 +297,34 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
     if source == "cad_drawing" and query_wants_technical_drawing(query):
         score += 8.0
     if source == "subassembly_drawing" and query_wants_assembly_diagram(query):
-        score += 8.0
+        score += 22.0
+        title = f"{entry.get('title', '')} {entry.get('image_name', '')}".lower()
+        if "main body" in title or "bom" in title:
+            score += 14.0
+    if query_wants_assembly_diagram(query):
+        if source == "field_collection":
+            score -= 22.0
+        if source == "cad_drawing":
+            if any(s in haystack for s in ("left side", "right side", "বাম পাশ", "ডান পাশ")):
+                score -= 16.0
+    if query_wants_technical_drawing(query) and not query_wants_assembly_diagram(query):
+        if source == "cad_drawing":
+            score += 6.0
+        if source == "field_collection":
+            score -= 8.0
+    if "hopper" in topics and query_wants_technical_drawing(query):
+        if source == "cad_drawing" and "hopper" in haystack:
+            score += 16.0
+    if "shaft" in topics and query_wants_technical_drawing(query):
+        if source == "cad_drawing" and "shaft" in haystack:
+            score += 18.0
+        if source == "field_collection":
+            score -= 10.0
+    if query_is_how_it_works(query) and source == "field_collection":
+        if "hopper" in haystack:
+            score += 16.0
+        if "belt" in haystack or "b65" in haystack:
+            score += 8.0
     if source == "field_collection":
         score += 3.0  # Prefer real photos when scores are close
         slot = entry.get("photo_no") or ""

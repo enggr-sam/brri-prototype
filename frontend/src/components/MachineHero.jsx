@@ -11,7 +11,7 @@ export default function MachineHero({ onStart }) {
         loop
         playsInline
         preload="metadata"
-        aria-label="BRRI Winnower 2024 operating animation"
+        aria-label="BRRI Winnower (BRRI Win2024) operating animation"
       />
       <div className="machine-hero__veil absolute inset-0" aria-hidden />
 
@@ -21,7 +21,7 @@ export default function MachineHero({ onStart }) {
         </p>
         <h1 className="animate-fade-up mt-2 max-w-xl font-display text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:mt-3 sm:text-5xl">
           BRRI Winnower
-          <span className="mt-0.5 block text-leaf-200 sm:mt-1">২০২৪</span>
+          <span className="mt-0.5 block text-leaf-200 sm:mt-1">BRRI Win2024</span>
         </h1>
         <p className="animate-fade-up mt-3 max-w-md font-bengali text-sm leading-relaxed text-white/85 sm:mt-4 sm:text-lg">
           ধান ঝাড়ার মেশিনের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।

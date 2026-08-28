@@ -176,7 +176,7 @@ NOVEL_TESTS = [
     {
         "id": "off_topic_refusal",
         "question": "আজকের আবহাওয়া কেমন থাকবে?",
-        "expect": ["উইনোয়ার", "মেশিন", "সাহায্য", "প্রশ্ন"],
+        "expect": ["BRRI Winnower", "Win2024", "মেশিন", "সাহায্য"],
         "expect_images_any": [],
         "expect_no_gallery": True,
         "forbid": ["বৃষ্টি হবে", "তাপমাত্রা"],

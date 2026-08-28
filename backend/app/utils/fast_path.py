@@ -140,8 +140,8 @@ _MOTOR_RATING_TERMS = (
 _QUESTION_MARKERS = ("কত", "কতো", "কী", "কি", " ki", "what", "কতখানি", "কতটা")
 
 _GREETING_REPLY_BN = (
-    "আসসালামু আলাইকুম। আমি শুধু বিআরআরআই উইনোয়ার ২০২৪ (BRRI Win2024) "
-    "মেশিন নিয়ে সাহায্য করি — যন্ত্রাংশ, স্পেক, খুঁত আর মেরামত।\n\n"
+    "আসসালামু আলাইকুম। আমি শুধু BRRI Winnower (model BRRI Win2024) "
+    "নিয়ে সাহায্য করি — যন্ত্রাংশ, স্পেক, খুঁত আর মেরামত।\n\n"
     "মেশিনে কী সমস্যা হচ্ছে লিখুন, অথবা ছবি পাঠান।"
 )
 
@@ -194,11 +194,34 @@ def is_motor_rating_query(text: str) -> bool:
 
 
 def is_weight_query(text: str) -> bool:
-    """Ask for machine mass — not vibration / 'feels heavy' faults."""
+    """Ask for machine mass — not capacity, grain kg, or vibration."""
     lower = nfc(text or "").lower()
-    if any(term in lower for term in ("কাঁপ", "ভাইব্রেট", "vibrat", "সমস্যা", "নষ্ট")):
+    if any(
+        term in lower
+        for term in (
+            "কাঁপ",
+            "ভাইব্রেট",
+            "vibrat",
+            "সমস্যা",
+            "নষ্ট",
+            "পরিষ্কার",
+            "ক্ষমতা",
+            "capacity",
+            "ঘণ্টা",
+            "ঘন্টা",
+            "hour",
+            "kg/h",
+            "kg/hr",
+            "একর",
+            "acre",
+            "শ্রমিক",
+            "design",
+            "ডিজাইন",
+        )
+    ):
         return False
-    has_weight = any(term in lower for term in ("ওজন", "weight", "কেজি", "kg"))
+    # Bare কেজি/kg is usually grain or capacity — only "ওজন" / "weight" means mass.
+    has_weight = any(term in lower for term in ("ওজন", "weight"))
     has_question = any(term in lower for term in _QUESTION_MARKERS)
     return has_weight and has_question
 
@@ -213,7 +236,7 @@ def format_motor_rating_bn() -> str:
     kw = motor.get("power_kw", 1.1)
     rpm = motor.get("speed_rpm", 1400)
     return (
-        f"বিআরআরআই উইনোয়ার ২০২৪ (BRRI Win2024) মেশিনে "
+        f"BRRI Winnower (model BRRI Win2024) মেশিনে "
         f"{_bn_num(hp)} হর্সপাওয়ার ({hp} HP / {kw} কিলোওয়াট) মোটর ব্যবহার করা হয়, "
         f"গতি {_bn_num(rpm)} আরপিএম ({rpm} rpm)।"
     )
@@ -223,7 +246,7 @@ def format_weight_bn() -> str:
     dims = get_knowledge_base().machine_data.get("dimensions") or {}
     kg = dims.get("weight_kg", 97.86)
     return (
-        f"বিআরআরআই উইনোয়ার ২০২৪ মেশিনের ওজন {_bn_num(kg)} কেজি ({kg} kg)।"
+        f"BRRI Winnower (model BRRI Win2024) মেশিনের ওজন {_bn_num(kg)} কেজি ({kg} kg)।"
         )
 
 
@@ -243,11 +266,11 @@ def is_machine_name_query(text: str) -> bool:
 
 def format_machine_name_bn() -> str:
     data = get_knowledge_base().machine_data
-    full = data.get("machine_name") or "BRRI Winnower Model 2024"
-    short = data.get("short_name") or "BRRI Win2024"
+    name = data.get("machine_name") or "BRRI Winnower"
+    model = data.get("model") or data.get("short_name") or "BRRI Win2024"
     maker = data.get("manufacturer") or "Bangladesh Rice Research Institute (BRRI)"
     return (
-        f"এই মেশিনের নাম {full} (সংক্ষেপে {short})। "
+        f"এই মেশিনের নাম {name}। মডেল {model}। "
         f"এটি {maker} তৈরি করেছে।"
     )
 
