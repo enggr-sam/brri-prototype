@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import ChatWindow from "../components/ChatWindow.jsx";
 import ChatInput from "../components/ChatInput.jsx";
 import MachineHero from "../components/MachineHero.jsx";
+import StarterQuestions from "../components/StarterQuestions.jsx";
 import { sendChatMessageStream } from "../services/api.js";
 import { formatSessionCostLabel } from "../utils/formatCost.js";
 
@@ -127,6 +128,10 @@ export default function ChatPage({ onCompactChange, onHeroVisibility }) {
             <p className="mb-3 font-bengali text-sm text-leaf-800/75">
               নিচে লিখুন, ছবি দিন, বা কণ্ঠে বলুন — উত্তর বাংলায় আসবে।
             </p>
+            <StarterQuestions
+              onSelect={handleSuggestionClick}
+              disabled={loading}
+            />
             <div className="chat-panel overflow-hidden shadow-sm">
               <ChatInput onSend={handleSend} disabled={loading} />
             </div>

@@ -27,6 +27,7 @@ from app.utils.image_reasoner import (
 from app.services.reference_selector import (
     retrieve_scored_candidates,
     select_reference_images,
+    refine_reference_images_for_reply,
     user_requests_visual_help,
     build_grounding_context,
 )
@@ -38,7 +39,12 @@ from app.utils.parts_suppliers import (
     is_belt_supplier_query,
 )
 from app.utils.cost_estimator import estimate_cost_usd, extract_usage
-from app.utils.follow_ups import local_suggestions
+from app.utils.follow_ups import (
+    SUGGESTION_LIMIT,
+    followup_prompt,
+    local_suggestions,
+    parse_suggestion_list,
+)
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
 from app.utils.reply_polish import needs_polish, polish_prompt
@@ -122,6 +128,7 @@ class ChatReplyResult:
     suggestions: list[str] = field(default_factory=list)
     show_reference_images: bool = False
     usage: UsageCost = field(default_factory=UsageCost)
+    reference_paths: list[Path] = field(default_factory=list)
 
 
 def _is_quota_error(exc: Exception) -> bool:
@@ -339,11 +346,56 @@ class GeminiService:
             return refs[:2]
         return []
 
-    @staticmethod
-    def _result_from_fast_path(hit: FastPathHit) -> ChatReplyResult:
+    def suggest_follow_ups(
+        self,
+        user_text: str,
+        reply_text: str,
+        history: list[dict[str, str]] | None = None,
+        usage: UsageCost | None = None,
+    ) -> list[str]:
+        """Ask the model for next questions after the visible reply is done."""
+        fallback = local_suggestions(user_text, history, reply_text=reply_text)
+        if not self.is_configured or not (reply_text or "").strip():
+            return fallback[:SUGGESTION_LIMIT]
+        try:
+            raw, sug_usage = self._generate_with_fallback(
+                [self._types.Part.from_text(text=followup_prompt(user_text, reply_text))],
+                config=self._types.GenerateContentConfig(
+                    system_instruction=(
+                        "You write short farmer follow-up questions in Bangla. "
+                        "JSON array only."
+                    ),
+                    max_output_tokens=220,
+                    temperature=0.4,
+                ),
+                fast=True,
+            )
+            if usage is not None:
+                usage.input_tokens += sug_usage.input_tokens
+                usage.output_tokens += sug_usage.output_tokens
+                usage.cost_usd = round(usage.cost_usd + sug_usage.cost_usd, 6)
+            picked = parse_suggestion_list(raw)
+            if len(picked) >= 3:
+                for extra in fallback:
+                    if extra not in picked:
+                        picked.append(extra)
+                    if len(picked) >= SUGGESTION_LIMIT:
+                        break
+                return picked[:SUGGESTION_LIMIT]
+        except Exception:
+            logger.exception("Follow-up suggestion call failed; using local chips.")
+        return fallback[:SUGGESTION_LIMIT]
+
+    def _result_from_fast_path(
+        self,
+        hit: FastPathHit,
+        user_text: str = "",
+        history: list[dict[str, str]] | None = None,
+    ) -> ChatReplyResult:
+        suggestions = self.suggest_follow_ups(user_text, hit.text, history)
         return ChatReplyResult(
             text=hit.text,
-            suggestions=hit.suggestions[:3],
+            suggestions=suggestions[:SUGGESTION_LIMIT] or hit.suggestions[:SUGGESTION_LIMIT],
             show_reference_images=hit.show_reference_images,
         )
 
@@ -474,14 +526,18 @@ class GeminiService:
         ):
             main_text = ensure_belt_dealers_in_reply("", user_text, history)
 
+        refined = refine_reference_images_for_reply(
+            user_text, main_text, reference_images, history
+        )
         show_images = _resolve_show_reference_images(
-            user_text, reference_images, meta, history, reply_text=main_text
+            user_text, refined, meta, history, reply_text=main_text
         )
         if not show_images:
             main_text = strip_gallery_pointers(main_text)
-        suggestions = meta.get("suggestions") or []
-        if not suggestions:
-            suggestions = local_suggestions(user_text, history)
+            refined = []
+        suggestions = self.suggest_follow_ups(
+            user_text, main_text, history, usage
+        )
 
         # Captions cost a model call and the gallery has a Bangla default line, so
         # only generate them when the farmer actually asked to be shown photos.
@@ -490,12 +546,12 @@ class GeminiService:
             or user_requests_visual_help(user_text)
         )
         captions: dict[int, str] = {}
-        if show_images and reference_images and caption_worthwhile:
+        if show_images and refined and caption_worthwhile:
             try:
                 cap_raw, cap_usage = self._generate_with_fallback(
                     [
                         self._types.Part.from_text(
-                            text=caption_prompt(user_text, main_text, reference_images)
+                            text=caption_prompt(user_text, main_text, refined)
                         )
                     ],
                     config=self._caption_generation_config(get_knowledge_base()),
@@ -511,9 +567,10 @@ class GeminiService:
         return ChatReplyResult(
             text=main_text,
             image_captions=captions if show_images else {},
-            suggestions=suggestions[:3],
+            suggestions=suggestions[:SUGGESTION_LIMIT],
             show_reference_images=show_images,
             usage=usage,
+            reference_paths=refined if show_images else [],
         )
 
     def _usage_from_response(self, response, model: str) -> UsageCost:
@@ -706,7 +763,7 @@ class GeminiService:
         hit = getattr(self, "_last_fast_path", None)
         if isinstance(hit, FastPathHit):
             self._last_fast_path = None
-            return self._result_from_fast_path(hit)
+            return self._result_from_fast_path(hit, user_text, history)
 
         raw = getattr(self, "_last_stream_buffer", "") or ""
         usage = getattr(self, "_last_stream_usage", None) or UsageCost(
@@ -764,7 +821,7 @@ class GeminiService:
             user_text, history, has_user_image=user_image_path is not None
         )
         if hit:
-            return self._result_from_fast_path(hit)
+            return self._result_from_fast_path(hit, user_text, history)
 
         kb = get_knowledge_base()
         if not self.is_configured:

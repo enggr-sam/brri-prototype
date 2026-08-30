@@ -445,8 +445,14 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         blob = f"{haystack} {identity}"
         if any(h in blob for h in ("hopper", "হপার", "feed")):
             score += 16.0
+        if any(h in blob for h in ("blower", "ব্লোয়ার", "fan", "পাখা")):
+            score += 12.0
+        if any(h in blob for h in ("চালনি", "sieve", "সিভ", "screen")):
+            score += 10.0
         if any(h in blob for h in ("belt", "b65", "বেল্ট")):
             score += 8.0
+        if any(h in blob for h in ("motor bottom", "standalone", "blue motor")):
+            score -= 10.0
     if source == "field_collection":
         score += 3.0  # Prefer real photos when scores are close
         slot = entry.get("photo_no") or ""
@@ -829,6 +835,23 @@ def select_reference_images(
         [p.name for p in chosen],
     )
     return chosen
+
+
+def refine_reference_images_for_reply(
+    user_text: str,
+    reply_text: str,
+    current: list[Path] | None = None,
+    history: list[dict[str, str]] | None = None,
+) -> list[Path]:
+    """Re-pick after the answer so the gallery matches what we actually said."""
+    reply = (reply_text or "").strip()
+    if not reply:
+        return list(current or [])
+    combined = f"{user_text or ''}\n{reply[:700]}"
+    picked = select_reference_images(combined, history=history)
+    if picked:
+        return picked
+    return list(current or [])
 
 
 def order_reference_images_by_relevance(

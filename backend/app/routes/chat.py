@@ -164,7 +164,8 @@ def _save_turn(
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found.")
 
-    if chat_result.show_reference_images and reference_paths:
+    if chat_result.show_reference_images:
+        reference_paths = list(chat_result.reference_paths or reference_paths)
         reference_paths = order_reference_images_by_relevance(
             reference_paths,
             f"{user_content}\n{chat_result.text}",
@@ -428,7 +429,10 @@ async def chat_message(
     assistant_out = _message_out(assistant_msg)
     if not assistant_out.reference_images and chat_result.show_reference_images:
         ref_meta = reference_images_metadata(
-            order_reference_images_by_relevance(reference_paths, f"{user_content}\n{chat_result.text}"),
+            order_reference_images_by_relevance(
+                list(chat_result.reference_paths or reference_paths),
+                f"{user_content}\n{chat_result.text}",
+            ),
             captions=chat_result.image_captions,
         )
         if ref_meta:
