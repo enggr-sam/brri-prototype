@@ -1,9 +1,7 @@
-import ReactMarkdown from "react-markdown";
+import MarkdownReply from "./MarkdownReply.jsx";
 
 /**
- * Renders the Bengali troubleshooting answer returned by the backend. Uses
- * react-markdown so numbered lists / headings from the LLM display cleanly,
- * and a Bengali-capable font for readability.
+ * Renders the Bengali troubleshooting answer returned by the backend.
  */
 export default function ResponseDisplay({ result }) {
   if (!result) return null;
@@ -26,9 +24,7 @@ export default function ResponseDisplay({ result }) {
         </div>
       )}
 
-      <article className="prose prose-sm max-w-none font-bengali text-slate-800 prose-headings:text-brri-dark prose-strong:text-brri-dark">
-        <ReactMarkdown>{result.response}</ReactMarkdown>
-      </article>
+      <MarkdownReply text={result.response} className="text-slate-800" />
 
       {result.reference_images_used?.length > 0 && (
         <p className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
