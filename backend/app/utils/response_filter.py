@@ -47,9 +47,6 @@ def filter_assistant_reply(text: str) -> str:
     # Model output mixes nukta encodings too, so normalise before anything matches on it.
     cleaned = nfc(text).strip()
 
-    # Flatten markdown bold/italic markers the model sometimes adds.
-    cleaned = re.sub(r"\*+([^*]+)\*+", r"\1", cleaned)
-
     # Never show Google Drive folder links to farmers in chat — gallery is in-app.
     cleaned = re.sub(
         r"https?://(?:drive|docs)\.google\.com/\S+",

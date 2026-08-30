@@ -1,5 +1,6 @@
 import { mediaUrl } from "../services/api.js";
 import { formatReplyCostLabel } from "../utils/formatCost.js";
+import MarkdownReply from "./MarkdownReply.jsx";
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 
@@ -135,18 +136,16 @@ export default function ChatBubble({ message, showTimestamp = false }) {
           </div>
         )}
 
-        <article
-          className={`max-w-none whitespace-pre-wrap font-bengali text-[15px] leading-relaxed ${
-            isUser ? "text-white" : "text-leaf-950"
-          }`}
-        >
-          {renderTextWithLinks(
-            message.content,
-            isUser
-              ? "break-all underline decoration-white/60 underline-offset-2"
-              : "break-all text-leaf-500 underline decoration-leaf-500/40 underline-offset-2"
-          )}
-        </article>
+        {isUser ? (
+          <article className="max-w-none whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-white">
+            {renderTextWithLinks(
+              message.content,
+              "break-all underline decoration-white/60 underline-offset-2"
+            )}
+          </article>
+        ) : (
+          <MarkdownReply text={message.content} className="text-leaf-950" />
+        )}
 
         {message.attachment_url && isUser && (
           <div className="mt-3">

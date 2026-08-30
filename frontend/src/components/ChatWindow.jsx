@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import ChatBubble from "./ChatBubble.jsx";
 import FollowUpSuggestions from "./FollowUpSuggestions.jsx";
 import Loader from "./Loader.jsx";
+import MarkdownReply from "./MarkdownReply.jsx";
 
 export default function ChatWindow({
   messages,
@@ -33,10 +34,10 @@ export default function ChatWindow({
               <img src="/brri-logo.jpg" alt="" className="h-5 w-5 object-contain" aria-hidden />
               <p className="text-xs font-medium text-brri-green">BRRI সহায়ক</p>
             </div>
-            <article className="whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-slate-800">
-              {streamingText}
+            <div className="relative">
+              <MarkdownReply text={streamingText} className="text-slate-800" />
               <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-brri-green align-middle" />
-            </article>
+            </div>
           </div>
         </div>
       )}
