@@ -40,7 +40,7 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
               onClick={onStart}
               className="w-full rounded-lg bg-leaf-500 px-5 py-3 font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
             >
-              কথা শুরু করুন
+              💬 কথা শুরু করুন
             </button>
           ) : (
             <a
@@ -48,7 +48,7 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
               onClick={(e) => handleAppLink(e, startHref)}
               className="inline-block w-full rounded-lg bg-leaf-500 px-5 py-3 text-center font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
             >
-              কথা শুরু করুন
+              💬 কথা শুরু করুন
             </a>
           )}
         </div>

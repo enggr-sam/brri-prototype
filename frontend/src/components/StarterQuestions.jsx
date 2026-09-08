@@ -17,7 +17,7 @@ export default function StarterQuestions({ onSelect, disabled, compact = false }
   return (
     <div className={compact ? "" : "mb-4"}>
       <p className="mb-2 font-bengali text-xs text-slate-500">
-        অথবা এখান থেকে শুরু করুন:
+        💡 অথবা এখান থেকে শুরু করুন:
       </p>
       <div className="flex flex-col gap-2">
         {items.map((q) => (

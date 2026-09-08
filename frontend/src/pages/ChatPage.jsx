@@ -239,7 +239,7 @@ export default function ChatPage() {
               onClick={newChat}
               className="hidden font-bengali text-xs text-leaf-800/70 hover:text-leaf-950 sm:inline"
             >
-              নতুন চ্যাট
+              ✨ নতুন চ্যাট
             </button>
             <a
               href="/"
@@ -257,7 +257,7 @@ export default function ChatPage() {
             <ChatGlyph />
           </span>
           <p className="min-w-0 truncate font-bengali text-sm">
-            {sessionId ? "চলমান কথোপকথন" : "নতুন কথোপকথন"}
+            {sessionId ? "💬 চলমান কথোপকথন" : "✨ নতুন কথোপকথন"}
           </p>
         </div>
 
@@ -313,7 +313,7 @@ function EmptyThread({ onSelect, disabled }) {
         />
         <div>
           <p className="text-sm font-semibold text-slate-700">BRRI সহায়ক</p>
-          <p className="font-bengali text-xs text-slate-400">প্রস্তুত</p>
+          <p className="font-bengali text-xs text-slate-400">✅ প্রস্তুত</p>
         </div>
       </div>
       <p className="font-bengali text-[15px] leading-relaxed text-slate-700 sm:text-base">

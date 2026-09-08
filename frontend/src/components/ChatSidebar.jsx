@@ -18,7 +18,7 @@ export default function ChatSidebar({
             BRRI সহায়ক
           </p>
           <p className="truncate font-bengali text-xs text-white/55">
-            {user?.mobile || "লগইন করা"}
+            {user?.mobile ? `👤 ${user.mobile}` : "🔐 লগইন করা"}
           </p>
         </div>
         {onClose && (
@@ -39,7 +39,7 @@ export default function ChatSidebar({
           onClick={onNewChat}
           className="w-full rounded-lg bg-leaf-500 px-3 py-2 font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600"
         >
-          + নতুন চ্যাট
+          ✨ নতুন চ্যাট
         </button>
       </div>
 
@@ -49,12 +49,12 @@ export default function ChatSidebar({
       >
         {loading && (
           <p className="px-2 py-4 font-bengali text-xs text-white/50">
-            ইতিহাস লোড হচ্ছে…
+            📂 ইতিহাস লোড হচ্ছে…
           </p>
         )}
         {!loading && sessions.length === 0 && (
           <p className="px-2 py-4 font-bengali text-xs text-white/50">
-            এখনো কোনো কথোপকথন নেই।
+            💬 এখনো কোনো কথোপকথন নেই।
           </p>
         )}
         {sessions.map((session) => {
@@ -85,7 +85,7 @@ export default function ChatSidebar({
           onClick={onLogout}
           className="w-full rounded-lg px-3 py-2 text-left font-bengali text-sm text-white/70 hover:bg-white/10 hover:text-white"
         >
-          লগআউট
+          🚪 লগআউট
         </button>
       </div>
     </aside>

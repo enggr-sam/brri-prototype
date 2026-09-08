@@ -46,7 +46,7 @@ export default function HomePage() {
               BRRI Multicrop Winnower
             </p>
             <p className="mt-0.5 font-bengali text-sm text-slate-500">
-              ব্রি শস্য ঝাড়াই যন্ত্র — চ্যাট খুলুন
+              ব্রি শস্য ঝাড়াই যন্ত্র — 💬 চ্যাট খুলুন
             </p>
           </div>
           <span

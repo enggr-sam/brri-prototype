@@ -136,7 +136,7 @@ export default function HistoryPage() {
     <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-2 py-3 sm:px-4">
       <div className="mb-3 shrink-0 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">কথোপকথনের ইতিহাস</h2>
+          <h2 className="text-lg font-semibold text-slate-900">📂 কথোপকথনের ইতিহাস</h2>
           <p className="text-xs text-slate-500">
             শুধু আপনার সেশন · সময় ও প্রশ্ন-উত্তর সহ
           </p>
@@ -147,7 +147,7 @@ export default function HistoryPage() {
           disabled={loading}
           className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
         >
-          ↻ রিফ্রেশ
+          🔄 রিফ্রেশ
         </button>
       </div>
 
@@ -157,7 +157,7 @@ export default function HistoryPage() {
       >
         {loading && (
           <div className="py-12">
-            <Loader label="ইতিহাস লোড হচ্ছে…" />
+            <Loader label="📂 ইতিহাস লোড হচ্ছে…" />
           </div>
         )}
 
@@ -169,7 +169,7 @@ export default function HistoryPage() {
 
         {!loading && !error && sessions.length === 0 && (
           <div className="rounded-xl border border-dashed border-slate-200 bg-white py-16 text-center text-slate-400">
-            <p className="font-bengali text-sm">এখনো কোনো কথোপকথন নেই।</p>
+            <p className="font-bengali text-sm">💬 এখনো কোনো কথোপকথন নেই।</p>
           </div>
         )}
 

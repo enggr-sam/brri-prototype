@@ -93,7 +93,7 @@ export default function Header({
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              ← চ্যাট
+              ← 💬 চ্যাট
             </a>
           )}
           {user ? (
@@ -103,7 +103,7 @@ export default function Header({
                   onDark ? "text-white/70" : "text-slate-500"
                 }`}
               >
-                {user.mobile}
+                👤 {user.mobile}
               </span>
               <button
                 type="button"
@@ -114,7 +114,7 @@ export default function Header({
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                লগআউট
+                🚪 লগআউট
               </button>
             </>
           ) : (
@@ -127,7 +127,7 @@ export default function Header({
                   : "bg-leaf-500 text-white hover:bg-leaf-600"
               }`}
             >
-              লগইন
+              🔐 লগইন
             </a>
           )}
         </div>

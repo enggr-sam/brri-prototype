@@ -45,7 +45,7 @@ export default function LoginPage() {
             BRRI Win2024
           </p>
           <h1 className="mt-1 font-display text-2xl font-semibold text-slate-900">
-            {mode === "register" ? "একাউন্ট খুলুন" : "লগইন করুন"}
+            {mode === "register" ? "📝 একাউন্ট খুলুন" : "🔐 লগইন করুন"}
           </h1>
           <p className="mt-2 font-bengali text-sm leading-relaxed text-slate-500">
             মোবাইল নম্বর ও একটি পাসওয়ার্ড দিন। চ্যাট ইতিহাস শুধু আপনার একাউন্টে থাকবে।
@@ -54,7 +54,7 @@ export default function LoginPage() {
           <form className="mt-6 space-y-4" onSubmit={submit}>
             <label className="block">
               <span className="font-bengali text-xs text-slate-500">
-                মোবাইল নম্বর
+                📱 মোবাইল নম্বর
               </span>
               <input
                 type="tel"
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
             <label className="block">
               <span className="font-bengali text-xs text-slate-500">
-                পাসওয়ার্ড (মনে রাখার মতো)
+                🔒 পাসওয়ার্ড (মনে রাখার মতো)
               </span>
               <input
                 type="password"
@@ -94,10 +94,10 @@ export default function LoginPage() {
               className="w-full rounded-lg bg-leaf-500 px-4 py-2.5 font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 disabled:opacity-50"
             >
               {loading
-                ? "অপেক্ষা করুন…"
+                ? "⏳ অপেক্ষা করুন…"
                 : mode === "register"
-                  ? "নিবন্ধন করুন"
-                  : "লগইন"}
+                  ? "📝 নিবন্ধন করুন"
+                  : "🔐 লগইন"}
             </button>
           </form>
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
               }}
               className="font-semibold text-leaf-500 hover:text-leaf-600"
             >
-              {mode === "register" ? "লগইন করুন" : "একাউন্ট খুলুন"}
+              {mode === "register" ? "🔐 লগইন করুন" : "📝 একাউন্ট খুলুন"}
             </button>
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function LoginPage() {
             onClick={(e) => handleAppLink(e, "/")}
             className="font-bengali text-sm text-slate-500 hover:text-slate-900"
           >
-            ← হোমে ফিরুন
+            ← 🏠 হোমে ফিরুন
           </a>
         </p>
       </div>

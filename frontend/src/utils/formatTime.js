@@ -14,10 +14,10 @@ export function formatDateTime(iso) {
 export function modalityLabel(modality) {
   switch (modality) {
     case "vision":
-      return "ছবি";
+      return "🖼️ ছবি";
     case "voice":
-      return "কণ্ঠ";
+      return "🎙️ কণ্ঠ";
     default:
-      return "লেখা";
+      return "✍️ লেখা";
   }
 }

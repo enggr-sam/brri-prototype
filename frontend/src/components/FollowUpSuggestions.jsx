@@ -4,7 +4,7 @@ export default function FollowUpSuggestions({ suggestions, onSelect, disabled })
   return (
     <div className="mt-1 border-t border-slate-100 pt-3">
       <p className="mb-2 font-bengali text-xs font-medium text-slate-400">
-        পরবর্তী প্রশ্ন:
+        ➡️ পরবর্তী প্রশ্ন:
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         {suggestions.map((q) => (
