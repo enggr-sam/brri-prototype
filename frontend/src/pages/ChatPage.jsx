@@ -178,7 +178,7 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="flex min-h-0 flex-1 overflow-hidden bg-[#e8eee9]">
+    <main className="flex min-h-0 flex-1 overflow-hidden bg-slate-100">
       {sidebarOpen && (
         <button
           type="button"
@@ -205,7 +205,7 @@ export default function ChatPage() {
         />
       </div>
 
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-white md:border-l md:border-leaf-900/10">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-white md:border-l md:border-slate-200">
         <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
             <button
@@ -252,8 +252,8 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <div className="flex shrink-0 items-center gap-2.5 bg-leaf-950 px-4 py-2.5 text-white sm:px-6">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-slate-600 sm:px-6">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-leaf-500/10 text-leaf-500">
             <ChatGlyph />
           </span>
           <p className="min-w-0 truncate font-bengali text-sm">

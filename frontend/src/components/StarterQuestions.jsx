@@ -26,7 +26,7 @@ export default function StarterQuestions({ onSelect, disabled, compact = false }
             type="button"
             disabled={disabled}
             onClick={() => onSelect(q)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 transition hover:border-leaf-500/30 hover:bg-leaf-50 disabled:opacity-40"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 shadow-sm transition hover:border-leaf-500/40 hover:bg-blue-50 disabled:opacity-40"
           >
             {q}
           </button>

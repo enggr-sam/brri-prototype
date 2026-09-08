@@ -5,19 +5,19 @@ export default {
     extend: {
       fontFamily: {
         display: [
-          "Sora",
+          "Inter",
           "Noto Sans Bengali",
           "system-ui",
           "sans-serif",
         ],
         bengali: [
           "Noto Sans Bengali",
-          "SolaimanLipi",
+          "Inter",
           "system-ui",
           "sans-serif",
         ],
         sans: [
-          "Sora",
+          "Inter",
           "Noto Sans Bengali",
           "system-ui",
           "sans-serif",
@@ -25,20 +25,22 @@ export default {
       },
       colors: {
         brri: {
-          green: "#1a7a45",
-          dark: "#0f3d2e",
-          light: "#d8efe0",
+          green: "#2563eb",
+          dark: "#0f172a",
+          light: "#e2e8f0",
         },
         leaf: {
-          50: "#f3faf5",
-          100: "#e4f3ea",
-          200: "#c5e4d0",
-          300: "#95cfaa",
-          400: "#5fb37e",
-          500: "#1a7a45",
-          800: "#1a4d36",
-          900: "#143d2c",
-          950: "#0f3d2e",
+          50: "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          300: "#93c5fd",
+          400: "#3b82f6",
+          500: "#2563eb",
+          600: "#1d4ed8",
+          700: "#1e3a8a",
+          800: "#1e293b",
+          900: "#0f172a",
+          950: "#0b1220",
         },
       },
       keyframes: {

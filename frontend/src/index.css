@@ -16,38 +16,35 @@ body,
 body {
   margin: 0;
   overflow: hidden;
-  color: #143d2c;
-  background:
-    radial-gradient(1200px 600px at 12% -10%, #c5e4d0 0%, transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, #e4f3ea 0%, transparent 50%),
-    linear-gradient(180deg, #f3faf5 0%, #eef5f1 45%, #e8f0eb 100%);
-  font-family: Sora, "Noto Sans Bengali", system-ui, sans-serif;
+  color: #0f172a;
+  background: #f3f4f6;
+  font-family: Inter, "Noto Sans Bengali", system-ui, sans-serif;
 }
 
 .app-shell {
-  background: transparent;
+  background: #f3f4f6;
 }
 
 .machine-hero__veil {
   background:
     linear-gradient(
       180deg,
-      rgba(15, 61, 46, 0.35) 0%,
-      rgba(15, 61, 46, 0.15) 35%,
-      rgba(15, 61, 46, 0.72) 100%
+      rgba(15, 23, 42, 0.45) 0%,
+      rgba(15, 23, 42, 0.18) 38%,
+      rgba(15, 23, 42, 0.78) 100%
     ),
     linear-gradient(
       90deg,
-      rgba(15, 61, 46, 0.55) 0%,
-      rgba(15, 61, 46, 0.2) 55%,
+      rgba(15, 23, 42, 0.55) 0%,
+      rgba(15, 23, 42, 0.18) 58%,
       transparent 100%
     );
 }
 
 .chat-panel {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(20, 61, 44, 0.08);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .composer {
@@ -56,7 +53,7 @@ body {
 
 .bubble-user {
   position: relative;
-  background: #eef1f3;
+  background: #f1f5f9;
   border-radius: 16px 16px 4px 16px;
 }
 
@@ -67,7 +64,7 @@ body {
   bottom: -5px;
   border-width: 6px 7px 0 0;
   border-style: solid;
-  border-color: #eef1f3 transparent transparent transparent;
+  border-color: #f1f5f9 transparent transparent transparent;
 }
 
 @media (max-width: 640px) {
@@ -75,9 +72,9 @@ body {
     background:
       linear-gradient(
         180deg,
-        rgba(15, 61, 46, 0.45) 0%,
-        rgba(15, 61, 46, 0.2) 40%,
-        rgba(15, 61, 46, 0.82) 100%
+        rgba(15, 23, 42, 0.5) 0%,
+        rgba(15, 23, 42, 0.22) 40%,
+        rgba(15, 23, 42, 0.84) 100%
       );
   }
 }
@@ -89,6 +86,6 @@ body {
 
   .machine-hero {
     background:
-      linear-gradient(160deg, #0f3d2e 0%, #1a4d36 55%, #1a7a45 100%);
+      linear-gradient(160deg, #0b1220 0%, #1e293b 55%, #2563eb 100%);
   }
 }

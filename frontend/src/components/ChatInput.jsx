@@ -150,7 +150,7 @@ export default function ChatInput({ onSend, disabled }) {
           onClick={submit}
           disabled={disabled || !canSend}
           aria-label="পাঠান"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-leaf-500 text-white transition hover:bg-leaf-950 disabled:opacity-35"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-leaf-500 text-white shadow-sm transition hover:bg-leaf-600 disabled:opacity-35"
         >
           <SendIcon />
         </button>

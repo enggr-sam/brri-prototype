@@ -31,7 +31,7 @@ function renderInline(text, keyPrefix) {
       nodes.push(
         <strong
           key={`${keyPrefix}-b${i}`}
-          className="rounded-sm bg-amber-100 px-0.5 font-bengali font-bold text-leaf-950"
+          className="rounded-sm bg-amber-100 px-0.5 font-bengali font-bold text-slate-900"
         >
           {bold}
         </strong>
@@ -40,7 +40,7 @@ function renderInline(text, keyPrefix) {
       nodes.push(
         <mark
           key={`${keyPrefix}-h${i}`}
-          className="rounded-sm bg-amber-100 px-0.5 font-bengali font-semibold text-leaf-950"
+          className="rounded-sm bg-amber-100 px-0.5 font-bengali font-semibold text-slate-900"
         >
           {highlight}
         </mark>

@@ -13,7 +13,7 @@ export default function FollowUpSuggestions({ suggestions, onSelect, disabled })
             type="button"
             disabled={disabled}
             onClick={() => onSelect(q)}
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 transition hover:border-leaf-500/30 hover:bg-leaf-50 disabled:opacity-40 sm:w-auto sm:py-1.5"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 shadow-sm transition hover:border-leaf-500/40 hover:bg-blue-50 disabled:opacity-40 sm:w-auto sm:py-1.5"
           >
             {q}
           </button>

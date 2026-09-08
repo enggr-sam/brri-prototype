@@ -18,15 +18,15 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
       <div className="machine-hero__veil absolute inset-0" aria-hidden />
 
       <div className="relative z-10 flex min-h-[min(58vh,420px)] flex-col justify-end px-4 pb-8 pt-14 sm:min-h-[min(72vh,560px)] sm:px-8 sm:pb-12 sm:pt-16">
-        <p className="animate-fade-up font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-leaf-100/90 sm:text-[11px] sm:tracking-[0.28em]">
+        <p className="animate-fade-up font-display text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70 sm:text-[11px] sm:tracking-[0.28em]">
           Bangladesh Rice Research Institute
         </p>
         <h1 className="animate-fade-up mt-2 max-w-xl font-display text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:mt-3 sm:text-5xl">
           BRRI Multicrop Winnower
-          <span className="mt-0.5 block text-leaf-200 sm:mt-1">
+          <span className="mt-0.5 block text-blue-200 sm:mt-1">
             ব্রি শস্য ঝাড়াই যন্ত্র
           </span>
-          <span className="mt-0.5 block text-sm font-medium tracking-normal text-leaf-200/90 sm:mt-1 sm:text-lg">
+          <span className="mt-0.5 block text-sm font-medium tracking-normal text-white/75 sm:mt-1 sm:text-lg">
             Model: BRRI Win2024
           </span>
         </h1>
@@ -38,7 +38,7 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
             <button
               type="button"
               onClick={onStart}
-              className="w-full bg-leaf-400 px-5 py-3 font-bengali text-sm font-semibold text-leaf-950 transition hover:bg-leaf-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
+              className="w-full rounded-lg bg-leaf-500 px-5 py-3 font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
             >
               কথা শুরু করুন
             </button>
@@ -46,7 +46,7 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
             <a
               href={startHref}
               onClick={(e) => handleAppLink(e, startHref)}
-              className="inline-block w-full bg-leaf-400 px-5 py-3 text-center font-bengali text-sm font-semibold text-leaf-950 transition hover:bg-leaf-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
+              className="inline-block w-full rounded-lg bg-leaf-500 px-5 py-3 text-center font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
             >
               কথা শুরু করুন
             </a>

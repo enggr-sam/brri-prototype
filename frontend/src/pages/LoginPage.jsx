@@ -40,20 +40,20 @@ export default function LoginPage() {
   return (
     <main className="min-h-0 flex-1 overflow-y-auto px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto w-full max-w-md">
-        <div className="border border-leaf-900/10 bg-white/90 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <p className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-leaf-500">
             BRRI Win2024
           </p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-leaf-950">
+          <h1 className="mt-1 font-display text-2xl font-semibold text-slate-900">
             {mode === "register" ? "একাউন্ট খুলুন" : "লগইন করুন"}
           </h1>
-          <p className="mt-2 font-bengali text-sm leading-relaxed text-leaf-800/75">
+          <p className="mt-2 font-bengali text-sm leading-relaxed text-slate-500">
             মোবাইল নম্বর ও একটি পাসওয়ার্ড দিন। চ্যাট ইতিহাস শুধু আপনার একাউন্টে থাকবে।
           </p>
 
           <form className="mt-6 space-y-4" onSubmit={submit}>
             <label className="block">
-              <span className="font-bengali text-xs text-leaf-800/80">
+              <span className="font-bengali text-xs text-slate-500">
                 মোবাইল নম্বর
               </span>
               <input
@@ -64,12 +64,12 @@ export default function LoginPage() {
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 placeholder="01XXXXXXXXX"
-                className="mt-1 w-full border border-leaf-900/15 bg-white px-3 py-2.5 font-bengali text-[15px] text-leaf-950 outline-none ring-leaf-500/30 focus:ring-2"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-bengali text-[15px] text-slate-900 outline-none ring-leaf-500/25 focus:border-leaf-500 focus:ring-2"
               />
             </label>
 
             <label className="block">
-              <span className="font-bengali text-xs text-leaf-800/80">
+              <span className="font-bengali text-xs text-slate-500">
                 পাসওয়ার্ড (মনে রাখার মতো)
               </span>
               <input
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="কমপক্ষে ৪ অক্ষর"
-                className="mt-1 w-full border border-leaf-900/15 bg-white px-3 py-2.5 font-bengali text-[15px] text-leaf-950 outline-none ring-leaf-500/30 focus:ring-2"
+                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 font-bengali text-[15px] text-slate-900 outline-none ring-leaf-500/25 focus:border-leaf-500 focus:ring-2"
               />
             </label>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-leaf-500 px-4 py-2.5 font-bengali text-sm font-semibold text-white transition hover:bg-leaf-950 disabled:opacity-50"
+              className="w-full rounded-lg bg-leaf-500 px-4 py-2.5 font-bengali text-sm font-semibold text-white shadow-sm transition hover:bg-leaf-600 disabled:opacity-50"
             >
               {loading
                 ? "অপেক্ষা করুন…"
@@ -101,7 +101,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 text-center font-bengali text-sm text-leaf-800/75">
+          <p className="mt-5 text-center font-bengali text-sm text-slate-500">
             {mode === "register" ? "আগে একাউন্ট আছে?" : "নতুন ব্যবহারকারী?"}{" "}
             <button
               type="button"
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 setMode(mode === "register" ? "login" : "register");
                 setError(null);
               }}
-              className="font-semibold text-leaf-700 hover:text-leaf-950"
+              className="font-semibold text-leaf-500 hover:text-leaf-600"
             >
               {mode === "register" ? "লগইন করুন" : "একাউন্ট খুলুন"}
             </button>
@@ -120,7 +120,7 @@ export default function LoginPage() {
           <a
             href="/"
             onClick={(e) => handleAppLink(e, "/")}
-            className="font-bengali text-sm text-leaf-800/70 hover:text-leaf-950"
+            className="font-bengali text-sm text-slate-500 hover:text-slate-900"
           >
             ← হোমে ফিরুন
           </a>

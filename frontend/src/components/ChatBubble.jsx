@@ -44,7 +44,7 @@ function GalleryActions({ img }) {
       <a
         href={`${href}${href.includes("?") ? "&" : "?"}download=1`}
         download={img.image_name || "cad-drawing.jpg"}
-        className="inline-flex items-center gap-1.5 border border-leaf-500/25 bg-leaf-50 px-2.5 py-1.5 font-bengali text-xs font-medium text-leaf-900 transition hover:bg-leaf-100"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-leaf-500/20 bg-leaf-50 px-2.5 py-1.5 font-bengali text-xs font-medium text-leaf-800 transition hover:bg-blue-50"
       >
         ⬇️ নকশা ডাউনলোড
       </a>
@@ -56,15 +56,15 @@ function ReferenceGallery({ images }) {
   if (!images?.length) return null;
 
   return (
-    <div className="mt-4 border-t border-leaf-900/10 pt-4">
-      <p className="mb-3 font-bengali text-sm font-medium text-leaf-950">
+    <div className="mt-4 border-t border-slate-200 pt-4">
+      <p className="mb-3 font-bengali text-sm font-medium text-slate-800">
         🖼️ ঠিক আছে এমন যন্ত্রাংশের ছবি — আপনার যন্ত্রাংশের সাথে তুলনা করুন
       </p>
       <div className="space-y-3">
         {images.map((img) => (
           <figure
             key={img.image_name}
-            className="overflow-hidden border border-leaf-900/10 bg-leaf-50/60"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
           >
             <img
               src={mediaUrl(img.url)}
@@ -74,17 +74,17 @@ function ReferenceGallery({ images }) {
             />
             <figcaption className="px-3 py-2.5">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-bengali text-sm font-semibold text-leaf-950">
+                <p className="font-bengali text-sm font-semibold text-slate-900">
                   {img.label}
                 </p>
                 {isCadDrawing(img) && (
-                  <span className="border border-leaf-500/20 bg-white px-1.5 py-0.5 font-bengali text-[10px] font-medium text-leaf-800">
+                  <span className="rounded border border-leaf-500/20 bg-white px-1.5 py-0.5 font-bengali text-[10px] font-medium text-leaf-700">
                     CAD নকশা
                   </span>
                 )}
               </div>
               {img.contextual_note ? (
-                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-leaf-900/80">
+                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-600">
                   {img.contextual_note}
                 </p>
               ) : null}

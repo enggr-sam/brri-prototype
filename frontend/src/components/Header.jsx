@@ -39,8 +39,8 @@ export default function Header({
         overlay
           ? "absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-gradient-to-b from-leaf-950/55 to-transparent"
           : compact
-            ? "relative border-b border-leaf-900/10 bg-leaf-950 text-white"
-            : "relative border-b border-leaf-900/10 bg-white/55 backdrop-blur-md"
+            ? "relative border-b border-white/10 bg-leaf-950 text-white"
+            : "relative border-b border-slate-200 bg-white shadow-sm"
       }`}
     >
       <div
@@ -54,7 +54,7 @@ export default function Header({
           className="flex min-w-0 items-center gap-3"
         >
           <div
-            className={`flex shrink-0 items-center justify-center overflow-hidden bg-white ${
+            className={`flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ${
               compact || overlay ? "h-9 w-9" : "h-10 w-10"
             }`}
           >
@@ -68,13 +68,13 @@ export default function Header({
             <div className="min-w-0">
               <p
                 className={`font-display font-semibold tracking-tight ${
-                  onDark ? "text-base text-white" : "text-lg text-leaf-950"
+                  onDark ? "text-base text-white" : "text-lg text-slate-900"
                 }`}
               >
                 BRRI Multicrop Winnower
               </p>
               {!compact && (
-                <p className="font-bengali text-xs text-leaf-800/70">
+                <p className="font-bengali text-xs text-slate-500">
                   ব্রি শস্য ঝাড়াই যন্ত্র · BRRI Win2024
                 </p>
               )}
@@ -90,7 +90,7 @@ export default function Header({
               className={`px-3 py-1.5 font-bengali text-sm transition ${
                 onDark
                   ? "text-white/85 hover:text-white"
-                  : "text-leaf-900/70 hover:text-leaf-950"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               ← চ্যাট
@@ -100,7 +100,7 @@ export default function Header({
             <>
               <span
                 className={`hidden font-bengali text-xs sm:inline ${
-                  onDark ? "text-white/70" : "text-leaf-800/70"
+                  onDark ? "text-white/70" : "text-slate-500"
                 }`}
               >
                 {user.mobile}
@@ -108,10 +108,10 @@ export default function Header({
               <button
                 type="button"
                 onClick={handleLogout}
-                className={`px-2 py-1.5 font-bengali text-sm transition ${
+                className={`rounded-lg px-2 py-1.5 font-bengali text-sm transition ${
                   onDark
                     ? "text-white/85 hover:text-white"
-                    : "text-leaf-900/70 hover:text-leaf-950"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
                 লগআউট
@@ -121,10 +121,10 @@ export default function Header({
             <a
               href="/login"
               onClick={(e) => handleAppLink(e, "/login?next=/winnower")}
-              className={`px-2 py-1.5 font-bengali text-sm transition ${
+              className={`rounded-lg px-3 py-1.5 font-bengali text-sm font-medium transition ${
                 onDark
-                  ? "text-white/85 hover:text-white"
-                  : "text-leaf-900/70 hover:text-leaf-950"
+                  ? "bg-white/15 text-white hover:bg-white/25"
+                  : "bg-leaf-500 text-white hover:bg-leaf-600"
               }`}
             >
               লগইন

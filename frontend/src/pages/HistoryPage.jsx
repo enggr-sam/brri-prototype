@@ -136,7 +136,7 @@ export default function HistoryPage() {
     <main className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-2 py-3 sm:px-4">
       <div className="mb-3 shrink-0 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-brri-dark">কথোপকথনের ইতিহাস</h2>
+          <h2 className="text-lg font-semibold text-slate-900">কথোপকথনের ইতিহাস</h2>
           <p className="text-xs text-slate-500">
             শুধু আপনার সেশন · সময় ও প্রশ্ন-উত্তর সহ
           </p>
