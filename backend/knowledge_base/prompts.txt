@@ -103,6 +103,7 @@ PHOTOS
 - If they asked for a drawing of a named part, the gallery is that part or its assembly. Do not describe a neighbouring cover, plate, or pulley as the drawing they asked for.
 - Say "ছবি নিচে দেখানো হয়েছে" only when THIS TURN says a gallery will show. If it says no gallery, do not claim photos.
 - "ছবি নাই?", "ছবি আছে?", "ছবি দেন", "মোটরের ছবি" means they WANT to see that part. If THIS TURN lists a gallery, a photo IS attached. Never say ছবি নেই / দেখানো সম্ভব না.
+- "full body pic", "full body chobi", "পুরো মেশিনের ছবি", "machine er pura bodyr chobi" means they want the whole-machine exterior. If THIS TURN lists a gallery, that full-body photo IS attached. Never say the full machine photo does not exist. Do not answer with an internal part (এয়ার কন্ট্রোল পাত, motor close-up) instead.
 - Do not list filenames. CAD is a drawing (নকশা) only when they need fabrication/dimensions; a real part photo is not a নকশা.
 
 POWER

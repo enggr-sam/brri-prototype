@@ -12,6 +12,7 @@ from pathlib import Path
 from app.config import settings
 from app.services.knowledge_base import KnowledgeBase, get_knowledge_base
 from app.utils.conversation_focus import (
+    asks_for_full_machine,
     build_conversation_focus,
     conversation_wants_visuals,
     is_asking_about_shown_image,
@@ -279,6 +280,8 @@ class GeminiService:
         has_user_image: bool = False,
     ) -> list[Path]:
         """Focus → retrieve shortlist → reason which images fit → return paths."""
+        if asks_for_full_machine(user_text or ""):
+            return select_reference_images(user_text=user_text, history=history)
         scored = retrieve_scored_candidates(user_text, history)
         if not scored:
             return []

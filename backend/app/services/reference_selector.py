@@ -17,6 +17,7 @@ from pathlib import Path
 from app.config import settings
 from app.services.knowledge_base import FIELD_PHOTO_BASE, get_knowledge_base
 from app.utils.conversation_focus import (
+    asks_for_full_machine,
     asks_for_photos,
     build_conversation_focus,
     conversation_wants_visuals,
@@ -171,7 +172,7 @@ _RANK_SKIP_TOPICS = frozenset({"blueprint", "grain_loss"})
 
 
 def user_requests_visual_help(text: str) -> bool:
-    return asks_for_photos(text)
+    return asks_for_photos(text) or asks_for_full_machine(text)
 
 
 def _is_fact_not_visual(text: str) -> bool:
@@ -202,6 +203,8 @@ def should_offer_gallery(
     if has_user_image:
         return True
     text = user_text or ""
+    if asks_for_full_machine(text):
+        return True
     if _is_fact_not_visual(text):
         return False
     if conversation_wants_visuals(text, history) or user_requests_visual_help(text):
@@ -334,10 +337,22 @@ def _entry_topics(entry: dict, *, strict: bool = False) -> set[str]:
 
 
 def _is_overview_shot(entry: dict) -> bool:
-    blob = f"{entry.get('image_name', '')} {entry.get('title', '')} {entry.get('part_paper', '')}".lower()
+    blob = (
+        f"{entry.get('image_name', '')} {entry.get('title', '')} "
+        f"{entry.get('part_paper', '')} {entry.get('description', '')}"
+    ).lower()
     return any(
         m in blob
-        for m in ("full machine", "full_exterior", "full front", "full side", "পুরো মেশিন")
+        for m in (
+            "full machine",
+            "full_exterior",
+            "full exterior",
+            "full front",
+            "full side",
+            "full_front",
+            "full_side",
+            "পুরো মেশিন",
+        )
     )
 
 
@@ -346,6 +361,8 @@ def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
     machine_topics = topics - _RANK_SKIP_TOPICS
     source = entry.get("source")
     image_name = (entry.get("image_name") or "").lower()
+    if asks_for_full_machine(query):
+        return _is_overview_shot(entry)
     if _is_overview_shot(entry) and not (
         query_is_how_it_works(query)
         or query_asks_machine_name(query)
@@ -407,10 +424,15 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
 
     if not entry_is_on_topic(entry, topics, query):
         return 0.0
+    if asks_for_full_machine(query) and _is_overview_shot(entry):
+        score += 20.0
+        if "full_exterior" in (entry.get("image_name") or "").lower():
+            score += 10.0
     if not topics and not (
         query_wants_technical_drawing(query)
         or query_wants_assembly_diagram(query)
         or asks_for_photos(query)
+        or asks_for_full_machine(query)
         or query_is_how_it_works(query)
         or query_asks_machine_name(query)
     ):
@@ -674,6 +696,19 @@ def retrieve_scored_candidates(
     if not entries:
         return []
 
+    if asks_for_full_machine(user_text or ""):
+        kb = get_knowledge_base()
+        scored_full: list[tuple[float, dict]] = []
+        for entry in kb.reference_images:
+            if not _is_overview_shot(entry):
+                continue
+            if not _resolve_path(entry.get("image_name") or ""):
+                continue
+            score = _score_entry(entry, user_text or "", set())
+            scored_full.append((score or 1.0, entry))
+        scored_full.sort(key=lambda item: (-item[0], item[1].get("image_number", 999)))
+        return scored_full[:pool]
+
     focus = build_conversation_focus(user_text or "", history)
     if is_belt_supplier_query(focus) or is_belt_price_query(user_text or "", history):
         return []
@@ -776,16 +811,54 @@ def build_grounding_context(
     if shown:
         lines.append("Gallery will show ONLY: " + "; ".join(shown))
         lines.append("You may say ছবি নিচে দেখানো হয়েছে. Do not mention other photos.")
-        if asks_for_photos(user_text or ""):
+        if asks_for_photos(user_text or "") or asks_for_full_machine(user_text or ""):
             lines.append(
                 "They asked if a photo exists / to see it. A photo IS attached. "
                 "Never say ছবি নেই or দেখানো সম্ভব না."
+            )
+        if asks_for_full_machine(user_text or ""):
+            lines.append(
+                "They asked for a full-body / whole-machine photo. "
+                "The gallery is the full exterior of ব্রি শস্য ঝাড়াই যন্ত্র. "
+                "Never say the full machine photo does not exist. "
+                "Do not switch to an internal part like এয়ার কন্ট্রোল পাত."
             )
     else:
         lines.append("No gallery this turn — do not say photos are shown below.")
     lines.append("Stay on the named part. Do not switch subsystems.")
     lines.append("=== END THIS TURN ===")
     return "\n".join(lines)
+
+
+def _select_full_machine_photos(*, limit: int = 1) -> list[Path]:
+    """Pick a real whole-machine exterior photo — never a part close-up."""
+    kb = get_knowledge_base()
+    ranked: list[tuple[float, dict]] = []
+    for entry in kb.reference_images:
+        if not _is_overview_shot(entry):
+            continue
+        name = entry.get("image_name") or ""
+        if not _resolve_path(name):
+            continue
+        bonus = 0.0
+        lower = name.lower()
+        if "full_exterior" in lower:
+            bonus += 20.0
+        if "full_front" in lower or "full front" in lower:
+            bonus += 12.0
+        if "full_side" in lower or "full side" in lower:
+            bonus += 10.0
+        ranked.append((bonus, entry))
+    ranked.sort(key=lambda item: (-item[0], item[1].get("image_number", 999)))
+    chosen: list[Path] = []
+    for _, entry in ranked:
+        path = _resolve_path(entry.get("image_name") or "")
+        if path is None:
+            continue
+        chosen.append(path)
+        if len(chosen) >= limit:
+            break
+    return chosen
 
 
 def select_reference_images(
@@ -797,6 +870,9 @@ def select_reference_images(
     preferred_numbers: list[int] | None = None,
 ) -> list[Path]:
     """Return up to ``limit`` paths using focus ranking (+ optional reasoner picks)."""
+    if asks_for_full_machine(user_text or ""):
+        return _select_full_machine_photos(limit=1)
+
     limit = limit or settings.MAX_REFERENCE_IMAGES
     wants_visuals = conversation_wants_visuals(user_text or "", history)
     # Auto-attach: one high-confidence photo. Explicit "show me" can use the full limit.
@@ -933,6 +1009,8 @@ def refine_reference_images_for_reply(
 ) -> list[Path]:
     """Keep the gallery on the question — do not grow it from a long answer."""
     current = list(current or [])
+    if asks_for_full_machine(user_text or ""):
+        return current[:1] or _select_full_machine_photos(limit=1)
     if not conversation_wants_visuals(user_text or "", history) and not user_requests_visual_help(
         user_text or ""
     ):

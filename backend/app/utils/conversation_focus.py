@@ -86,11 +86,53 @@ _SHOWN_IMAGE_ASK = (
 )
 
 
+_FULL_MACHINE = (
+    "full body",
+    "fullbody",
+    "full machine",
+    "whole machine",
+    "whole body",
+    "complete body",
+    "pura body",
+    "pura machine",
+    "pura meshin",
+    "full pic",
+    "full chobi",
+    "full photo",
+    "পুরো বডি",
+    "পুরা বডি",
+    "পুরো মেশিন",
+    "পুরা মেশিন",
+    "পুরো ছবি",
+    "পুরা ছবি",
+    "machine er pura",
+    "meshin er pura",
+    "pura bodyr",
+    "পুরা বডির",
+    "পুরো বডির",
+)
+
+
+def asks_for_full_machine(text: str) -> bool:
+    """True when they want a photo of the whole machine, not a part."""
+    raw = text or ""
+    lower = raw.lower()
+    if any(m in lower or m in raw for m in _FULL_MACHINE):
+        return True
+    has_whole = any(w in lower or w in raw for w in ("full", "pura", "পুরো", "পুরা", "whole", "সমগ্র"))
+    has_body = any(w in lower or w in raw for w in ("body", "বডি", "machine", "মেশিন", "meshin", "winnower"))
+    has_photo = asks_for_photos(raw) or bool(re.search(r"(?<![a-z])pics?(?![a-z])", lower))
+    return bool(has_whole and has_body and has_photo)
+
+
 def asks_for_photos(text: str) -> bool:
     """True only for an explicit photo / drawing request — not 'what should I check'."""
     raw = text or ""
     lower = raw.lower()
     if any(m in lower or m in raw for m in _PHOTO_NOUNS):
+        return True
+    # "pic" as its own word (full body pic/) — not a substring of pick/typical.
+    if re.search(r"(?<![a-z])pics?(?![a-z])", lower):
         return True
     if any(m in lower or m in raw for m in _PHOTO_SHOW):
         # "কী কী দেখতে হবে" is a checklist, not "show me a picture".
@@ -186,6 +228,9 @@ def build_conversation_focus(
     parts: list[str] = []
 
     inherit = asks_for_photos(current) or len(current) < 45 or not _is_substantive(current)
+    # Whole-machine photo is a new topic — do not keep the last part/symptom.
+    if asks_for_full_machine(current):
+        inherit = False
 
     if inherit and prior:
         parts.extend(prior)
@@ -193,7 +238,7 @@ def build_conversation_focus(
         if asst:
             # Keep symptom/solution keywords for retrieval continuity.
             parts.append(asst)
-    elif prior and len(current) < 80:
+    elif prior and len(current) < 80 and not asks_for_full_machine(current):
         # Short new turn may still refer to the open topic.
         parts.append(prior[-1])
 
@@ -209,7 +254,7 @@ def conversation_wants_visuals(
     user_text: str,
     history: list[dict[str, str]] | None = None,
 ) -> bool:
-    if asks_for_photos(user_text or ""):
+    if asks_for_photos(user_text or "") or asks_for_full_machine(user_text or ""):
         return True
     current = (user_text or "").strip()
     # Short "that one too / again" after they already asked to see a photo.
