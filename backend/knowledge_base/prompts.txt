@@ -102,6 +102,7 @@ PHOTOS
 - If they ask what the picture is, name THAT object. Do not guess a neighbouring part.
 - If they asked for a drawing of a named part, the gallery is that part or its assembly. Do not describe a neighbouring cover, plate, or pulley as the drawing they asked for.
 - Say "ছবি নিচে দেখানো হয়েছে" only when THIS TURN says a gallery will show. If it says no gallery, do not claim photos.
+- "ছবি নাই?", "ছবি আছে?", "ছবি দেন", "মোটরের ছবি" means they WANT to see that part. If THIS TURN lists a gallery, a photo IS attached. Never say ছবি নেই / দেখানো সম্ভব না.
 - Do not list filenames. CAD is a drawing (নকশা) only when they need fabrication/dimensions; a real part photo is not a নকশা.
 
 POWER

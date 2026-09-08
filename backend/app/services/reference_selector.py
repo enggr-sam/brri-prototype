@@ -776,6 +776,11 @@ def build_grounding_context(
     if shown:
         lines.append("Gallery will show ONLY: " + "; ".join(shown))
         lines.append("You may say ছবি নিচে দেখানো হয়েছে. Do not mention other photos.")
+        if asks_for_photos(user_text or ""):
+            lines.append(
+                "They asked if a photo exists / to see it. A photo IS attached. "
+                "Never say ছবি নেই or দেখানো সম্ভব না."
+            )
     else:
         lines.append("No gallery this turn — do not say photos are shown below.")
     lines.append("Stay on the named part. Do not switch subsystems.")
@@ -796,6 +801,9 @@ def select_reference_images(
     wants_visuals = conversation_wants_visuals(user_text or "", history)
     # Auto-attach: one high-confidence photo. Explicit "show me" can use the full limit.
     if not wants_visuals and not has_user_image:
+        limit = min(limit, 1)
+    # "মোটরের ছবি দেন" → one real part photo, not three neighbour shots.
+    if wants_visuals and not has_user_image:
         limit = min(limit, 1)
 
     focus = build_conversation_focus(user_text or "", history)
@@ -876,6 +884,15 @@ def select_reference_images(
             picked_unit_subasm = True
         return True
 
+    prefer_real_photo = (
+        wants_visuals
+        and not query_wants_technical_drawing(focus)
+        and not query_wants_assembly_diagram(focus)
+    )
+
+    def _is_real_photo(entry: dict) -> bool:
+        return entry.get("source") not in {"cad_drawing", "subassembly_drawing"}
+
     # Prefer LLM / caller-selected numbers when provided — still on-topic only.
     if preferred_numbers:
         score_by_num = {
@@ -889,7 +906,14 @@ def select_reference_images(
     for score, entry in scored_candidates:
         if len(chosen) >= limit:
             break
+        if prefer_real_photo and not _is_real_photo(entry):
+            continue
         _add(entry, score)
+    if not chosen:
+        for score, entry in scored_candidates:
+            if len(chosen) >= limit:
+                break
+            _add(entry, score)
 
     logger.info(
         "Selected %d images for focus=%r topics=%s: %s",

@@ -48,7 +48,12 @@ from app.utils.follow_ups import (
 from app.utils.image_captions import caption_prompt, parse_image_caption_lines
 from app.utils.reply_metadata import META_MARKER, split_reply_metadata
 from app.utils.reply_polish import needs_polish, polish_prompt
-from app.utils.response_filter import filter_assistant_reply, strip_gallery_pointers
+from app.utils.image_labels import display_label
+from app.utils.response_filter import (
+    filter_assistant_reply,
+    strip_false_missing_photos,
+    strip_gallery_pointers,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -535,6 +540,13 @@ class GeminiService:
         if not show_images:
             main_text = strip_gallery_pointers(main_text)
             refined = []
+        elif refined:
+            main_text = strip_false_missing_photos(main_text)
+            if len(main_text) < 16:
+                kb = get_knowledge_base()
+                entry = kb._by_name.get(refined[0].name, {})
+                label = display_label(entry, refined[0].name)
+                main_text = f"{label} নিচে দেওয়া আছে।"
         suggestions = self.suggest_follow_ups(
             user_text, main_text, history, usage
         )

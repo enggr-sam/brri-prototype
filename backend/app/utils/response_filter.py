@@ -28,6 +28,27 @@ _GALLERY_POINTER_PATTERNS = [
 ]
 
 
+_MISSING_PHOTO_PATTERNS = [
+    r"(?:^|(?<=[।\n]))[^।\n]*ছবি[^।\n]*(?:সম্ভব হচ্ছে না|দেখানো যাচ্ছে না|দেওয়া যাচ্ছে না|দেয়া যাচ্ছে না)[^।\n]*।?",
+    r"(?:^|(?<=[।\n]))[^।\n]*কোনো\s+ছবি[^।\n]*।?",
+    r"(?:^|(?<=[।\n]))[^।\n]*(?:ছবি নেই|ছবি নাই)[^।\n]*।?",
+    r"(?:^|(?<=[।\n]))[^\n.]*(?:cannot|can't|can not)\s+show[^\n.]*(?:photo|image)[^\n.]*\.?",
+    r"(?:^|(?<=[।\n]))[^\n.]*(?:no (?:photo|image)[^\n.]*(?:available|right now))[^\n.]*\.?",
+]
+
+
+def strip_false_missing_photos(text: str) -> str:
+    """Drop 'we have no photo' lines when a gallery image is actually attached."""
+    if not text:
+        return text
+    cleaned = text
+    for pattern in _MISSING_PHOTO_PATTERNS:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    return cleaned.strip()
+
+
 def strip_gallery_pointers(text: str) -> str:
     """Drop "photo shown below" lines when no gallery will be attached."""
     if not text:
