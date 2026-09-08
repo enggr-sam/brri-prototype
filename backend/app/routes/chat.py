@@ -29,6 +29,7 @@ from app.services.knowledge_base import get_knowledge_base
 from app.services.reference_selector import (
     order_reference_images_by_relevance,
     resolve_reference_image_paths,
+    should_offer_gallery,
 )
 from app.utils.bangla_text import nfc
 from app.utils.conversation_focus import is_asking_about_shown_image, last_shown_gallery
@@ -118,17 +119,14 @@ def _sse(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
-def _should_attach_reference_images(user_text: str, has_user_image: bool) -> bool:
-    if has_user_image:
-        return True
-    text = user_text.lower()
-    basic_markers = (
-        "ratio", "ration", "অনুপাত", "spec", "স্পেস", "সাইজ", "size", "কত",
-        "dimension", "bom", "what is", "কী সাইজ", "মডেল",
+def _should_attach_reference_images(
+    user_text: str,
+    has_user_image: bool,
+    history: list[dict] | None = None,
+) -> bool:
+    return should_offer_gallery(
+        user_text, history, has_user_image=has_user_image
     )
-    if any(m in text for m in basic_markers) and len(text) < 100:
-        return False
-    return True
 
 
 async def _prepare_user_input(
@@ -305,7 +303,7 @@ async def chat_message_stream(
     elif (not fast_hit or (fast_hit and fast_hit.show_reference_images)) and (
         (fast_hit and fast_hit.show_reference_images)
         or _should_attach_reference_images(
-            user_content, user_image_path is not None
+            user_content, user_image_path is not None, history
         )
     ):
         reference_paths = gemini_service.pick_reference_images(
@@ -409,7 +407,7 @@ async def chat_message(
     elif (not fast_hit or (fast_hit and fast_hit.show_reference_images)) and (
         (fast_hit and fast_hit.show_reference_images)
         or _should_attach_reference_images(
-            user_content, user_image_path is not None
+            user_content, user_image_path is not None, history
         )
     ):
         reference_paths = gemini_service.pick_reference_images(

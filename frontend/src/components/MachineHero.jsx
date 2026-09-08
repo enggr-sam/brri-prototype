@@ -31,7 +31,7 @@ export default function MachineHero({ onStart, startHref = "/winnower" }) {
           </span>
         </h1>
         <p className="animate-fade-up mt-3 max-w-md font-bengali text-sm leading-relaxed text-white/85 sm:mt-4 sm:text-lg">
-          শস্য ঝাড়াই যন্ত্রের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।
+          শস্য ঝাড়াই যন্ত্রের যন্ত্রাংশ, সমস্যা ও মেরামত — 📷 ছবি, 🎙️ কণ্ঠ বা ✍️ লেখায় জিজ্ঞেস করুন।
         </p>
         <div className="animate-fade-up mt-5 sm:mt-7">
           {onStart ? (

@@ -56,12 +56,8 @@ function ReferenceGallery({ images }) {
   if (!images?.length) return null;
 
   return (
-    <div className="mt-4 border-t border-slate-200 pt-4">
-      <p className="mb-3 font-bengali text-sm font-medium text-slate-800">
-        🖼️ ঠিক আছে এমন যন্ত্রাংশের ছবি — আপনার যন্ত্রাংশের সাথে তুলনা করুন
-      </p>
-      <div className="space-y-3">
-        {images.map((img) => (
+    <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+      {images.map((img) => (
           <figure
             key={img.image_name}
             className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
@@ -91,8 +87,7 @@ function ReferenceGallery({ images }) {
               <GalleryActions img={img} />
             </figcaption>
           </figure>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }

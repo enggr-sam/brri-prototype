@@ -68,7 +68,7 @@ export default function ChatPage() {
       const userPreview = {
         id: `pending-user-${Date.now()}`,
         role: "user",
-        content: text || (imageFile ? "(ছবি পাঠানো)" : "(কণ্ঠ বার্তা)"),
+        content: text || (imageFile ? "(📷 ছবি পাঠানো)" : "(🎙️ কণ্ঠ বার্তা)"),
         modality: imageFile ? "vision" : audioBlob ? "voice" : "text",
         attachment_url: null,
         reference_images: [],

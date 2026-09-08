@@ -8,16 +8,11 @@ from __future__ import annotations
 
 import re
 
-_PHOTO_ASK = (
+_PHOTO_NOUNS = (
     "ছবি",
     "photo",
     "picture",
     "image",
-    "দেখান",
-    "দেখিয়",
-    "দেখাই",
-    "বুঝিয়",
-    "বুঝাই",
     "visual",
     "diagram",
     "drawing",
@@ -25,9 +20,20 @@ _PHOTO_ASK = (
     "cad",
     "নকশা",
     "ড্রয়িং",
-    "show",
     "chobi",
     "chobi nai",
+)
+
+_PHOTO_SHOW = (
+    "দেখান",
+    "দেখাও",
+    "দেখাইয়া দাও",
+    "show me",
+    "show the",
+    "show a",
+    "show photo",
+    "pic dao",
+    "pic den",
 )
 
 _SHORT_FOLLOWUP = (
@@ -81,8 +87,17 @@ _SHOWN_IMAGE_ASK = (
 
 
 def asks_for_photos(text: str) -> bool:
-    lower = (text or "").lower()
-    return any(m in lower for m in _PHOTO_ASK)
+    """True only for an explicit photo / drawing request — not 'what should I check'."""
+    raw = text or ""
+    lower = raw.lower()
+    if any(m in lower or m in raw for m in _PHOTO_NOUNS):
+        return True
+    if any(m in lower or m in raw for m in _PHOTO_SHOW):
+        # "কী কী দেখতে হবে" is a checklist, not "show me a picture".
+        if "দেখতে" in raw and "দেখান" not in raw and "দেখাও" not in raw:
+            return False
+        return True
+    return False
 
 
 def is_asking_about_shown_image(text: str, history: list[dict] | None = None) -> bool:
@@ -196,8 +211,11 @@ def conversation_wants_visuals(
 ) -> bool:
     if asks_for_photos(user_text or ""):
         return True
-    # Explicit photo ask earlier in the same open topic.
-    for msg in reversed((history or [])[-4:]):
-        if msg.get("role") == "user" and asks_for_photos(msg.get("content") or ""):
-            return True
+    current = (user_text or "").strip()
+    # Short "that one too / again" after they already asked to see a photo.
+    follow = ("আরও", "আরো", "again", "same", "ওইটা", "এটাও", "ওই")
+    if len(current) < 28 and any(x in current.lower() or x in current for x in follow):
+        for msg in reversed((history or [])[-4:]):
+            if msg.get("role") == "user" and asks_for_photos(msg.get("content") or ""):
+                return True
     return False

@@ -174,6 +174,52 @@ def user_requests_visual_help(text: str) -> bool:
     return asks_for_photos(text)
 
 
+def _is_fact_not_visual(text: str) -> bool:
+    """HP / weight / price / hello — a photo would be noise."""
+    from app.utils.fast_path import (
+        is_capacity_query,
+        is_greeting,
+        is_motor_rating_query,
+        is_weight_query,
+    )
+
+    if is_greeting(text):
+        return True
+    if is_motor_rating_query(text) or is_weight_query(text) or is_capacity_query(text):
+        return True
+    if is_belt_supplier_query(text) or is_belt_price_query(text):
+        return True
+    return False
+
+
+def should_offer_gallery(
+    user_text: str,
+    history: list[dict[str, str]] | None = None,
+    *,
+    has_user_image: bool = False,
+) -> bool:
+    """Whether this turn should try to attach a catalogue photo at all."""
+    if has_user_image:
+        return True
+    text = user_text or ""
+    if _is_fact_not_visual(text):
+        return False
+    if conversation_wants_visuals(text, history) or user_requests_visual_help(text):
+        return True
+    if query_wants_technical_drawing(text) or query_wants_assembly_diagram(text):
+        return True
+    if query_is_how_it_works(text) and not asks_for_photos(text):
+        return False
+
+    focus = build_conversation_focus(text, history)
+    if _is_fact_not_visual(focus):
+        return False
+    if query_is_how_it_works(focus) and not asks_for_photos(text):
+        return False
+    topics = _detect_query_topics(focus) - _RANK_SKIP_TOPICS
+    return bool(topics)
+
+
 def build_image_selection_query(
     user_text: str,
     history: list[dict[str, str]] | None = None,
@@ -748,9 +794,9 @@ def select_reference_images(
     """Return up to ``limit`` paths using focus ranking (+ optional reasoner picks)."""
     limit = limit or settings.MAX_REFERENCE_IMAGES
     wants_visuals = conversation_wants_visuals(user_text or "", history)
-    # Symptom answers: at most 2 on-topic photos. Photo-asks can use the full limit.
+    # Auto-attach: one high-confidence photo. Explicit "show me" can use the full limit.
     if not wants_visuals and not has_user_image:
-        limit = min(limit, 2)
+        limit = min(limit, 1)
 
     focus = build_conversation_focus(user_text or "", history)
     topics = _detect_query_topics(focus)
@@ -770,8 +816,11 @@ def select_reference_images(
     min_score = settings.REFERENCE_IMAGE_MIN_SCORE
     if has_user_image:
         min_score = max(3.0, min_score - 1.0)
-    if wants_visuals:
-        min_score = max(3.5, min_score - 1.0)
+    elif wants_visuals:
+        min_score = max(3.5, min_score - 0.5)
+    else:
+        # Symptom / named-part auto-attach must be a clear match, not a neighbour.
+        min_score = max(min_score, 6.0)
 
     kb = get_knowledge_base()
     scored_candidates = retrieve_scored_candidates(user_text, history)
@@ -858,15 +907,20 @@ def refine_reference_images_for_reply(
     current: list[Path] | None = None,
     history: list[dict[str, str]] | None = None,
 ) -> list[Path]:
-    """Re-pick after the answer so the gallery matches what we actually said."""
+    """Keep the gallery on the question — do not grow it from a long answer."""
+    current = list(current or [])
+    if not conversation_wants_visuals(user_text or "", history) and not user_requests_visual_help(
+        user_text or ""
+    ):
+        return current[:1]
     reply = (reply_text or "").strip()
     if not reply:
-        return list(current or [])
+        return current
     combined = f"{user_text or ''}\n{reply[:700]}"
     picked = select_reference_images(combined, history=history)
     if picked:
         return picked
-    return list(current or [])
+    return current
 
 
 def order_reference_images_by_relevance(

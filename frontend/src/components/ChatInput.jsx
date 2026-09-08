@@ -161,8 +161,8 @@ export default function ChatInput({ onSend, disabled }) {
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={disabled || isRecording}
-          title="ছবি পাঠান"
-          aria-label="ছবি পাঠান"
+          title="📷 ছবি পাঠান"
+          aria-label="📷 ছবি পাঠান"
           className="flex h-9 w-9 items-center justify-center text-slate-400 transition hover:text-leaf-500 disabled:opacity-40"
         >
           <PhotoIcon />

@@ -80,12 +80,12 @@ def _resolve_show_reference_images(
         return True
     if user_requests_visual_help(user_text):
         return True
-    if meta.get("show_images") is True:
-        return True
     if meta.get("show_images") is False:
         return False
-    # Only the on-topic shortlist is passed in — show it.
-    return True
+    if meta.get("show_images") is True:
+        return len(reference_images) <= 2
+    # Auto-picked shortlist: only a single confident photo, never a dump.
+    return len(reference_images) == 1
 
 
 def _ranking_is_decisive(scored: list[tuple[float, dict]]) -> bool:
