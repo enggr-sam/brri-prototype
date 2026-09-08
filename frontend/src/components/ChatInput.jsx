@@ -94,8 +94,10 @@ export default function ChatInput({ onSend, disabled }) {
     }
   };
 
+  const canSend = Boolean(text.trim() || imageFile || audioBlob);
+
   return (
-    <div className="composer shrink-0 border-t border-leaf-900/8 bg-white/95 p-2.5 sm:p-3">
+    <div className="composer shrink-0 border-t border-slate-200 bg-white px-3 pt-2.5 sm:px-4">
       {error && (
         <p className="mb-2 font-bengali text-xs text-red-700">{error}</p>
       )}
@@ -110,7 +112,7 @@ export default function ChatInput({ onSend, disabled }) {
           <button
             type="button"
             onClick={clearImage}
-            className="min-h-11 font-bengali text-xs text-leaf-800/60 hover:text-red-700 sm:min-h-0"
+            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 sm:min-h-0"
           >
             সরান
           </button>
@@ -119,73 +121,113 @@ export default function ChatInput({ onSend, disabled }) {
 
       {audioBlob && (
         <div className="mb-2 flex items-center gap-2">
-          <span className="font-bengali text-xs text-leaf-800/80">
+          <span className="font-bengali text-xs text-slate-600">
             🎙️ কণ্ঠ রেকর্ড প্রস্তুত
           </span>
           <button
             type="button"
             onClick={clearAudio}
-            className="min-h-11 font-bengali text-xs text-leaf-800/60 hover:text-red-700 sm:min-h-0"
+            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 sm:min-h-0"
           >
             সরান
           </button>
         </div>
       )}
 
-      <div className="flex items-end gap-1.5 sm:gap-2">
-        <div className="flex shrink-0 gap-0.5 sm:gap-1">
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={disabled || isRecording}
-            title="ছবি পাঠান"
-            aria-label="ছবি পাঠান"
-            className="flex h-11 w-11 items-center justify-center text-lg leading-none transition hover:bg-leaf-100 disabled:opacity-40 sm:h-10 sm:w-10"
-          >
-            📷
-          </button>
-          <button
-            type="button"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={disabled}
-            title={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
-            aria-label={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
-            className={`flex h-11 w-11 items-center justify-center text-lg leading-none transition hover:bg-leaf-100 disabled:opacity-40 sm:h-10 sm:w-10 ${
-              isRecording ? "animate-soft-pulse text-red-600" : ""
-            }`}
-          >
-            {isRecording ? "⏹️" : "🎙️"}
-          </button>
-        </div>
-
+      <div className="flex items-end gap-2">
         <textarea
           ref={textRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={onKeyDown}
           disabled={disabled}
-          placeholder="বাংলায় সমস্যা লিখুন…"
+          placeholder="প্রশ্ন লিখুন…"
           rows={1}
-          className="max-h-28 min-h-[44px] flex-1 resize-none border border-leaf-900/10 bg-white px-3 py-2.5 text-sm font-bengali text-leaf-950 focus:border-leaf-500 focus:outline-none focus:ring-1 focus:ring-leaf-500 disabled:opacity-50 sm:min-h-[42px]"
+          className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 font-bengali text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
         />
-
         <button
           type="button"
           onClick={submit}
-          disabled={disabled || (!text.trim() && !imageFile && !audioBlob)}
-          className="h-11 shrink-0 bg-leaf-500 px-3.5 font-bengali text-sm font-semibold text-white transition hover:bg-leaf-950 disabled:opacity-40 sm:h-auto sm:px-4 sm:py-2.5"
+          disabled={disabled || !canSend}
+          aria-label="পাঠান"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-leaf-500 text-white transition hover:bg-leaf-950 disabled:opacity-35"
         >
-          পাঠান
+          <SendIcon />
         </button>
-
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => pickImage(e.target.files?.[0])}
-        />
       </div>
+
+      <div className="flex items-center gap-1 pb-1">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={disabled || isRecording}
+          title="ছবি পাঠান"
+          aria-label="ছবি পাঠান"
+          className="flex h-9 w-9 items-center justify-center text-slate-400 transition hover:text-leaf-500 disabled:opacity-40"
+        >
+          <PhotoIcon />
+        </button>
+        <button
+          type="button"
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={disabled}
+          title={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
+          aria-label={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
+          className={`flex h-9 w-9 items-center justify-center transition disabled:opacity-40 ${
+            isRecording
+              ? "animate-soft-pulse text-red-600"
+              : "text-slate-400 hover:text-leaf-500"
+          }`}
+        >
+          {isRecording ? <StopIcon /> : <MicIcon />}
+        </button>
+      </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => pickImage(e.target.files?.[0])}
+      />
     </div>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2.2 8.1 13.4 2.6c.5-.25.98.3.72.8L9.7 13.7c-.22.46-.9.42-1.06-.06L7.2 9.2 2.3 8.1c-.5-.14-.5-.74-.1-1Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+function PhotoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <rect x="2" y="4" width="14" height="11" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="6.2" cy="8" r="1.3" fill="currentColor" />
+      <path d="M2.8 13.2 7 9.6l2.4 2 2.2-2.6 3.4 4.2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="5.5" y="1.8" width="5" height="8" rx="2.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M3.4 7.6a4.6 4.6 0 0 0 9.2 0M8 12.2v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <rect x="2.5" y="2.5" width="9" height="9" rx="1.2" fill="currentColor" />
+    </svg>
   );
 }

@@ -51,7 +51,23 @@ body {
 }
 
 .composer {
-  padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.bubble-user {
+  position: relative;
+  background: #eef1f3;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.bubble-user::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  bottom: -5px;
+  border-width: 6px 7px 0 0;
+  border-style: solid;
+  border-color: #eef1f3 transparent transparent transparent;
 }
 
 @media (max-width: 640px) {

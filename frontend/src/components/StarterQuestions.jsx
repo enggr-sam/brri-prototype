@@ -11,20 +11,22 @@ export const STARTER_QUESTIONS = [
   "মোটর গরম হলে কী করব?",
 ];
 
-export default function StarterQuestions({ onSelect, disabled }) {
+export default function StarterQuestions({ onSelect, disabled, compact = false }) {
+  const items = compact ? STARTER_QUESTIONS.slice(0, 5) : STARTER_QUESTIONS;
+
   return (
-    <div className="mb-4">
-      <p className="mb-2 font-bengali text-sm text-leaf-800/75">
+    <div className={compact ? "" : "mb-4"}>
+      <p className="mb-2 font-bengali text-xs text-slate-500">
         অথবা এখান থেকে শুরু করুন:
       </p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-        {STARTER_QUESTIONS.map((q) => (
+      <div className="flex flex-col gap-2">
+        {items.map((q) => (
           <button
             key={q}
             type="button"
             disabled={disabled}
             onClick={() => onSelect(q)}
-            className="w-full border border-leaf-500/25 bg-white px-3 py-2.5 text-left font-bengali text-xs leading-snug text-leaf-950 transition hover:bg-leaf-50 disabled:opacity-40 sm:w-auto sm:py-1.5"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 transition hover:border-leaf-500/30 hover:bg-leaf-50 disabled:opacity-40"
           >
             {q}
           </button>

@@ -1,6 +1,8 @@
+import { handleAppLink } from "../utils/nav.js";
+
 const VIDEO_SRC = "/media/brri-winnower-2024.mp4";
 
-export default function MachineHero({ onStart }) {
+export default function MachineHero({ onStart, startHref = "/winnower" }) {
   return (
     <section className="machine-hero relative isolate min-h-[min(58vh,420px)] w-full overflow-hidden sm:min-h-[min(72vh,560px)]">
       <video
@@ -32,13 +34,23 @@ export default function MachineHero({ onStart }) {
           শস্য ঝাড়াই যন্ত্রের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।
         </p>
         <div className="animate-fade-up mt-5 sm:mt-7">
-          <button
-            type="button"
-            onClick={onStart}
-            className="w-full bg-leaf-400 px-5 py-3 font-bengali text-sm font-semibold text-leaf-950 transition hover:bg-leaf-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
-          >
-            কথা শুরু করুন
-          </button>
+          {onStart ? (
+            <button
+              type="button"
+              onClick={onStart}
+              className="w-full bg-leaf-400 px-5 py-3 font-bengali text-sm font-semibold text-leaf-950 transition hover:bg-leaf-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
+            >
+              কথা শুরু করুন
+            </button>
+          ) : (
+            <a
+              href={startHref}
+              onClick={(e) => handleAppLink(e, startHref)}
+              className="inline-block w-full bg-leaf-400 px-5 py-3 text-center font-bengali text-sm font-semibold text-leaf-950 transition hover:bg-leaf-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:w-auto sm:py-2.5"
+            >
+              কথা শুরু করুন
+            </a>
+          )}
         </div>
       </div>
     </section>

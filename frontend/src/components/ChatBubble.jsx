@@ -97,76 +97,78 @@ function ReferenceGallery({ images }) {
   );
 }
 
+function relativeTime(iso) {
+  if (!iso) return "এইমাত্র";
+  const delta = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(delta) || delta < 60_000) return "এইমাত্র";
+  return new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Dhaka",
+  });
+}
+
 export default function ChatBubble({ message, showTimestamp = false }) {
   const isUser = message.role === "user";
 
-  return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[min(100%,24rem)] px-3.5 py-3 sm:max-w-[88%] sm:px-4 ${
-          isUser
-            ? "rounded-2xl rounded-br-md bg-leaf-500 text-white"
-            : "rounded-2xl rounded-bl-md bg-white shadow-sm ring-1 ring-leaf-900/8"
-        }`}
-      >
-        {showTimestamp && message.created_at && (
-          <p
-            className={`mb-2 text-[11px] ${
-              isUser ? "text-white/70" : "text-leaf-800/50"
-            }`}
-          >
-            {new Date(message.created_at).toLocaleString("bn-BD", {
-              timeZone: "Asia/Dhaka",
-              hour: "2-digit",
-              minute: "2-digit",
-              day: "numeric",
-              month: "short",
-            })}
-          </p>
-        )}
-        {!isUser && (
-          <div className="mb-2 flex items-center gap-2">
-            <img
-              src="/brri-logo.jpg"
-              alt=""
-              className="h-5 w-5 object-contain"
-              aria-hidden
-            />
-            <p className="text-xs font-medium text-leaf-500">BRRI সহায়ক</p>
-          </div>
-        )}
-
-        {isUser ? (
-          <article className="max-w-none whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-white">
+  if (isUser) {
+    return (
+      <div className="flex flex-col items-end">
+        <div className="bubble-user max-w-[min(100%,20rem)] px-3.5 py-2.5 sm:max-w-[80%]">
+          {showTimestamp && message.created_at && (
+            <p className="mb-1 text-[11px] text-slate-400">
+              {new Date(message.created_at).toLocaleString("bn-BD", {
+                timeZone: "Asia/Dhaka",
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "numeric",
+                month: "short",
+              })}
+            </p>
+          )}
+          <article className="whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-slate-800">
             {renderTextWithLinks(
               message.content,
-              "break-all underline decoration-white/60 underline-offset-2"
+              "break-all underline decoration-slate-400 underline-offset-2"
             )}
           </article>
-        ) : (
-          <MarkdownReply text={message.content} className="text-leaf-950" />
-        )}
+          {message.attachment_url && (
+            <div className="mt-2">
+              {message.modality === "vision" ? (
+                <img
+                  src={mediaUrl(message.attachment_url)}
+                  alt="Uploaded part"
+                  className="max-h-48 w-full bg-white object-contain sm:max-h-52"
+                />
+              ) : (
+                <p className="text-xs text-slate-500">🎙️ কণ্ঠ বার্তা</p>
+              )}
+            </div>
+          )}
+        </div>
+        <p className="mt-1 pr-1 font-bengali text-[11px] text-slate-400">
+          {relativeTime(message.created_at)}
+        </p>
+      </div>
+    );
+  }
 
-        {message.attachment_url && isUser && (
-          <div className="mt-3">
-            {message.modality === "vision" ? (
-              <img
-                src={mediaUrl(message.attachment_url)}
-                alt="Uploaded part"
-                className="max-h-48 w-full bg-black/10 object-contain sm:max-h-52"
-              />
-            ) : (
-              <p className="text-xs opacity-90">🎙️ কণ্ঠ বার্তা</p>
-            )}
-          </div>
-        )}
-
-        {!isUser && message.reference_images?.length > 0 && (
+  return (
+    <div className="flex items-start gap-2.5">
+      <img
+        src="/brri-logo.jpg"
+        alt=""
+        className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+        aria-hidden
+      />
+      <div className="min-w-0 max-w-[min(100%,24rem)] flex-1 sm:max-w-[88%]">
+        <p className="mb-1 text-xs font-semibold text-slate-600">BRRI সহায়ক</p>
+        <MarkdownReply text={message.content} className="text-slate-800" />
+        {message.reference_images?.length > 0 && (
           <ReferenceGallery images={message.reference_images} />
         )}
-
-        {!isUser && message.cost_usd > 0 && (
-          <p className="mt-2 border-t border-leaf-900/10 pt-2 font-bengali text-[10px] text-leaf-800/45">
+        {message.cost_usd > 0 && (
+          <p className="mt-2 font-bengali text-[10px] text-slate-400">
             {formatReplyCostLabel(message.cost_usd)}
             {message.model_used ? ` · ${message.model_used}` : ""}
           </p>

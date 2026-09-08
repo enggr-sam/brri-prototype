@@ -4,6 +4,7 @@ export default function AppLayout({
   route,
   compactHeader = false,
   overlayHeader = false,
+  hideHeader = false,
   children,
 }) {
   return (
@@ -12,11 +13,13 @@ export default function AppLayout({
         overlayHeader ? "relative" : ""
       }`}
     >
-      <Header
-        compact={compactHeader}
-        overlay={overlayHeader}
-        showChatHome={route === "history"}
-      />
+      {!hideHeader && (
+        <Header
+          compact={compactHeader}
+          overlay={overlayHeader}
+          showChatHome={route === "history"}
+        />
+      )}
       {children}
     </div>
   );

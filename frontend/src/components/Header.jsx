@@ -1,3 +1,5 @@
+import { handleAppLink } from "../utils/nav.js";
+
 const LOGO_SRC = "/brri-logo.jpg";
 
 export default function Header({
@@ -22,7 +24,11 @@ export default function Header({
           compact || overlay ? "py-3" : "py-4"
         }`}
       >
-        <a href="#/" className="flex min-w-0 items-center gap-3">
+        <a
+          href="/"
+          onClick={(e) => handleAppLink(e, "/")}
+          className="flex min-w-0 items-center gap-3"
+        >
           <div
             className={`flex shrink-0 items-center justify-center overflow-hidden bg-white ${
               compact || overlay ? "h-9 w-9" : "h-10 w-10"
@@ -54,7 +60,8 @@ export default function Header({
 
         {showChatHome && (
           <a
-            href="#/"
+            href="/winnower"
+            onClick={(e) => handleAppLink(e, "/winnower")}
             className={`px-3 py-1.5 font-bengali text-sm transition ${
               onDark
                 ? "text-white/85 hover:text-white"

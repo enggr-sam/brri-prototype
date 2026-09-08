@@ -11,6 +11,7 @@ export default function ChatWindow({
   error,
   suggestions,
   onSuggestionClick,
+  emptySlot = null,
 }) {
   const bottomRef = useRef(null);
 
@@ -20,31 +21,42 @@ export default function ChatWindow({
 
   return (
     <div
-      className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-y-contain px-4 py-4"
+      className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-y-contain px-4 py-5"
       style={{ WebkitOverflowScrolling: "touch" }}
     >
+      {emptySlot}
+
       {messages.map((msg) => (
         <ChatBubble key={msg.id ?? `${msg.role}-${msg.created_at}`} message={msg} />
       ))}
 
       {streamingText && (
-        <div className="flex justify-start">
-          <div className="max-w-[92%] rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100 sm:max-w-[88%]">
-            <div className="mb-2 flex items-center gap-2">
-              <img src="/brri-logo.jpg" alt="" className="h-5 w-5 object-contain" aria-hidden />
-              <p className="text-xs font-medium text-brri-green">BRRI সহায়ক</p>
-            </div>
+        <div className="flex items-start gap-2.5">
+          <img
+            src="/brri-logo.jpg"
+            alt=""
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="mb-1 text-xs font-semibold text-slate-600">BRRI সহায়ক</p>
             <div className="relative">
               <MarkdownReply text={streamingText} className="text-slate-800" />
-              <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-brri-green align-middle" />
+              <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-leaf-500 align-middle" />
             </div>
           </div>
         </div>
       )}
 
       {loading && !streamingText && (
-        <div className="flex justify-start">
-          <div className="rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-sm ring-1 ring-slate-100">
+        <div className="flex items-start gap-2.5">
+          <img
+            src="/brri-logo.jpg"
+            alt=""
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+            aria-hidden
+          />
+          <div className="pt-1">
             <Loader label="চিন্তা করছি…" compact />
           </div>
         </div>
