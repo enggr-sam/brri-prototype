@@ -10,7 +10,16 @@ from app.utils.conversation_focus import build_conversation_focus
 
 SUGGESTION_LIMIT = 5
 
-_BANNED = ("ঝরনি", "ঝরনী", "জাল", "চালনা", "বিআরআরআই উইনোয়ার", "উইনোয়ার ২০২৪")
+_BANNED = (
+    "ঝরনি",
+    "ঝরনী",
+    "জাল",
+    "চালনা",
+    "বিআরআরআই উইনোয়ার",
+    "উইনোয়ার ২০২৪",
+    "ব্রি উইনোয়ার",
+    "ব্রি ধান গম",
+)
 
 _TOPIC_SUGGESTIONS: dict[str, tuple[str, ...]] = {
     "air_control": (
@@ -26,10 +35,10 @@ _TOPIC_SUGGESTIONS: dict[str, tuple[str, ...]] = {
         "বেল্ট পিছলে যাচ্ছে কেন?",
     ),
     "sieve": (
-        "চালনি কীভাবে পরিষ্কার করব?",
-        "কোন ফসলে কোন চালনি লাগবে?",
-        "চালনি নড়ছে না কেন?",
-        "চালনির ছিদ্র বড় না ছোট?",
+        "চালুনি কীভাবে পরিষ্কার করব?",
+        "কোন ফসলে কোন চালুনি লাগবে?",
+        "চালুনি নড়ছে না কেন?",
+        "চালুনির ছিদ্র কত মিলিমিটার?",
     ),
     "motor": (
         "মোটর গরম হচ্ছে কেন?",
@@ -72,7 +81,7 @@ _DEFAULT_SUGGESTIONS = (
     "চালু করার আগে কী কী দেখব?",
     "নিয়মিত রক্ষণাবেক্ষণ কীভাবে করব?",
     "B65 বেল্ট কোথায় পাওয়া যাবে?",
-    "কোন চালনি কোন ফসলে লাগে?",
+    "কোন চালুনি কোন ফসলে লাগে?",
     "ব্লোয়ারের হাওয়া দুর্বল কেন?",
     "হপারে ধান আটকে যায় কেন?",
 )
@@ -137,8 +146,9 @@ def followup_prompt(user_text: str, reply_text: str) -> str:
         "- Spoken Bangla. One line each. A farmer would tap these next.\n"
         "- Each question must follow THIS answer (same part, next step, or a missing detail).\n"
         "- No generic filler like 'আর কোন সমস্যা হতে পারে'.\n"
-        "- Screen word: চালনি or সিভ. Never জাল, ঝরনি, চালনা.\n"
-        "- Do not write the machine name in Bangla.\n"
+        "- Screen word: চালুনি or sieve. Never জাল, ঝরনি, চালনা.\n"
+        "- Bangla machine name: ব্রি শস্য ঝাড়াই যন্ত্র. English: BRRI Multicrop Winnower. Model: BRRI Win2024.\n"
+        "- Never ব্রি উইনোয়ার or বিআরআরআই উইনোয়ার.\n"
         "- Do not invent kg/h, wages, or a part that is not in the answer.\n"
         '- JSON only: ["q1","q2","q3","q4","q5"]\n'
     )

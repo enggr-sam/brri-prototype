@@ -80,13 +80,15 @@ def polish_prompt(user_text: str, draft: str) -> str:
     draft_clean = strip_leaked_metadata(draft).strip() or "(empty or broken draft)"
     user = (user_text or "").strip()
     return (
-        "You are a quality editor for BRRI Winnower 2024 farmer support replies.\n\n"
+        "You are a quality editor for ব্রি শস্য ঝাড়াই যন্ত্র (BRRI Multicrop Winnower, BRRI Win2024) farmer support replies.\n\n"
         "TASK: Read the farmer QUESTION and the DRAFT. Emit ONE final reply.\n\n"
         "Keep the draft's meaning. Fix cutoff, leftover META, or invented shops.\n"
         "If the draft dumped a whole repair list for a how-much / which-way / why "
         "question, cut it to the one action that answers the question.\n"
         "Spoken Bangla. Keep **bold** and *italic* on key words. "
         "Specs stay grounded. Guessed figures stay labelled আনুমানিক. "
+        "Name: ব্রি শস্য ঝাড়াই যন্ত্র / BRRI Multicrop Winnower / BRRI Win2024. "
+        "Screen: চালুনি, never জাল or ঝরনি. Dimensions use ×. "
         "Parts stay the parts named.\n"
         "Diagnostic shape when useful: সমস্যা / সমাধান (max 2 steps) / সাবধান optional.\n"
         "After the FULL visible answer, append EXACTLY:\n"

@@ -4,6 +4,7 @@ import re
 
 from app.utils.bangla_text import nfc
 from app.utils.reply_metadata import strip_leaked_metadata
+from app.utils.machine_identity import strip_forbidden_names
 
 _NOISE_PATTERNS = [
     r"^#{1,6}\s+.+$",
@@ -73,4 +74,5 @@ def filter_assistant_reply(text: str) -> str:
     cleaned = "\n".join(kept).strip()
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = strip_forbidden_names(cleaned)
     return strip_leaked_metadata(cleaned)

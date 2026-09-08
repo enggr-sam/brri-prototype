@@ -1,23 +1,52 @@
 {
-  "machine_name": "BRRI Winnower",
+  "machine_name": "BRRI Multicrop Winnower",
+  "machine_name_bn": "ব্রি শস্য ঝাড়াই যন্ত্র",
   "short_name": "BRRI Win2024",
   "model": "BRRI Win2024",
   "manufacturer": "Bangladesh Rice Research Institute (BRRI)",
-  "purpose": "Cleaning and separating rice grain from chaff, dust, and lighter impurities using a controlled air blast and an oscillating sieve.",
+  "country_of_origin": "Bangladesh",
+  "country_of_manufacture": "Bangladesh",
+  "classification": "Multicrop winnower machine",
+  "purpose": "Cleaning and separation of grains from chaff and impurities using combined airflow and oscillation.",
+  "operation_type": "Electrically operated",
+  "feeding_method": "Manual feeding",
+  "do_not_call": [
+    "BRRI Winnower",
+    "ব্রি উইনোয়ার",
+    "বিআরআরআই উইনোয়ার",
+    "ব্রি ধান গম ঝাড়াই যন্ত্র"
+  ],
   "dimensions": {
-    "overall_mm": "1350 × 835 × 1310",
-    "length_mm": 1350,
-    "width_mm": 835,
-    "height_mm": 1310,
-    "weight_kg": 97.86
+    "overall_mm": "1220 × 815 × 1330",
+    "length_mm": 1220,
+    "width_mm": 815,
+    "height_mm": 1330,
+    "weight_kg": 115,
+    "motor_base_mm": "395 × 197"
+  },
+  "hopper": {
+    "dimension_mm": "620 × 580 × 320",
+    "load_capacity_kg": "450–550"
+  },
+  "performance": {
+    "winnowing_capacity_kg_per_hour": "700–800",
+    "winnowing_capacity_min_kg_h": 700,
+    "winnowing_capacity_max_kg_h": 800,
+    "two_acre_time_hours": "৪–৬",
+    "two_acre_paddy_tonnes_typical": "৩–৪",
+    "labour_saved_note_bn": "আনুমানিক ৭০–৮০% শ্রমিকের প্রয়োজন কমতে পারে; ৪–৫ জনের পরিবর্তে সাধারণত ১–২ জন শ্রমিক দিয়ে কাজ পরিচালনা করা সম্ভব।",
+    "target_capacity_kg_h": 1000,
+    "scale_to_1000_note_bn": "১,০০০ কেজি/ঘণ্টা লক্ষ্যের জন্য ফিডিং রেট, চালুনির ক্ষেত্রফল ও গতি, ব্লোয়ারের বায়ুপ্রবাহ এবং প্রয়োজন অনুযায়ী মোটর ও পাওয়ার ট্রান্সমিশন বাড়াতে/অপটিমাইজ করতে হয়।"
   },
   "motor": {
-    "power_hp": 1.5,
-    "power_kw": 1.1,
-    "speed_rpm": 1400
+    "type": "Electric motor",
+    "phase": "Single phase",
+    "power_hp": 0.5,
+    "power_kw": 0.37,
+    "speed_rpm": "1400–1450"
   },
   "power_transmission": {
-    "type": "V-belt drive",
+    "type": "Belt and pulley drive",
     "belt": {
       "profile": "B-belt",
       "length_inch": 65,
@@ -35,11 +64,26 @@
   "blower": {
     "diameter_mm": 270
   },
+  "separation": {
+    "method": "Air blowing and vibration mechanism",
+    "vibrating_plate_length_mm": 237,
+    "eccentric_linkage_length_mm": 225,
+    "wind_board_mm": "483 × 228",
+    "cleaning_mechanism": "Combined airflow and oscillation"
+  },
   "sieve_types": {
-    "description": "Three interchangeable sieves (চালনি / সিভ) — large, medium, and small hole sizes for different crops. Farmer word: চালনি, not জাল."
+    "farmer_word_bn": "চালুনি",
+    "english_word": "sieve",
+    "never_call": ["জাল", "ঝরনি", "ঝরনী", "jharani", "jal"],
+    "description": "Three interchangeable sieves (চালুনি / sieve) for mustard, paddy, and maize. Farmer word: চালুনি. English: sieve. Never জাল or ঝরনি.",
+    "by_crop_mm": {
+      "mustard": 6,
+      "paddy": 10,
+      "maize": 13
+    }
   },
   "core_mechanism": {
-    "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the sieve.",
+    "summary": "The motor drives a main shaft via the V-belt. This main shaft operates the blower unit and uses a sieve cam/linkage to shake the চালুনি.",
     "main_shaft": "Driven by the motor through the B65 V-belt; sieve shaft uses 6203×2 bearings; blower uses UCP206×2 pillow blocks and 6302×8 ball bearings.",
     "blower_unit": {
       "diameter_mm": 270,
@@ -47,24 +91,30 @@
     },
     "sieve_mechanism": {
       "type": "Cam / linkage driven oscillating sieve",
-      "function": "The main shaft's cam and linkage shake the sieve back and forth to grade and separate the grain."
+      "function": "The main shaft's cam and linkage shake the চালুনি back and forth to grade and separate the grain."
     }
   },
   "materials": {
-    "main_frame": "Mild steel (plain carbon steel) angle bars (38 × 38 × 3 mm)",
+    "main_frame": "Mild steel angle bars (38 × 38 × 3 mm)",
     "shop_name_bn": "মাইল্ড স্টিল",
-    "hoppers": "Mild steel (plain carbon steel)",
-    "structural_components": "Some ASTM A36 components",
+    "hoppers": "Mild steel",
     "fasteners": "Stainless steel",
     "angle_bar_spec_mm": "38 × 38 × 3",
     "flat_bar_spec_mm": "20 × 4"
+  },
+  "unpublished": {
+    "shaft_diameter_mm": null,
+    "shaft_length_mm": null,
+    "gusset": false,
+    "bom_table": null,
+    "labour_taka": null
   },
   "common_issues": [
     "V-belt (B65) slipping, cracking, or over/under tension causing low shaft speed.",
     "Worn or noisy UCP206 / 6302 / 6203 bearings causing vibration and heat.",
     "Blower imbalance or blade damage reducing air blast and cleaning quality.",
     "Sieve cam/linkage wear or loose fasteners causing weak or uneven oscillation.",
-    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 1.5 HP / 1.1 kW, 1400 rpm motor).",
+    "Motor not starting or running slow (voltage, capacitor, or winding issues on the 0.5 HP single-phase motor).",
     "Frame or hopper corrosion / cracked welds on the mild steel angle bars.",
     "Too much air/wind causing good grain to blow away with chaff — adjust air control lever and feed gate."
   ],

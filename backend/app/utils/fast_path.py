@@ -13,6 +13,7 @@ from app.config import settings
 from app.services.knowledge_base import get_knowledge_base
 from app.utils.bangla_text import nfc
 from app.utils.follow_ups import local_suggestions
+from app.utils.machine_identity import mention
 from app.utils.parts_suppliers import (
     format_belt_price_reply_bn,
     format_belt_suppliers_bn,
@@ -139,11 +140,12 @@ _MOTOR_RATING_TERMS = (
 
 _QUESTION_MARKERS = ("কত", "কতো", "কী", "কি", " ki", "what", "কতখানি", "কতটা")
 
-_GREETING_REPLY_BN = (
-    "আসসালামু আলাইকুম। আমি শুধু BRRI Winnower (model BRRI Win2024) "
-    "নিয়ে সাহায্য করি — যন্ত্রাংশ, স্পেক, খুঁত আর মেরামত।\n\n"
-    "মেশিনে কী সমস্যা হচ্ছে লিখুন, অথবা ছবি পাঠান।"
-)
+def greeting_reply_bn() -> str:
+    return (
+        f"আসসালামু আলাইকুম। আমি শুধু {mention()} "
+        "নিয়ে সাহায্য করি — যন্ত্রাংশ, স্পেক, খুঁত আর মেরামত।\n\n"
+        "মেশিনে কী সমস্যা হচ্ছে লিখুন, অথবা ছবি পাঠান।"
+    )
 
 _GREETING_SUGGESTIONS = (
     "মেশিনে কী সমস্যা হচ্ছে?",
@@ -232,22 +234,80 @@ def _bn_num(value: object) -> str:
 
 def format_motor_rating_bn() -> str:
     motor = get_knowledge_base().machine_data.get("motor") or {}
-    hp = motor.get("power_hp", 1.5)
-    kw = motor.get("power_kw", 1.1)
-    rpm = motor.get("speed_rpm", 1400)
+    hp = motor.get("power_hp", 0.5)
+    kw = motor.get("power_kw", 0.37)
+    rpm = motor.get("speed_rpm", "1400–1450")
     return (
-        f"BRRI Winnower (model BRRI Win2024) মেশিনে "
-        f"{_bn_num(hp)} হর্সপাওয়ার ({hp} HP / {kw} কিলোওয়াট) মোটর ব্যবহার করা হয়, "
-        f"গতি {_bn_num(rpm)} আরপিএম ({rpm} rpm)।"
+        f"{mention()} মেশিনে "
+        f"{_bn_num(hp)} হর্সপাওয়ার ({hp} HP / {kw} কিলোওয়াট) সিঙ্গেল-ফেজ মোটর ব্যবহার করা হয়, "
+        f"গতি {_bn_num(rpm) if isinstance(rpm, (int, float)) else str(rpm)} আরপিএম ({rpm} rpm)।"
     )
 
 
 def format_weight_bn() -> str:
     dims = get_knowledge_base().machine_data.get("dimensions") or {}
-    kg = dims.get("weight_kg", 97.86)
+    kg = dims.get("weight_kg", 115)
     return (
-        f"BRRI Winnower (model BRRI Win2024) মেশিনের ওজন {_bn_num(kg)} কেজি ({kg} kg)।"
-        )
+        f"{mention()} মেশিনের ওজন {_bn_num(kg)} কেজি ({kg} kg)।"
+    )
+
+
+def format_capacity_bn() -> str:
+    perf = get_knowledge_base().machine_data.get("performance") or {}
+    cap = perf.get("winnowing_capacity_kg_per_hour", "700–800")
+    return (
+        f"{mention()} মেশিনের অফিসিয়াল ঝাড়াই ক্ষমতা **{cap} কেজি/ঘণ্টা** "
+        f"({cap} kg/h)। আর্দ্রতা, ময়লা ও ফিডিং রেট অনুযায়ী একটু কম-বেশি হতে পারে।"
+    )
+
+
+def is_capacity_query(text: str) -> bool:
+    """Rated kg/h — not machine weight, not 500→1000 design scaling."""
+    lower = nfc(text or "").lower()
+    if any(term in lower for term in ("ওজন", "weight", "ডিজাইন", "design", "পরিবর্তন", "1000", "১০০০", "500")):
+        return False
+    hourly = any(
+        term in lower
+        for term in ("ঘণ্টা", "ঘন্টা", "hour", "kg/h", "kg/hr", "কেজি/ঘণ্টা", "ক্ষমতা", "capacity")
+    )
+    grain = any(term in lower for term in ("কেজি", "kg", "ধান", "পরিষ্কার", "ঝাড়াই", "ঝাড়াই", "winnow"))
+    has_question = any(term in lower for term in _QUESTION_MARKERS)
+    return hourly and grain and has_question
+
+
+def is_acre_time_query(text: str) -> bool:
+    lower = nfc(text or "").lower()
+    if "একর" not in lower and "acre" not in lower:
+        return False
+    return any(term in lower for term in ("সময়", "সময়", "লাগবে", "কতক্ষণ", "hour", "ঘণ্টা", "ঘন্টা"))
+
+
+def format_acre_time_bn() -> str:
+    perf = get_knowledge_base().machine_data.get("performance") or {}
+    hours = perf.get("two_acre_time_hours", "৪–৬")
+    cap = perf.get("winnowing_capacity_kg_per_hour", "700–800")
+    tonnes = perf.get("two_acre_paddy_tonnes_typical", "৩–৪")
+    return (
+        f"{mention()} মেশিনের ক্ষমতা **{cap} কেজি/ঘণ্টা**। "
+        f"২ একর থেকে আনুমানিক {tonnes} টন ধান হলে পরিষ্কার করতে **আনুমানিক {hours} ঘণ্টা** লাগতে পারে। "
+        f"ফলন, আর্দ্রতা, ময়লা ও ফিডিং রেট অনুযায়ী সময় কম-বেশি হতে পারে।"
+    )
+
+
+def is_labour_query(text: str) -> bool:
+    lower = nfc(text or "").lower()
+    if not any(term in lower for term in ("শ্রমিক", "labour", "labor")):
+        return False
+    return any(term in lower for term in ("কম", "খরচ", "save", "বাঁচ", "কত"))
+
+
+def format_labour_bn() -> str:
+    perf = get_knowledge_base().machine_data.get("performance") or {}
+    note = perf.get("labour_saved_note_bn") or (
+        "আনুমানিক ৭০–৮০% শ্রমিকের প্রয়োজন কমতে পারে; "
+        "৪–৫ জনের পরিবর্তে সাধারণত ১–২ জন শ্রমিক দিয়ে কাজ পরিচালনা করা সম্ভব।"
+    )
+    return f"{mention()} ব্যবহার করলে {note} টাকার হিসাব নথিতে নেই।"
 
 
 def is_machine_name_query(text: str) -> bool:
@@ -258,7 +318,17 @@ def is_machine_name_query(text: str) -> bool:
     has_name = any(term in lower for term in ("নাম", "name", " nam", "naam"))
     has_machine = any(
         term in lower
-        for term in ("মেশিন", "machine", "winnower", "win2024", "brri", "উইনোয়ার", "উইনোয়ার")
+        for term in (
+            "মেশিন",
+            "machine",
+            "winnower",
+            "win2024",
+            "brri",
+            "উইনোয়ার",
+            "উইনোয়ার",
+            "ঝাড়াই",
+            "ঝাড়াই",
+        )
     )
     has_question = any(term in lower for term in _QUESTION_MARKERS)
     return has_name and has_machine and has_question
@@ -266,11 +336,15 @@ def is_machine_name_query(text: str) -> bool:
 
 def format_machine_name_bn() -> str:
     data = get_knowledge_base().machine_data
-    name = data.get("machine_name") or "BRRI Winnower"
-    model = data.get("model") or data.get("short_name") or "BRRI Win2024"
+    en, bn, model = (
+        data.get("machine_name"),
+        data.get("machine_name_bn"),
+        data.get("model") or data.get("short_name"),
+    )
     maker = data.get("manufacturer") or "Bangladesh Rice Research Institute (BRRI)"
     return (
-        f"এই মেশিনের নাম {name}। মডেল {model}। "
+        f"এই মেশিনের বাংলা নাম **{bn}**। "
+        f"ইংরেজি নাম **{en}**। মডেল **{model}**। "
         f"এটি {maker} তৈরি করেছে।"
     )
 
@@ -294,7 +368,7 @@ def try_fast_path(
 
     if is_greeting(text):
         return FastPathHit(
-            text=_GREETING_REPLY_BN,
+            text=greeting_reply_bn(),
             suggestions=list(_GREETING_SUGGESTIONS),
         )
 
@@ -313,6 +387,24 @@ def try_fast_path(
     if is_machine_name_query(text):
         return FastPathHit(
             text=format_machine_name_bn(),
+            suggestions=local_suggestions(text, history),
+        )
+
+    if is_capacity_query(text):
+        return FastPathHit(
+            text=format_capacity_bn(),
+            suggestions=local_suggestions(text, history),
+        )
+
+    if is_acre_time_query(text):
+        return FastPathHit(
+            text=format_acre_time_bn(),
+            suggestions=local_suggestions(text, history),
+        )
+
+    if is_labour_query(text):
+        return FastPathHit(
+            text=format_labour_bn(),
             suggestions=local_suggestions(text, history),
         )
 

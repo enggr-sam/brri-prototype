@@ -11,7 +11,7 @@ export default function MachineHero({ onStart }) {
         loop
         playsInline
         preload="metadata"
-        aria-label="BRRI Winnower (Model: BRRI Win2024) operating animation"
+        aria-label="ব্রি শস্য ঝাড়াই যন্ত্র (BRRI Multicrop Winnower, Model: BRRI Win2024) operating animation"
       />
       <div className="machine-hero__veil absolute inset-0" aria-hidden />
 
@@ -20,13 +20,16 @@ export default function MachineHero({ onStart }) {
           Bangladesh Rice Research Institute
         </p>
         <h1 className="animate-fade-up mt-2 max-w-xl font-display text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:mt-3 sm:text-5xl">
-          BRRI Winnower
+          BRRI Multicrop Winnower
           <span className="mt-0.5 block text-leaf-200 sm:mt-1">
+            ব্রি শস্য ঝাড়াই যন্ত্র
+          </span>
+          <span className="mt-0.5 block text-sm font-medium tracking-normal text-leaf-200/90 sm:mt-1 sm:text-lg">
             Model: BRRI Win2024
           </span>
         </h1>
         <p className="animate-fade-up mt-3 max-w-md font-bengali text-sm leading-relaxed text-white/85 sm:mt-4 sm:text-lg">
-          ধান ঝাড়ার মেশিনের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।
+          শস্য ঝাড়াই যন্ত্রের যন্ত্রাংশ, সমস্যা ও মেরামত — ছবি, কণ্ঠ বা লেখায় জিজ্ঞেস করুন।
         </p>
         <div className="animate-fade-up mt-5 sm:mt-7">
           <button

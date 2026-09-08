@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from app.services.knowledge_base import get_knowledge_base
+from app.utils.machine_identity import mention
 
 _BELT_TERMS = ("belt", "বেল্ট", "b65", "v-belt", "v belt", "ভি-বেল্ট", "ভি বেল্ট")
 
@@ -228,7 +229,7 @@ def format_belt_suppliers_bn(*, heading: str | None = None) -> str:
         lines = [heading, ""] if heading else []
     else:
         lines = [
-            "BRRI Winnower (model BRRI Win2024) মেশিনের B65 ভি-বেল্ট (১৬৫০ mm) "
+            f"{mention()} মেশিনের B65 ভি-বেল্ট (১৬৫০ mm) "
             "নিচের অনুমোদিত ডিলার/দোকান থেকে পাওয়া যায়:",
             "",
         ]

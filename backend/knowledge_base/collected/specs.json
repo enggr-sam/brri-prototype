@@ -7,32 +7,32 @@
   {
     "field_key": "Machine Name",
     "label_bn": "মেশিনের নাম",
-    "value": "BRRI Winnower"
+    "value": "BRRI Multicrop Winnower"
   },
   {
     "field_key": "Dimensions Overall Mm",
     "label_bn": "সামগ্রিক মাপ (mm)",
-    "value": "1350 × 835 × 1310"
+    "value": "1220 × 815 × 1330"
   },
   {
     "field_key": "Weight",
-    "label_bn": "ওজন (g)",
-    "value": "97861.75"
+    "label_bn": "ওজন (kg)",
+    "value": "115"
   },
   {
     "field_key": "Motor",
     "label_bn": "মোটর — HP",
-    "value": "1.5"
+    "value": "0.5"
   },
   {
     "field_key": "Motor",
     "label_bn": "মোটর — kW",
-    "value": "1.1"
+    "value": "0.37"
   },
   {
     "field_key": "Motor",
     "label_bn": "মোটর — RPM",
-    "value": "1400"
+    "value": "1400–1450"
   },
   {
     "field_key": "Belt Type",
@@ -56,7 +56,7 @@
   },
   {
     "field_key": "Bearing Sieve",
-    "label_bn": "ঝরনি বিয়ারিং",
+    "label_bn": "চালুনি বিয়ারিং",
     "value": "6203 × 2"
   },
   {
@@ -81,7 +81,7 @@
   },
   {
     "field_key": "Sieve Types",
-    "label_bn": "ঝরনির ধরন (THREE TYPE OF SIEVE)",
-    "value": "Large / Medium / Small holes net"
+    "label_bn": "চালুনির ধরন (THREE TYPE OF SIEVE)",
+    "value": "Mustard 6 mm, paddy 10 mm, maize 13 mm"
   }
 ]

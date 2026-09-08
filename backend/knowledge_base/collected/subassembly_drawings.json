@@ -717,7 +717,7 @@
       "sub-assembly 7",
       "motor"
     ],
-    "catalog_description": "Sub-assembly diagram 7 — MOTOR: 1.5 HP / 1.1 kW / 1400 rpm single-phase motor mounting.",
+    "catalog_description": "Sub-assembly diagram 7 — MOTOR: official spec is 0.5 HP single-phase, 1400–1450 rpm. Ignore older 1.5 HP labels on this sheet.",
     "field_photo_no": "11",
     "source": "subassembly_drawing"
   },
@@ -737,7 +737,7 @@
       "sub-assembly 7",
       "motor"
     ],
-    "catalog_description": "Sub-assembly diagram 7 — MOTOR: 1.5 HP / 1.1 kW / 1400 rpm single-phase motor mounting.",
+    "catalog_description": "Sub-assembly diagram 7 — MOTOR: official spec is 0.5 HP single-phase, 1400–1450 rpm. Ignore older 1.5 HP labels on this sheet.",
     "field_photo_no": "11",
     "source": "subassembly_drawing"
   },
