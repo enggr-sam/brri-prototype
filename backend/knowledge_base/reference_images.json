@@ -100,5 +100,64 @@
     "image_name": "36_detached_sieve_connecting_rod_long.jpg",
     "original_image_name": "IMG-20260718-WA0036.jpg",
     "description": "A removed/detached long orange-painted connecting rod with a circular bearing eye at each end and a central clamp with adjustment bolts, lying on the ground. Troubleshooting context: The long drive linkage connecting the crank to the sieve/blower assembly. If it is bent or its eye bearings are worn, the shaking action fails; the bot can reference this to guide replacement."
+  },
+  {
+    "image_number": 40,
+    "image_name": "40_official_hopper_nametag.jpg",
+    "original_image_name": "QnA-completed-image22.jpeg",
+    "keywords": [
+      "nameplate",
+      "hopper",
+      "হপার",
+      "নাম",
+      "ব্রি শস্য ঝাড়াই যন্ত্র",
+      "BRRI WIN 2024",
+      "blower",
+      "motor",
+      "belt"
+    ],
+    "description": "Side view of the orange ব্রি শস্য ঝাড়াই যন্ত্র (BRRI Win2024) in the field. The hopper nameplate reads 'ব্রি শস্য ঝাড়াই যন্ত্র (BRRI WIN 2024)'. The blower housing, electric motor, and V-belt drive are visible on this side. Troubleshooting context: Use this when the farmer asks the machine's official Bangla/English name or wants to see the hopper with the nameplate. Q5 of the client form had no hopper CAD; this operating photo is the hopper evidence."
+  },
+  {
+    "image_number": 41,
+    "image_name": "41_official_hopper_sieve_drive.jpg",
+    "original_image_name": "QnA-completed-image23.jpeg",
+    "keywords": ["hopper", "হপার", "sieve", "চালুনি", "belt", "drive", "discharge", "chute"],
+    "description": "Side view of the machine showing the top hopper, the vibrating perforated sieve/screen bed, the belt/drive on the side, and the lower discharge chutes. Troubleshooting context: Use this to explain how grain flows from hopper onto the sieve and out the chutes, or to help locate hopper, sieve, belt, and outlets together."
+  },
+  {
+    "image_number": 42,
+    "image_name": "42_official_sieve_chaff_discharge_running.jpg",
+    "original_image_name": "QnA-completed-image24.jpeg",
+    "keywords": ["sieve", "চালুনি", "chaff", "চিটা", "tush", "তুষ", "discharge", "running", "blower"],
+    "description": "The machine in operation: chaff and light material blowing off the sieve while grain moves along the perforated screen toward the discharge chute. Troubleshooting context: Use this when explaining how winnowing works, or if the farmer asks why chaff flies off / how clean grain separates from tush while the machine is running."
+  },
+  {
+    "image_number": 43,
+    "image_name": "43_official_hopper_feed_operator.jpg",
+    "original_image_name": "QnA-completed-image25.jpeg",
+    "keywords": ["hopper", "হপার", "feed gate", "ফিড গেট", "operator", "sieve", "চালুনি"],
+    "description": "An operator adjusting the hopper feed gate while uncleaned paddy sits on the perforated metal sieve below. Troubleshooting context: If grain feeds too fast, too slow, or jams, show this photo and tell the farmer to adjust the hopper feed gate so paddy drops onto the sieve at a steady rate."
+  },
+  {
+    "image_number": 44,
+    "image_name": "44_official_hopper_grain_onto_sieve.jpg",
+    "original_image_name": "QnA-completed-image26.jpeg",
+    "keywords": ["hopper", "হপার", "sieve", "চালুনি", "feed", "paddy", "ধান"],
+    "description": "Close view of the hopper spilling uncleaned paddy onto the circular-perforated sieve/screen. Shows the grain path from hopper mouth onto the shaking চালুনি. Troubleshooting context: Use this to explain feeding, hopper clogs, or how paddy should land on the sieve. Prefer this over CAD when the farmer asks to see the hopper."
+  },
+  {
+    "image_number": 45,
+    "image_name": "45_official_grain_and_chaff_outlets.jpg",
+    "original_image_name": "QnA-completed-image27.jpeg",
+    "keywords": ["outlet", "chute", "discharge", "grain", "chaff", "চিটা", "ধান", "motor"],
+    "description": "Operating photo of both outlets: clean grain falling from a chute into a red basin, and chaff/dust discharging into a blue basin, with the electric motor visible. Troubleshooting context: Use this when the farmer asks where clean grain comes out versus where tush/chaff goes, or to confirm the two-stream discharge."
+  },
+  {
+    "image_number": 46,
+    "image_name": "46_official_clean_grain_outlet.jpg",
+    "original_image_name": "QnA-completed-image28.jpeg",
+    "keywords": ["clean grain", "outlet", "chute", "discharge", "ভালো ধান", "আউটলেট"],
+    "description": "Close view of the clean-grain outlet: cleaned paddy pouring from the chute into a collection bin, with hands inspecting the grain. Troubleshooting context: Use this when the farmer asks where good grain comes out, how to collect cleaned paddy, or whether the grain stream looks correctly separated."
   }
 ]

@@ -288,8 +288,11 @@ async def chat_message_stream(
         reference_paths = resolve_reference_image_paths(
             [str(item.get("image_name") or "") for item in last_gallery]
         )
-    elif not fast_hit and _should_attach_reference_images(
-        user_content, user_image_path is not None
+    elif (not fast_hit or (fast_hit and fast_hit.show_reference_images)) and (
+        (fast_hit and fast_hit.show_reference_images)
+        or _should_attach_reference_images(
+            user_content, user_image_path is not None
+        )
     ):
         reference_paths = gemini_service.pick_reference_images(
             user_content,
@@ -394,8 +397,11 @@ async def chat_message(
         reference_paths = resolve_reference_image_paths(
             [str(item.get("image_name") or "") for item in last_gallery]
         )
-    elif not fast_hit and _should_attach_reference_images(
-        user_content, user_image_path is not None
+    elif (not fast_hit or (fast_hit and fast_hit.show_reference_images)) and (
+        (fast_hit and fast_hit.show_reference_images)
+        or _should_attach_reference_images(
+            user_content, user_image_path is not None
+        )
     ):
         reference_paths = gemini_service.pick_reference_images(
             user_content,

@@ -79,9 +79,33 @@ _CUTTING_SHEET_MARKERS = (
 )
 
 
+def query_asks_machine_name(text: str) -> bool:
+    """Ask for the official name / nameplate — not a CAD 'plate' drawing."""
+    lower = (text or "").lower()
+    if "nameplate" in lower or "name plate" in lower:
+        return True
+    has_name = any(t in lower for t in ("নাম", "official name", "machine name", "মেশিনের নাম"))
+    has_machine = any(
+        t in lower
+        for t in (
+            "মেশিন",
+            "machine",
+            "winnower",
+            "brri",
+            "ঝাড়াই",
+            "ঝাড়াই",
+            "win2024",
+        )
+    )
+    return has_name and has_machine
+
+
 def query_wants_technical_drawing(text: str) -> bool:
     """True when the farmer/mechanic asks for dimensions, fabrication, or assembly layout."""
     lower = (text or "").lower()
+    # "nameplate" contains "plate" but is a hopper sticker photo, not a CAD plate.
+    if query_asks_machine_name(text):
+        return False
     return any(m in lower for m in _DRAWING_QUERY_MARKERS)
 
 

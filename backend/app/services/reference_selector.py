@@ -24,6 +24,7 @@ from app.utils.conversation_focus import (
     last_shown_gallery,
 )
 from app.utils.drawing_queries import (
+    query_asks_machine_name,
     query_is_how_it_works,
     query_wants_assembly_diagram,
     query_wants_cutting_sheet,
@@ -67,7 +68,7 @@ _TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "pulley": ("pulley", "tension", "ratio", "পুলি", "অনুপাত"),
     "linkage": ("linkage", "connecting rod", "arm", "crank", "রড", "লিঙ্ক"),
-    "discharge": ("discharge", "outlet", "chute", "নল", "আউটলেট", "নিষ্কাশন"),
+    "discharge": ("discharge", "outlet", "chute", "নল", "আউটলেট", "নিষ্কাশন", "বের হয়", "বের হয়", "বের হও"),
     "blueprint": ("blueprint", "dimension", "drawing", "manufactur", "spec", "bom", "মাপ", "নকশা", "ড্রয়িং"),
     "shaft": ("shaft", "শ্যাফট", "শ্যাফ্ট"),
 }
@@ -122,7 +123,7 @@ _PAPER_DOCUMENT_MARKERS = (
 _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
     "air_control": (
         "air control", "air intake", "blower intake", "এয়ার", "বাতাস নিয়ন্ত্রণ",
-        "control plate", "batash",
+        "control plate", "batash", "chaff", "চিটা", "তুষ",
     ),
     "belt": ("belt", "b65", "v-belt", "বেল্ট"),
     "sieve": ("sieve", "ঝরন", "screen", "চালুনি", "চালনি", "সিভ"),
@@ -131,6 +132,7 @@ _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
     "blower": ("blower", "ব্লোয়ার", "fan", "ফ্যান", "পাখা"),
     "hopper": ("hopper", "হপার", "feed gate"),
     "shaft": ("shaft", "শ্যাফট", "small shaft", "sieve small"),
+    "discharge": ("discharge", "outlet", "chute", "আউটলেট", "নল", "বের হয়", "বের হয়"),
 }
 
 # Synonym groups: Bangla "পার্ট-২" is the same modifier as English "part-2".
@@ -297,8 +299,11 @@ def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
     """False when the catalogue row is clearly about a different subsystem."""
     machine_topics = topics - _RANK_SKIP_TOPICS
     source = entry.get("source")
-    if _is_overview_shot(entry) and not any(
-        w in query.lower() for w in ("full", "পুরো", "whole", "সমগ্র", "বাইর")
+    image_name = (entry.get("image_name") or "").lower()
+    if _is_overview_shot(entry) and not (
+        query_is_how_it_works(query)
+        or query_asks_machine_name(query)
+        or any(w in query.lower() for w in ("full", "পুরো", "whole", "সমগ্র", "বাইর"))
     ):
         return False
     if not machine_topics:
@@ -306,6 +311,8 @@ def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
             return source == "subassembly_drawing"
         if query_wants_technical_drawing(query):
             return source in {"cad_drawing", "subassembly_drawing"}
+        if query_asks_machine_name(query):
+            return "nametag" in image_name or "nameplate" in image_name or source != "cad_drawing"
         if query_is_how_it_works(query):
             return source != "cad_drawing"
         return not _is_overview_shot(entry)
@@ -359,6 +366,7 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
         or query_wants_assembly_diagram(query)
         or asks_for_photos(query)
         or query_is_how_it_works(query)
+        or query_asks_machine_name(query)
     ):
         return 0.0
 
@@ -441,18 +449,25 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
     if query_wants_cutting_sheet(query) and source == "cad_drawing":
         if _identity_mentions_topic(identity, rank_topics or topics):
             score += 14.0
+    image_name = (entry.get("image_name") or "").lower()
     if query_is_how_it_works(query) and source != "cad_drawing":
         blob = f"{haystack} {identity}"
         if any(h in blob for h in ("hopper", "হপার", "feed")):
             score += 16.0
         if any(h in blob for h in ("blower", "ব্লোয়ার", "fan", "পাখা")):
             score += 12.0
-        if any(h in blob for h in ("চালনি", "sieve", "সিভ", "screen")):
+        if any(h in blob for h in ("চালুনি", "চালনি", "sieve", "সিভ", "screen")):
             score += 10.0
         if any(h in blob for h in ("belt", "b65", "বেল্ট")):
             score += 8.0
+        if "official" in image_name:
+            score += 14.0
         if any(h in blob for h in ("motor bottom", "standalone", "blue motor")):
             score -= 10.0
+    if query_asks_machine_name(query) and (
+        "nametag" in image_name or "nameplate" in image_name
+    ):
+        score += 22.0
     if source == "field_collection":
         score += 3.0  # Prefer real photos when scores are close
         slot = entry.get("photo_no") or ""

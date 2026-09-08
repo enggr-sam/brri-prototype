@@ -388,6 +388,7 @@ def try_fast_path(
         return FastPathHit(
             text=format_machine_name_bn(),
             suggestions=local_suggestions(text, history),
+            show_reference_images=True,
         )
 
     if is_capacity_query(text):
