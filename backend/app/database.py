@@ -59,6 +59,7 @@ def _migrate_sqlite_schema() -> None:
 
     migrations = [
         ("chat_sessions", "total_cost_usd", "REAL NOT NULL DEFAULT 0.0"),
+        ("chat_sessions", "user_id", "INTEGER"),
         ("chat_messages", "follow_up_suggestions_json", "TEXT"),
         ("chat_messages", "cost_usd", "REAL NOT NULL DEFAULT 0.0"),
         ("chat_messages", "input_tokens", "INTEGER NOT NULL DEFAULT 0"),

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import ChatBubble from "../components/ChatBubble.jsx";
 import Loader from "../components/Loader.jsx";
 import { fetchChatHistory, fetchChatSessions } from "../services/api.js";
+import { getToken } from "../utils/auth.js";
 import { formatDateTime } from "../utils/formatTime.js";
+import { goTo } from "../utils/nav.js";
 
 function SessionCard({ session, expanded, onToggle, detail, loadingDetail }) {
   return (
@@ -79,6 +81,10 @@ export default function HistoryPage() {
   const [loadingDetailId, setLoadingDetailId] = useState(null);
 
   const loadSessions = useCallback(async () => {
+    if (!getToken()) {
+      goTo("/login?next=/history");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -86,6 +92,10 @@ export default function HistoryPage() {
       setSessions(data.sessions);
       setTotal(data.total);
     } catch (err) {
+      if (err.status === 401) {
+        goTo("/login?next=/history");
+        return;
+      }
       setError(err.message || "ইতিহাস লোড করা যায়নি।");
     } finally {
       setLoading(false);
@@ -111,6 +121,10 @@ export default function HistoryPage() {
       const data = await fetchChatHistory(sessionId);
       setDetails((prev) => ({ ...prev, [sessionId]: data }));
     } catch (err) {
+      if (err.status === 401) {
+        goTo("/login?next=/history");
+        return;
+      }
       setError(err.message || "কথোপকথন লোড করা যায়নি।");
       setExpandedId(null);
     } finally {
@@ -124,7 +138,7 @@ export default function HistoryPage() {
         <div>
           <h2 className="text-lg font-semibold text-brri-dark">কথোপকথনের ইতিহাস</h2>
           <p className="text-xs text-slate-500">
-            সব সেশন · সময় ও প্রশ্ন-উত্তর সহ
+            শুধু আপনার সেশন · সময় ও প্রশ্ন-উত্তর সহ
           </p>
         </div>
         <button

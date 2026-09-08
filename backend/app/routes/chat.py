@@ -13,7 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SessionLocal, get_db
+from app.deps import get_current_user
 from app.models import ChatMessage, ChatSession
+from app.models.user import User
 from app.schemas import (
     ChatHistoryOut,
     ChatMessageOut,
@@ -61,6 +63,23 @@ def _raise_quota(exc: QuotaExceededError) -> NoReturn:
 
 def _safe_filename(name: str) -> bool:
     return ".." not in name and "/" not in name and "\\" not in name
+
+
+def _owned_session(db: Session, session_id: str, user: User) -> ChatSession:
+    session = db.get(ChatSession, session_id)
+    if session is None or session.user_id != user.id:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    return session
+
+
+def _get_or_create_session(
+    db: Session, session_id: str | None, user: User
+) -> ChatSession:
+    if session_id:
+        return _owned_session(db, session_id, user)
+    session = ChatSession(id=str(uuid.uuid4()), user_id=user.id)
+    db.add(session)
+    return session
 
 
 def _message_out(msg: ChatMessage, session_total: float | None = None) -> ChatMessageOut:
@@ -249,6 +268,7 @@ async def chat_message_stream(
     image: UploadFile | None = File(default=None),
     audio: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> StreamingResponse:
     """Stream assistant reply tokens (SSE), then persist with cost + suggestions."""
     get_knowledge_base()
@@ -256,15 +276,9 @@ async def chat_message_stream(
     if not text and not image and not audio:
         raise HTTPException(status_code=400, detail="Send text, an image, or audio.")
 
-    if session_id:
-        session = db.get(ChatSession, session_id)
-        if session is None:
-            raise HTTPException(status_code=404, detail="Session not found.")
-    else:
-        session = ChatSession(id=str(uuid.uuid4()))
-        db.add(session)
-        db.commit()
-        db.refresh(session)
+    session = _get_or_create_session(db, session_id, user)
+    db.commit()
+    db.refresh(session)
 
     session_id_str = session.id
 
@@ -361,6 +375,7 @@ async def chat_message(
     image: UploadFile | None = File(default=None),
     audio: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> ChatResponse:
     """Non-streaming fallback — same logic as /chat/message/stream."""
     get_knowledge_base()
@@ -368,14 +383,8 @@ async def chat_message(
     if not text and not image and not audio:
         raise HTTPException(status_code=400, detail="Send text, an image, or audio.")
 
-    if session_id:
-        session = db.get(ChatSession, session_id)
-        if session is None:
-            raise HTTPException(status_code=404, detail="Session not found.")
-    else:
-        session = ChatSession(id=str(uuid.uuid4()))
-        db.add(session)
-        db.flush()
+    session = _get_or_create_session(db, session_id, user)
+    db.flush()
 
     history_rows = db.scalars(
         select(ChatMessage)
@@ -459,9 +468,11 @@ def list_chat_sessions(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ) -> ChatSessionsListOut:
-    """List all chat sessions (newest activity first) with a short preview."""
-    total = db.scalar(select(func.count()).select_from(ChatSession)) or 0
+    """List this user's chat sessions (newest activity first)."""
+    owned = ChatSession.user_id == user.id
+    total = db.scalar(select(func.count()).select_from(ChatSession).where(owned)) or 0
 
     rows = db.execute(
         select(
@@ -471,6 +482,7 @@ def list_chat_sessions(
             func.max(ChatMessage.created_at).label("last_message_at"),
         )
         .join(ChatMessage, ChatMessage.session_id == ChatSession.id)
+        .where(owned)
         .group_by(ChatSession.id)
         .order_by(func.max(ChatMessage.created_at).desc())
         .offset(offset)
@@ -506,11 +518,13 @@ def list_chat_sessions(
 
 
 @router.get("/chat/{session_id}", response_model=ChatHistoryOut)
-def chat_history(session_id: str, db: Session = Depends(get_db)) -> ChatHistoryOut:
+def chat_history(
+    session_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ChatHistoryOut:
     """Return full message history for a session."""
-    session = db.get(ChatSession, session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail="Session not found.")
+    session = _owned_session(db, session_id, user)
     messages = db.scalars(
         select(ChatMessage)
         .where(ChatMessage.session_id == session_id)

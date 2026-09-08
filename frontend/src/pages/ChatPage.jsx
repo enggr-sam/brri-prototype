@@ -1,12 +1,15 @@
-import { useCallback, useState } from "react";
-import ChatWindow from "../components/ChatWindow.jsx";
+import { useCallback, useEffect, useState } from "react";
 import ChatInput from "../components/ChatInput.jsx";
+import ChatSidebar from "../components/ChatSidebar.jsx";
+import ChatWindow from "../components/ChatWindow.jsx";
 import StarterQuestions from "../components/StarterQuestions.jsx";
-import { sendChatMessageStream } from "../services/api.js";
-import { handleAppLink } from "../utils/nav.js";
+import { fetchChatHistory, fetchChatSessions, logoutUser, sendChatMessageStream } from "../services/api.js";
+import { clearAuth, getToken, getUser } from "../utils/auth.js";
 import { formatSessionCostLabel } from "../utils/formatCost.js";
+import { goTo, handleAppLink } from "../utils/nav.js";
 
 export default function ChatPage() {
+  const [user, setUser] = useState(() => getUser());
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [streamingText, setStreamingText] = useState("");
@@ -14,11 +17,49 @@ export default function ChatPage() {
   const [error, setError] = useState(null);
   const [sessionCostUsd, setSessionCostUsd] = useState(0);
   const [pendingSuggestions, setPendingSuggestions] = useState([]);
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isEmpty = messages.length === 0 && !loading && !streamingText;
 
+  const redirectToLogin = useCallback(() => {
+    goTo("/login?next=/winnower");
+  }, []);
+
+  useEffect(() => {
+    if (!getToken()) {
+      redirectToLogin();
+    }
+  }, [redirectToLogin]);
+
+  const loadSessions = useCallback(async () => {
+    if (!getToken()) return;
+    setSessionsLoading(true);
+    try {
+      const data = await fetchChatSessions({ limit: 80 });
+      setSessions(data.sessions || []);
+    } catch (err) {
+      if (err.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setError(err.message || "ইতিহাস লোড করা যায়নি।");
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, [redirectToLogin]);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
+
   const handleSend = useCallback(
     async ({ text, imageFile, audioBlob, audioFilename }) => {
+      if (!getToken()) {
+        redirectToLogin();
+        return;
+      }
       setLoading(true);
       setError(null);
       setStreamingText("");
@@ -62,6 +103,7 @@ export default function ChatPage() {
               setPendingSuggestions(
                 event.assistant_message?.follow_up_suggestions || []
               );
+              loadSessions();
             } else if (event.type === "error") {
               throw new Error(event.detail || "AI service error.");
             }
@@ -72,12 +114,16 @@ export default function ChatPage() {
           prev.filter((m) => !String(m.id).startsWith("pending-"))
         );
         setStreamingText("");
+        if (err.status === 401) {
+          redirectToLogin();
+          return;
+        }
         setError(err.message || "Something went wrong.");
       } finally {
         setLoading(false);
       }
     },
-    [sessionId]
+    [sessionId, loadSessions, redirectToLogin]
   );
 
   const handleSuggestionClick = (question) => {
@@ -92,53 +138,127 @@ export default function ChatPage() {
     setError(null);
     setSessionCostUsd(0);
     setPendingSuggestions([]);
+    setSidebarOpen(false);
+  };
+
+  const openSession = async (id) => {
+    if (loading) return;
+    setSidebarOpen(false);
+    if (id === sessionId && messages.length > 0) return;
+    setError(null);
+    setStreamingText("");
+    setPendingSuggestions([]);
+    try {
+      const data = await fetchChatHistory(id);
+      setSessionId(data.session_id);
+      setMessages(data.messages || []);
+      setSessionCostUsd(data.session_total_cost_usd || 0);
+      const lastAssistant = [...(data.messages || [])]
+        .reverse()
+        .find((m) => m.role === "assistant");
+      setPendingSuggestions(lastAssistant?.follow_up_suggestions || []);
+    } catch (err) {
+      if (err.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      setError(err.message || "কথোপকথন খোলা যায়নি।");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      /* token is cleared locally anyway */
+    }
+    clearAuth();
+    setUser(null);
+    goTo("/");
   };
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f4f6f5]">
-      <div className="mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col bg-white shadow-sm sm:my-3 sm:max-w-xl sm:overflow-hidden sm:rounded-2xl sm:border sm:border-leaf-900/8">
-        <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
-          <a
-            href="/"
-            onClick={(e) => handleAppLink(e, "/")}
-            className="flex h-8 w-8 items-center justify-center text-leaf-500 transition hover:bg-leaf-50"
-            aria-label="হোমে ফিরুন"
-          >
-            <CloseIcon />
-          </a>
-          <h1 className="font-display text-sm font-semibold tracking-wide text-slate-800">
-            চ্যাট
-          </h1>
-          <a
-            href="/history"
-            onClick={(e) => handleAppLink(e, "/history")}
-            className="font-bengali text-xs text-leaf-800/60 hover:text-leaf-950"
-          >
-            ইতিহাস
-          </a>
-        </header>
+    <main className="flex min-h-0 flex-1 overflow-hidden bg-[#e8eee9]">
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-leaf-950/40 md:hidden"
+          aria-label="সাইডবার বন্ধ"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <div className="flex shrink-0 items-center justify-between bg-leaf-950 px-4 py-2.5 text-white">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
-              <ChatGlyph />
-            </span>
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-[min(20rem,86vw)] transform transition-transform duration-200 md:static md:z-0 md:w-72 md:translate-x-0 lg:w-80 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <ChatSidebar
+          user={user}
+          sessions={sessions}
+          activeId={sessionId}
+          loading={sessionsLoading}
+          onSelect={openSession}
+          onNewChat={newChat}
+          onLogout={handleLogout}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
+
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-white md:border-l md:border-leaf-900/10">
+        <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center text-leaf-800 md:hidden"
+              aria-label="চ্যাট ইতিহাস"
+            >
+              <MenuIcon />
+            </button>
+            <a
+              href="/"
+              onClick={(e) => handleAppLink(e, "/")}
+              className="hidden h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 sm:flex"
+              aria-label="হোমে ফিরুন"
+            >
+              <CloseIcon />
+            </a>
             <div className="min-w-0">
-              <p className="truncate font-bengali text-sm font-medium">
+              <p className="truncate font-display text-sm font-semibold text-slate-800 sm:text-base">
                 BRRI সহায়ক
               </p>
-              <p className="truncate font-bengali text-[11px] text-white/65">
-                {loading ? "উত্তর লিখছে…" : "লাইভ · ব্রি শস্য ঝাড়াই যন্ত্র"}
+              <p className="truncate font-bengali text-[11px] text-slate-400">
+                {loading ? "উত্তর লিখছে…" : "ব্রি শস্য ঝাড়াই যন্ত্র · ওয়েব ও মোবাইল"}
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={newChat}
-            className="shrink-0 font-bengali text-xs text-white/75 hover:text-white"
-          >
-            নতুন
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={newChat}
+              className="hidden font-bengali text-xs text-leaf-800/70 hover:text-leaf-950 sm:inline"
+            >
+              নতুন চ্যাট
+            </button>
+            <a
+              href="/"
+              onClick={(e) => handleAppLink(e, "/")}
+              className="flex h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 sm:hidden"
+              aria-label="হোমে ফিরুন"
+            >
+              <CloseIcon />
+            </a>
+          </div>
+        </header>
+
+        <div className="flex shrink-0 items-center gap-2.5 bg-leaf-950 px-4 py-2.5 text-white sm:px-6">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
+            <ChatGlyph />
+          </span>
+          <p className="min-w-0 truncate font-bengali text-sm">
+            {sessionId ? "চলমান কথোপকথন" : "নতুন কথোপকথন"}
+          </p>
         </div>
 
         <ChatWindow
@@ -158,7 +278,9 @@ export default function ChatPage() {
           }
         />
 
-        <ChatInput onSend={handleSend} disabled={loading} />
+        <div className="mx-auto w-full max-w-3xl">
+          <ChatInput onSend={handleSend} disabled={loading} />
+        </div>
 
         {(error || sessionCostUsd > 0) && (
           <div className="shrink-0 px-4 pb-2">
@@ -174,7 +296,7 @@ export default function ChatPage() {
             )}
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }
@@ -194,20 +316,25 @@ function EmptyThread({ onSelect, disabled }) {
           <p className="font-bengali text-xs text-slate-400">প্রস্তুত</p>
         </div>
       </div>
-      <p className="text-center font-bengali text-[11px] text-slate-400">
-        চ্যাট শুরু ·{" "}
-        {new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Dhaka",
-        })}
-      </p>
-      <p className="font-bengali text-[15px] leading-relaxed text-slate-700">
+      <p className="font-bengali text-[15px] leading-relaxed text-slate-700 sm:text-base">
         ব্রি শস্য ঝাড়াই যন্ত্র নিয়ে জিজ্ঞেস করুন — যন্ত্রাংশ, সমস্যা, নকশা বা
-        রক্ষণাবেক্ষণ। নিচে লিখুন, ছবি দিন, বা একটি প্রশ্ন বেছে নিন।
+        রক্ষণাবেক্ষণ। কম্পিউটার বা ফোন — দুই জায়গাতেই চ্যাট ও ইতিহাস ব্যবহার করা যাবে।
       </p>
       <StarterQuestions onSelect={onSelect} disabled={disabled} compact />
     </div>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+      <path
+        d="M3 4.5h12M3 9h12M3 13.5h12"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 

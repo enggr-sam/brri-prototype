@@ -1,4 +1,7 @@
-import { handleAppLink } from "../utils/nav.js";
+import { useEffect, useState } from "react";
+import { logoutUser } from "../services/api.js";
+import { clearAuth, getUser, isLoggedIn } from "../utils/auth.js";
+import { goTo, handleAppLink } from "../utils/nav.js";
 
 const LOGO_SRC = "/brri-logo.jpg";
 
@@ -8,6 +11,27 @@ export default function Header({
   showChatHome = false,
 }) {
   const onDark = compact || overlay;
+  const [user, setUser] = useState(() => getUser());
+
+  useEffect(() => {
+    const sync = () => setUser(getUser());
+    window.addEventListener("brri-auth", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("brri-auth", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      /* ignore */
+    }
+    clearAuth();
+    goTo("/");
+  };
 
   return (
     <header
@@ -58,19 +82,55 @@ export default function Header({
           )}
         </a>
 
-        {showChatHome && (
-          <a
-            href="/winnower"
-            onClick={(e) => handleAppLink(e, "/winnower")}
-            className={`px-3 py-1.5 font-bengali text-sm transition ${
-              onDark
-                ? "text-white/85 hover:text-white"
-                : "text-leaf-900/70 hover:text-leaf-950"
-            }`}
-          >
-            ← চ্যাট
-          </a>
-        )}
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {showChatHome && (
+            <a
+              href="/winnower"
+              onClick={(e) => handleAppLink(e, isLoggedIn() ? "/winnower" : "/login?next=/winnower")}
+              className={`px-3 py-1.5 font-bengali text-sm transition ${
+                onDark
+                  ? "text-white/85 hover:text-white"
+                  : "text-leaf-900/70 hover:text-leaf-950"
+              }`}
+            >
+              ← চ্যাট
+            </a>
+          )}
+          {user ? (
+            <>
+              <span
+                className={`hidden font-bengali text-xs sm:inline ${
+                  onDark ? "text-white/70" : "text-leaf-800/70"
+                }`}
+              >
+                {user.mobile}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={`px-2 py-1.5 font-bengali text-sm transition ${
+                  onDark
+                    ? "text-white/85 hover:text-white"
+                    : "text-leaf-900/70 hover:text-leaf-950"
+                }`}
+              >
+                লগআউট
+              </button>
+            </>
+          ) : (
+            <a
+              href="/login"
+              onClick={(e) => handleAppLink(e, "/login?next=/winnower")}
+              className={`px-2 py-1.5 font-bengali text-sm transition ${
+                onDark
+                  ? "text-white/85 hover:text-white"
+                  : "text-leaf-900/70 hover:text-leaf-950"
+              }`}
+            >
+              লগইন
+            </a>
+          )}
+        </div>
       </div>
     </header>
   );

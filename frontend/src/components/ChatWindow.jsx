@@ -21,9 +21,10 @@ export default function ChatWindow({
 
   return (
     <div
-      className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-y-contain px-4 py-5"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-5 sm:px-6 lg:px-8"
       style={{ WebkitOverflowScrolling: "touch" }}
     >
+      <div className="mx-auto w-full max-w-3xl space-y-5">
       {emptySlot}
 
       {messages.map((msg) => (
@@ -77,6 +78,7 @@ export default function ChatWindow({
       )}
 
       <div ref={bottomRef} />
+      </div>
     </div>
   );
 }

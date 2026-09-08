@@ -17,6 +17,9 @@ class ChatSession(Base):
     id: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
+    user_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -24,6 +27,7 @@ class ChatSession(Base):
     )
     total_cost_usd: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
 
+    user: Mapped["User | None"] = relationship(back_populates="sessions")
     messages: Mapped[list["ChatMessage"]] = relationship(
         back_populates="session",
         order_by="ChatMessage.created_at",

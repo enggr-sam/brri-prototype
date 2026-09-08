@@ -1,0 +1,131 @@
+import { useEffect, useState } from "react";
+import { loginUser, registerUser } from "../services/api.js";
+import { getToken, safeNextPath, setAuth } from "../utils/auth.js";
+import { goTo, handleAppLink } from "../utils/nav.js";
+
+function nextPath() {
+  const query = new URLSearchParams(window.location.search);
+  return safeNextPath(query.get("next"));
+}
+
+export default function LoginPage() {
+  const [mode, setMode] = useState("register");
+  const [mobile, setMobile] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (getToken()) goTo(nextPath());
+  }, []);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const data =
+        mode === "register"
+          ? await registerUser({ mobile, password })
+          : await loginUser({ mobile, password });
+      setAuth(data);
+      goTo(nextPath());
+    } catch (err) {
+      setError(err.message || "কাজটি সম্পন্ন হয়নি।");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <main className="min-h-0 flex-1 overflow-y-auto px-4 py-10 sm:px-6 sm:py-16">
+      <div className="mx-auto w-full max-w-md">
+        <div className="border border-leaf-900/10 bg-white/90 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+          <p className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-leaf-500">
+            BRRI Win2024
+          </p>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-leaf-950">
+            {mode === "register" ? "একাউন্ট খুলুন" : "লগইন করুন"}
+          </h1>
+          <p className="mt-2 font-bengali text-sm leading-relaxed text-leaf-800/75">
+            মোবাইল নম্বর ও একটি পাসওয়ার্ড দিন। চ্যাট ইতিহাস শুধু আপনার একাউন্টে থাকবে।
+          </p>
+
+          <form className="mt-6 space-y-4" onSubmit={submit}>
+            <label className="block">
+              <span className="font-bengali text-xs text-leaf-800/80">
+                মোবাইল নম্বর
+              </span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                required
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                placeholder="01XXXXXXXXX"
+                className="mt-1 w-full border border-leaf-900/15 bg-white px-3 py-2.5 font-bengali text-[15px] text-leaf-950 outline-none ring-leaf-500/30 focus:ring-2"
+              />
+            </label>
+
+            <label className="block">
+              <span className="font-bengali text-xs text-leaf-800/80">
+                পাসওয়ার্ড (মনে রাখার মতো)
+              </span>
+              <input
+                type="password"
+                autoComplete={mode === "register" ? "new-password" : "current-password"}
+                required
+                minLength={4}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="কমপক্ষে ৪ অক্ষর"
+                className="mt-1 w-full border border-leaf-900/15 bg-white px-3 py-2.5 font-bengali text-[15px] text-leaf-950 outline-none ring-leaf-500/30 focus:ring-2"
+              />
+            </label>
+
+            {error && (
+              <p className="font-bengali text-sm text-red-700">{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-leaf-500 px-4 py-2.5 font-bengali text-sm font-semibold text-white transition hover:bg-leaf-950 disabled:opacity-50"
+            >
+              {loading
+                ? "অপেক্ষা করুন…"
+                : mode === "register"
+                  ? "নিবন্ধন করুন"
+                  : "লগইন"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center font-bengali text-sm text-leaf-800/75">
+            {mode === "register" ? "আগে একাউন্ট আছে?" : "নতুন ব্যবহারকারী?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(mode === "register" ? "login" : "register");
+                setError(null);
+              }}
+              className="font-semibold text-leaf-700 hover:text-leaf-950"
+            >
+              {mode === "register" ? "লগইন করুন" : "একাউন্ট খুলুন"}
+            </button>
+          </p>
+        </div>
+
+        <p className="mt-4 text-center">
+          <a
+            href="/"
+            onClick={(e) => handleAppLink(e, "/")}
+            className="font-bengali text-sm text-leaf-800/70 hover:text-leaf-950"
+          >
+            ← হোমে ফিরুন
+          </a>
+        </p>
+      </div>
+    </main>
+  );
+}

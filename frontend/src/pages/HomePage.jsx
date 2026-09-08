@@ -1,13 +1,16 @@
 import MachineHero from "../components/MachineHero.jsx";
+import { isLoggedIn } from "../utils/auth.js";
 import { handleAppLink } from "../utils/nav.js";
 
 const VIDEO_SRC = "/media/brri-winnower-2024.mp4";
 
 export default function HomePage() {
+  const chatHref = isLoggedIn() ? "/winnower" : "/login?next=/winnower";
+
   return (
     <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
       <div className="animate-fade-up">
-        <MachineHero startHref="/winnower" />
+        <MachineHero startHref={chatHref} />
       </div>
 
       <section className="mx-auto w-full max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
@@ -19,8 +22,8 @@ export default function HomePage() {
         </h2>
 
         <a
-          href="/winnower"
-          onClick={(e) => handleAppLink(e, "/winnower")}
+          href={chatHref}
+          onClick={(e) => handleAppLink(e, chatHref)}
           className="mt-4 flex overflow-hidden border border-leaf-900/10 bg-white/80 shadow-sm backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-leaf-500/30 hover:shadow-md"
         >
           <div className="relative h-28 w-32 shrink-0 bg-leaf-950 sm:h-32 sm:w-40">

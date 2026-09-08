@@ -1,6 +1,24 @@
+import { clearAuth, getToken } from "../utils/auth.js";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
+export class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+function authHeaders(extra = {}) {
+  const token = getToken();
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
+}
+
 async function handleResponse(res) {
+  if (res.status === 401) {
+    clearAuth();
+  }
   if (!res.ok) {
     let detail = `Request failed (${res.status})`;
     try {
@@ -9,7 +27,7 @@ async function handleResponse(res) {
     } catch {
       /* ignore */
     }
-    throw new Error(detail);
+    throw new ApiError(detail, res.status);
   }
   return res.json();
 }
@@ -22,6 +40,43 @@ function parseSseBlock(block) {
   } catch {
     return null;
   }
+}
+
+export async function registerUser({ mobile, password }) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mobile, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function loginUser({ mobile, password }) {
+  const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mobile, password }),
+  });
+  return handleResponse(res);
+}
+
+export async function fetchMe() {
+  const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
+}
+
+export async function logoutUser() {
+  const res = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (res.status === 401) {
+    clearAuth();
+    return { ok: true };
+  }
+  return handleResponse(res);
 }
 
 /**
@@ -39,8 +94,13 @@ export async function sendChatMessageStream(
 
   const res = await fetch(`${API_BASE_URL}/api/chat/message/stream`, {
     method: "POST",
+    headers: authHeaders(),
     body: formData,
   });
+
+  if (res.status === 401) {
+    clearAuth();
+  }
 
   if (!res.ok) {
     let detail = `Request failed (${res.status})`;
@@ -50,7 +110,7 @@ export async function sendChatMessageStream(
     } catch {
       /* ignore */
     }
-    throw new Error(detail);
+    throw new ApiError(detail, res.status);
   }
 
   const reader = res.body.getReader();
@@ -76,7 +136,9 @@ export async function sendChatMessageStream(
 }
 
 export async function fetchChatHistory(sessionId) {
-  const res = await fetch(`${API_BASE_URL}/api/chat/${sessionId}`);
+  const res = await fetch(`${API_BASE_URL}/api/chat/${sessionId}`, {
+    headers: authHeaders(),
+  });
   return handleResponse(res);
 }
 
@@ -85,7 +147,9 @@ export async function fetchChatSessions({ limit = 50, offset = 0 } = {}) {
     limit: String(limit),
     offset: String(offset),
   });
-  const res = await fetch(`${API_BASE_URL}/api/chat/sessions/list?${params}`);
+  const res = await fetch(`${API_BASE_URL}/api/chat/sessions/list?${params}`, {
+    headers: authHeaders(),
+  });
   return handleResponse(res);
 }
 
