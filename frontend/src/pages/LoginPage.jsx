@@ -9,7 +9,7 @@ function nextPath() {
 }
 
 export default function LoginPage() {
-  const [mode, setMode] = useState("register");
+  const [mode, setMode] = useState("login");
   const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);

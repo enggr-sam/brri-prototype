@@ -87,7 +87,7 @@ export default function ChatSidebar({
           onClick={onLogout}
           className="w-full rounded-lg px-3 py-2 text-left font-bengali text-sm text-white/70 hover:bg-white/10 hover:text-white"
         >
-          🚪 লগআউট
+          🚪➡️ লগআউট
         </button>
       </div>
     </aside>
