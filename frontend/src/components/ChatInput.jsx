@@ -97,9 +97,9 @@ export default function ChatInput({ onSend, disabled }) {
   const canSend = Boolean(text.trim() || imageFile || audioBlob);
 
   return (
-    <div className="composer shrink-0 border-t border-slate-200 bg-white px-3 pt-2.5 sm:px-4">
+    <div className="composer shrink-0 border-t border-slate-200 bg-white px-3 pt-2.5 dark:border-slate-800 dark:bg-slate-900 sm:px-4">
       {error && (
-        <p className="mb-2 font-bengali text-xs text-red-700">{error}</p>
+        <p className="mb-2 font-bengali text-xs text-red-700 dark:text-red-400">{error}</p>
       )}
 
       {imagePreview && (
@@ -112,7 +112,7 @@ export default function ChatInput({ onSend, disabled }) {
           <button
             type="button"
             onClick={clearImage}
-            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 sm:min-h-0"
+            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400 sm:min-h-0"
           >
             সরান
           </button>
@@ -121,13 +121,13 @@ export default function ChatInput({ onSend, disabled }) {
 
       {audioBlob && (
         <div className="mb-2 flex items-center gap-2">
-          <span className="font-bengali text-xs text-slate-600">
+          <span className="font-bengali text-xs text-slate-600 dark:text-slate-300">
             🎙️ কণ্ঠ রেকর্ড প্রস্তুত
           </span>
           <button
             type="button"
             onClick={clearAudio}
-            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 sm:min-h-0"
+            className="min-h-11 font-bengali text-xs text-slate-400 hover:text-red-700 dark:text-slate-500 dark:hover:text-red-400 sm:min-h-0"
           >
             সরান
           </button>
@@ -143,7 +143,7 @@ export default function ChatInput({ onSend, disabled }) {
           disabled={disabled}
           placeholder="প্রশ্ন লিখুন…"
           rows={1}
-          className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 font-bengali text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
+          className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 font-bengali text-[15px] text-slate-800 placeholder:text-slate-400 focus:outline-none disabled:opacity-50 dark:text-slate-100 dark:placeholder:text-slate-500"
         />
         <button
           type="button"
@@ -163,7 +163,7 @@ export default function ChatInput({ onSend, disabled }) {
           disabled={disabled || isRecording}
           title="📷 ছবি পাঠান"
           aria-label="📷 ছবি পাঠান"
-          className="flex h-9 w-9 items-center justify-center text-slate-400 transition hover:text-leaf-500 disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center text-slate-400 transition hover:text-leaf-500 disabled:opacity-40 dark:text-slate-500 dark:hover:text-leaf-400"
         >
           <PhotoIcon />
         </button>
@@ -175,8 +175,8 @@ export default function ChatInput({ onSend, disabled }) {
           aria-label={isRecording ? "রেকর্ড থামান" : "কণ্ঠ বার্তা"}
           className={`flex h-9 w-9 items-center justify-center transition disabled:opacity-40 ${
             isRecording
-              ? "animate-soft-pulse text-red-600"
-              : "text-slate-400 hover:text-leaf-500"
+              ? "animate-soft-pulse text-red-600 dark:text-red-400"
+              : "text-slate-400 hover:text-leaf-500 dark:text-slate-500 dark:hover:text-leaf-400"
           }`}
         >
           {isRecording ? <StopIcon /> : <MicIcon />}

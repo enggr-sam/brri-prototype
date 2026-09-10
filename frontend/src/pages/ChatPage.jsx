@@ -178,7 +178,7 @@ export default function ChatPage() {
   };
 
   return (
-    <main className="flex min-h-0 flex-1 overflow-hidden bg-slate-100">
+    <main className="flex min-h-0 flex-1 overflow-hidden bg-slate-100 dark:bg-slate-950">
       {sidebarOpen && (
         <button
           type="button"
@@ -205,13 +205,13 @@ export default function ChatPage() {
         />
       </div>
 
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-white md:border-l md:border-slate-200">
-        <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 sm:px-5">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-slate-900 md:border-l md:border-slate-200 dark:md:border-slate-800">
+        <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-3 py-2.5 dark:border-slate-800 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="flex h-9 w-9 items-center justify-center text-leaf-800 md:hidden"
+              className="flex h-9 w-9 items-center justify-center text-leaf-800 dark:text-slate-300 md:hidden"
               aria-label="চ্যাট ইতিহাস"
             >
               <MenuIcon />
@@ -219,16 +219,16 @@ export default function ChatPage() {
             <a
               href="/"
               onClick={(e) => handleAppLink(e, "/")}
-              className="hidden h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 sm:flex"
+              className="hidden h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 dark:text-leaf-400 dark:hover:bg-slate-800 sm:flex"
               aria-label="হোমে ফিরুন"
             >
               <CloseIcon />
             </a>
             <div className="min-w-0">
-              <p className="truncate font-display text-sm font-semibold text-slate-800 sm:text-base">
+              <p className="truncate font-display text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-base">
                 BRRI সহায়ক
               </p>
-              <p className="truncate font-bengali text-[11px] text-slate-400">
+              <p className="truncate font-bengali text-[11px] text-slate-400 dark:text-slate-500">
                 {loading ? "উত্তর লিখছে…" : "ব্রি শস্য ঝাড়াই যন্ত্র · ওয়েব ও মোবাইল"}
               </p>
             </div>
@@ -237,14 +237,14 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={newChat}
-              className="hidden font-bengali text-xs text-leaf-800/70 hover:text-leaf-950 sm:inline"
+              className="hidden font-bengali text-xs text-leaf-800/70 hover:text-leaf-950 dark:text-slate-400 dark:hover:text-slate-100 sm:inline"
             >
               ✨ নতুন চ্যাট
             </button>
             <a
               href="/"
               onClick={(e) => handleAppLink(e, "/")}
-              className="flex h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 sm:hidden"
+              className="flex h-9 w-9 items-center justify-center text-leaf-500 hover:bg-leaf-50 dark:text-leaf-400 dark:hover:bg-slate-800 sm:hidden"
               aria-label="হোমে ফিরুন"
             >
               <CloseIcon />
@@ -252,8 +252,8 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <div className="flex shrink-0 items-center gap-2.5 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-slate-600 sm:px-6">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-leaf-500/10 text-leaf-500">
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-slate-600 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300 sm:px-6">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-leaf-500/10 text-leaf-500 dark:bg-leaf-400/15 dark:text-leaf-400">
             <ChatGlyph />
           </span>
           <p className="min-w-0 truncate font-bengali text-sm">
@@ -285,12 +285,12 @@ export default function ChatPage() {
         {(error || sessionCostUsd > 0) && (
           <div className="shrink-0 px-4 pb-2">
             {error && (
-              <p className="text-center font-bengali text-sm text-red-700">
+              <p className="text-center font-bengali text-sm text-red-700 dark:text-red-400">
                 {error}
               </p>
             )}
             {!error && sessionCostUsd > 0 && (
-              <p className="text-center font-bengali text-[10px] text-slate-400">
+              <p className="text-center font-bengali text-[10px] text-slate-400 dark:text-slate-500">
                 {formatSessionCostLabel(sessionCostUsd)}
               </p>
             )}
@@ -308,15 +308,15 @@ function EmptyThread({ onSelect, disabled }) {
         <img
           src="/brri-logo.jpg"
           alt=""
-          className="mt-0.5 h-8 w-8 rounded-full bg-slate-100 object-contain p-0.5"
+          className="mt-0.5 h-8 w-8 rounded-full bg-slate-100 object-contain p-0.5 dark:bg-slate-800"
           aria-hidden
         />
         <div>
-          <p className="text-sm font-semibold text-slate-700">BRRI সহায়ক</p>
-          <p className="font-bengali text-xs text-slate-400">✅ প্রস্তুত</p>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">BRRI সহায়ক</p>
+          <p className="font-bengali text-xs text-slate-400 dark:text-slate-500">✅ প্রস্তুত</p>
         </div>
       </div>
-      <p className="font-bengali text-[15px] leading-relaxed text-slate-700 sm:text-base">
+      <p className="font-bengali text-[15px] leading-relaxed text-slate-700 dark:text-slate-300 sm:text-base">
         ব্রি শস্য ঝাড়াই যন্ত্র নিয়ে জিজ্ঞেস করুন — যন্ত্রাংশ, সমস্যা, নকশা বা
         রক্ষণাবেক্ষণ। কম্পিউটার বা ফোন — দুই জায়গাতেই চ্যাট ও ইতিহাস ব্যবহার করা যাবে।
       </p>

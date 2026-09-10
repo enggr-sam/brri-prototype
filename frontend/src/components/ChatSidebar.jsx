@@ -1,4 +1,5 @@
 import { formatDateTime } from "../utils/formatTime.js";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function ChatSidebar({
   user,
@@ -79,7 +80,8 @@ export default function ChatSidebar({
         })}
       </div>
 
-      <div className="shrink-0 border-t border-white/10 px-3 py-3">
+      <div className="shrink-0 space-y-2 border-t border-white/10 px-3 py-3">
+        <ThemeToggle variant="segmented" />
         <button
           type="button"
           onClick={onLogout}

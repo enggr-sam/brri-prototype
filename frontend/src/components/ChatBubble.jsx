@@ -44,7 +44,7 @@ function GalleryActions({ img }) {
       <a
         href={`${href}${href.includes("?") ? "&" : "?"}download=1`}
         download={img.image_name || "cad-drawing.jpg"}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-leaf-500/20 bg-leaf-50 px-2.5 py-1.5 font-bengali text-xs font-medium text-leaf-800 transition hover:bg-blue-50"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-leaf-500/20 bg-leaf-50 px-2.5 py-1.5 font-bengali text-xs font-medium text-leaf-800 transition hover:bg-blue-50 dark:border-leaf-400/30 dark:bg-leaf-400/10 dark:text-leaf-300 dark:hover:bg-leaf-400/20"
       >
         ⬇️ নকশা ডাউনলোড
       </a>
@@ -56,11 +56,11 @@ function ReferenceGallery({ images }) {
   if (!images?.length) return null;
 
   return (
-    <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+    <div className="mt-4 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
       {images.map((img) => (
           <figure
             key={img.image_name}
-            className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+            className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
           >
             <img
               src={mediaUrl(img.url)}
@@ -70,17 +70,17 @@ function ReferenceGallery({ images }) {
             />
             <figcaption className="px-3 py-2.5">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-bengali text-sm font-semibold text-slate-900">
+                <p className="font-bengali text-sm font-semibold text-slate-900 dark:text-slate-100">
                   {img.label}
                 </p>
                 {isCadDrawing(img) && (
-                  <span className="rounded border border-leaf-500/20 bg-white px-1.5 py-0.5 font-bengali text-[10px] font-medium text-leaf-700">
+                  <span className="rounded border border-leaf-500/20 bg-white px-1.5 py-0.5 font-bengali text-[10px] font-medium text-leaf-700 dark:border-leaf-400/30 dark:bg-slate-900 dark:text-leaf-300">
                     CAD নকশা
                   </span>
                 )}
               </div>
               {img.contextual_note ? (
-                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-600">
+                <p className="mt-1.5 font-bengali text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                   {img.contextual_note}
                 </p>
               ) : null}
@@ -111,7 +111,7 @@ export default function ChatBubble({ message, showTimestamp = false }) {
       <div className="flex flex-col items-end">
         <div className="bubble-user max-w-[min(100%,20rem)] px-3.5 py-2.5 sm:max-w-[80%]">
           {showTimestamp && message.created_at && (
-            <p className="mb-1 text-[11px] text-slate-400">
+            <p className="mb-1 text-[11px] text-slate-400 dark:text-slate-500">
               {new Date(message.created_at).toLocaleString("bn-BD", {
                 timeZone: "Asia/Dhaka",
                 hour: "2-digit",
@@ -121,7 +121,7 @@ export default function ChatBubble({ message, showTimestamp = false }) {
               })}
             </p>
           )}
-          <article className="whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-slate-800">
+          <article className="whitespace-pre-wrap font-bengali text-[15px] leading-relaxed text-slate-800 dark:text-slate-100">
             {renderTextWithLinks(
               message.content,
               "break-all underline decoration-slate-400 underline-offset-2"
@@ -136,12 +136,12 @@ export default function ChatBubble({ message, showTimestamp = false }) {
                   className="max-h-48 w-full bg-white object-contain sm:max-h-52"
                 />
               ) : (
-                <p className="text-xs text-slate-500">🎙️ কণ্ঠ বার্তা</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">🎙️ কণ্ঠ বার্তা</p>
               )}
             </div>
           )}
         </div>
-        <p className="mt-1 pr-1 font-bengali text-[11px] text-slate-400">
+        <p className="mt-1 pr-1 font-bengali text-[11px] text-slate-400 dark:text-slate-500">
           {relativeTime(message.created_at)}
         </p>
       </div>
@@ -153,17 +153,17 @@ export default function ChatBubble({ message, showTimestamp = false }) {
       <img
         src="/brri-logo.jpg"
         alt=""
-        className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+        className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5 dark:bg-slate-800"
         aria-hidden
       />
       <div className="min-w-0 max-w-[min(100%,24rem)] flex-1 sm:max-w-[88%]">
-        <p className="mb-1 text-xs font-semibold text-slate-600">BRRI সহায়ক</p>
-        <MarkdownReply text={message.content} className="text-slate-800" />
+        <p className="mb-1 text-xs font-semibold text-slate-600 dark:text-slate-300">BRRI সহায়ক</p>
+        <MarkdownReply text={message.content} className="text-slate-800 dark:text-slate-200" />
         {message.reference_images?.length > 0 && (
           <ReferenceGallery images={message.reference_images} />
         )}
         {message.cost_usd > 0 && (
-          <p className="mt-2 font-bengali text-[10px] text-slate-400">
+          <p className="mt-2 font-bengali text-[10px] text-slate-400 dark:text-slate-500">
             {formatReplyCostLabel(message.cost_usd)}
             {message.model_used ? ` · ${message.model_used}` : ""}
           </p>

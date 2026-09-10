@@ -11,6 +11,17 @@
       rel="stylesheet"
     />
     <title>ব্রি শস্য ঝাড়াই যন্ত্র · BRRI Win2024</title>
+    <script>
+      // Runs before paint so a saved dark theme never flashes light first.
+      (function () {
+        var theme = "light";
+        try {
+          if (localStorage.getItem("brri_theme") === "dark") theme = "dark";
+        } catch (e) {}
+        if (theme === "dark") document.documentElement.classList.add("dark");
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

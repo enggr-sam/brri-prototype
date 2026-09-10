@@ -19,10 +19,20 @@ body {
   color: #0f172a;
   background: #f3f4f6;
   font-family: Inter, "Noto Sans Bengali", system-ui, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .app-shell {
   background: #f3f4f6;
+}
+
+html.dark body {
+  color: #e2e8f0;
+  background: #020617;
+}
+
+html.dark .app-shell {
+  background: #020617;
 }
 
 .machine-hero__veil {
@@ -47,6 +57,12 @@ body {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
+html.dark .chat-panel {
+  background: #0f172a;
+  border-color: rgba(148, 163, 184, 0.16);
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.55);
+}
+
 .composer {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
@@ -65,6 +81,14 @@ body {
   border-width: 6px 7px 0 0;
   border-style: solid;
   border-color: #f1f5f9 transparent transparent transparent;
+}
+
+html.dark .bubble-user {
+  background: #1e293b;
+}
+
+html.dark .bubble-user::after {
+  border-color: #1e293b transparent transparent transparent;
 }
 
 @media (max-width: 640px) {

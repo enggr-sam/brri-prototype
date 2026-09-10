@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { logoutUser } from "../services/api.js";
 import { clearAuth, getUser, isLoggedIn } from "../utils/auth.js";
 import { goTo, handleAppLink } from "../utils/nav.js";
+import ThemeToggle from "./ThemeToggle.jsx";
 
 const LOGO_SRC = "/brri-logo.jpg";
 
@@ -40,7 +41,7 @@ export default function Header({
           ? "absolute inset-x-0 top-0 z-20 border-b border-white/10 bg-gradient-to-b from-leaf-950/55 to-transparent"
           : compact
             ? "relative border-b border-white/10 bg-leaf-950 text-white"
-            : "relative border-b border-slate-200 bg-white shadow-sm"
+            : "relative border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
       }`}
     >
       <div
@@ -68,13 +69,15 @@ export default function Header({
             <div className="min-w-0">
               <p
                 className={`font-display font-semibold tracking-tight ${
-                  onDark ? "text-base text-white" : "text-lg text-slate-900"
+                  onDark
+                    ? "text-base text-white"
+                    : "text-lg text-slate-900 dark:text-slate-100"
                 }`}
               >
                 BRRI Multicrop Winnower
               </p>
               {!compact && (
-                <p className="font-bengali text-xs text-slate-500">
+                <p className="font-bengali text-xs text-slate-500 dark:text-slate-400">
                   ব্রি শস্য ঝাড়াই যন্ত্র · BRRI Win2024
                 </p>
               )}
@@ -82,7 +85,8 @@ export default function Header({
           )}
         </a>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <ThemeToggle onDark={onDark} />
           {showChatHome && (
             <a
               href="/winnower"
@@ -90,7 +94,7 @@ export default function Header({
               className={`px-3 py-1.5 font-bengali text-sm transition ${
                 onDark
                   ? "text-white/85 hover:text-white"
-                  : "text-slate-600 hover:text-slate-900"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
               }`}
             >
               ← 💬 চ্যাট
@@ -100,7 +104,7 @@ export default function Header({
             <>
               <span
                 className={`hidden font-bengali text-xs sm:inline ${
-                  onDark ? "text-white/70" : "text-slate-500"
+                  onDark ? "text-white/70" : "text-slate-500 dark:text-slate-400"
                 }`}
               >
                 👤 {user.mobile}
@@ -111,7 +115,7 @@ export default function Header({
                 className={`rounded-lg px-2 py-1.5 font-bengali text-sm transition ${
                   onDark
                     ? "text-white/85 hover:text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                 }`}
               >
                 🚪 লগআউট

@@ -16,7 +16,7 @@ export default function StarterQuestions({ onSelect, disabled, compact = false }
 
   return (
     <div className={compact ? "" : "mb-4"}>
-      <p className="mb-2 font-bengali text-xs text-slate-500">
+      <p className="mb-2 font-bengali text-xs text-slate-500 dark:text-slate-400">
         💡 অথবা এখান থেকে শুরু করুন:
       </p>
       <div className="flex flex-col gap-2">
@@ -26,7 +26,7 @@ export default function StarterQuestions({ onSelect, disabled, compact = false }
             type="button"
             disabled={disabled}
             onClick={() => onSelect(q)}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 shadow-sm transition hover:border-leaf-500/40 hover:bg-blue-50 disabled:opacity-40"
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left font-bengali text-xs leading-snug text-slate-700 shadow-sm transition hover:border-leaf-500/40 hover:bg-blue-50 disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-leaf-400/50 dark:hover:bg-slate-700"
           >
             {q}
           </button>

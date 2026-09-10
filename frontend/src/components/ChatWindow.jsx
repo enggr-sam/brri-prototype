@@ -36,14 +36,14 @@ export default function ChatWindow({
           <img
             src="/brri-logo.jpg"
             alt=""
-            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5 dark:bg-slate-800"
             aria-hidden
           />
           <div className="min-w-0 flex-1 pt-0.5">
-            <p className="mb-1 text-xs font-semibold text-slate-600">BRRI সহায়ক</p>
+            <p className="mb-1 text-xs font-semibold text-slate-600 dark:text-slate-300">BRRI সহায়ক</p>
             <div className="relative">
-              <MarkdownReply text={streamingText} className="text-slate-800" />
-              <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-leaf-500 align-middle" />
+              <MarkdownReply text={streamingText} className="text-slate-800 dark:text-slate-200" />
+              <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-leaf-500 align-middle dark:bg-leaf-400" />
             </div>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function ChatWindow({
           <img
             src="/brri-logo.jpg"
             alt=""
-            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5"
+            className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-slate-100 object-contain p-0.5 dark:bg-slate-800"
             aria-hidden
           />
           <div className="pt-1">
@@ -72,7 +72,7 @@ export default function ChatWindow({
       )}
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           {error}
         </div>
       )}
