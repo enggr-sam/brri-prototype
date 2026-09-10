@@ -134,6 +134,7 @@ _SUBSYSTEM_HINTS: dict[str, tuple[str, ...]] = {
     "hopper": ("hopper", "হপার", "feed gate"),
     "shaft": ("shaft", "শ্যাফট", "small shaft", "sieve small"),
     "discharge": ("discharge", "outlet", "chute", "আউটলেট", "নল", "বের হয়", "বের হয়"),
+    "pulley": ("pulley", "পুলি", "motor pulley", "blower pulley"),
 }
 
 # Synonym groups: Bangla "পার্ট-২" is the same modifier as English "part-2".
@@ -169,6 +170,58 @@ _GENERIC_KEYWORDS = frozenset(
 )
 
 _RANK_SKIP_TOPICS = frozenset({"blueprint", "grain_loss"})
+
+# Physical parts. When the farmer names one, do not attach a neighbour's photo
+# (pulley question → motor close-up, belt question → hopper, …).
+_PART_TOPICS = frozenset({
+    "motor",
+    "pulley",
+    "belt",
+    "hopper",
+    "sieve",
+    "bearing",
+    "blower",
+    "shaft",
+    "linkage",
+    "discharge",
+    "air_control",
+})
+
+# Most-specific part first so "মোটর পুলি" locks on pulley, not motor.
+_PART_SPECIFICITY = (
+    "pulley",
+    "belt",
+    "bearing",
+    "shaft",
+    "linkage",
+    "hopper",
+    "sieve",
+    "blower",
+    "air_control",
+    "discharge",
+    "motor",
+)
+
+# Longer phrases first: "motor pulley" is a pulley, "power pulley belt" is a belt.
+_PRIMARY_PART_MARKERS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("belt", (
+        "pulley belt", "power pulley belt", "v-belt", "v belt", "b65", "ভি-বেল্ট",
+    )),
+    ("pulley", (
+        "motor pulley", "blower pulley", "bottom pulley", "cast pulley",
+        "drive pulley", "pulley", "পুলি",
+    )),
+    ("air_control", ("air control", "air intake", "এয়ার কন্ট্রোল")),
+    ("hopper", ("hopper", "হপার", "feed gate")),
+    ("sieve", ("sieve", "চালুনি", "চালনি", "ঝরন", "screen")),
+    ("bearing", ("bearing", "বিয়ারিং", "pillow")),
+    ("blower", ("blower", "ব্লোয়ার", "fan", "ফ্যান", "পাখা")),
+    ("shaft", ("shaft", "শ্যাফট", "শ্যাফ্ট")),
+    ("linkage", ("linkage", "connecting rod", "লিঙ্ক")),
+    ("discharge", ("discharge", "outlet", "chute", "আউটলেট")),
+    ("motor", ("motor", "মোটর", "generator")),
+    ("belt", ("belt", "বেল্ট")),
+)
 
 
 def user_requests_visual_help(text: str) -> bool:
@@ -219,7 +272,7 @@ def should_offer_gallery(
         return False
     if query_is_how_it_works(focus) and not asks_for_photos(text):
         return False
-    topics = _detect_query_topics(focus) - _RANK_SKIP_TOPICS
+    topics = _topics_for_turn(text, focus) - _RANK_SKIP_TOPICS
     return bool(topics)
 
 
@@ -260,6 +313,43 @@ def _detect_query_topics(query: str) -> set[str]:
         for topic, keywords in _TOPIC_KEYWORDS.items()
         if any(_keyword_in_text(kw, ql) for kw in keywords)
     }
+
+
+def _topics_for_turn(user_text: str, focus: str) -> set[str]:
+    """Prefer the current message's part. History must not swap pulley → motor."""
+    current = _detect_query_topics(user_text or "")
+    if current - _RANK_SKIP_TOPICS:
+        return current
+    return _detect_query_topics(focus or "")
+
+
+def _dominant_part_topic(topics: set[str]) -> str | None:
+    asked = topics & _PART_TOPICS
+    if not asked:
+        return None
+    for topic in _PART_SPECIFICITY:
+        if topic in asked:
+            return topic
+    return None
+
+
+def _primary_part_topic(entry: dict) -> str | None:
+    """What this catalogue row *is*, not every word in its description."""
+    identity = _fold_text(_entry_identity(entry).replace("_", " ").replace("-", " "))
+    slot = str(entry.get("photo_no") or "")
+    if slot == "11":
+        return "motor"
+    if slot == "12" or slot == "13":
+        return "pulley"
+    if slot == "10":
+        return "belt"
+    for topic, markers in _PRIMARY_PART_MARKERS:
+        if any(m in identity for m in markers):
+            return topic
+    sub = (entry.get("subsystem") or "").lower()
+    if sub in _PART_TOPICS:
+        return sub
+    return None
 
 
 def _entry_haystack(entry: dict) -> str:
@@ -379,6 +469,15 @@ def entry_is_on_topic(entry: dict, topics: set[str], query: str) -> bool:
         if query_is_how_it_works(query):
             return source != "cad_drawing"
         return not _is_overview_shot(entry)
+    dominant = _dominant_part_topic(machine_topics)
+    if dominant:
+        primary = _primary_part_topic(entry)
+        if primary:
+            return primary == dominant
+        owned = _entry_topics(entry, strict=True) & _PART_TOPICS
+        owned |= set(_PHOTO_SLOT_TOPICS.get(str(entry.get("photo_no") or ""), ()))
+        if owned:
+            return dominant in owned
     drawing_ask = query_wants_technical_drawing(query) or query_wants_assembly_diagram(query)
     et = _entry_topics(entry, strict=drawing_ask)
     if not et:
@@ -505,6 +604,17 @@ def _score_entry(entry: dict, query: str, topics: set[str]) -> float:
     rank_topics = topics - _RANK_SKIP_TOPICS
     if rank_topics and _identity_mentions_topic(identity, rank_topics):
         score += 12.0
+    dominant = _dominant_part_topic(topics)
+    if dominant:
+        primary = _primary_part_topic(entry)
+        if primary == dominant:
+            score += 18.0
+        elif primary and primary != dominant:
+            score -= 22.0
+        # "ব্লোয়ার পুলি" should beat a generic drive-side pulley shot.
+        extra = (topics & _PART_TOPICS) - {dominant}
+        if extra and all(t in identity for t in extra):
+            score += 12.0
 
     if _is_unit_drawing_query(query) and rank_topics:
         if source == "subassembly_drawing" and _entry_subsystem_matches(entry, rank_topics):
@@ -713,18 +823,22 @@ def retrieve_scored_candidates(
     if is_belt_supplier_query(focus) or is_belt_price_query(user_text or "", history):
         return []
 
-    topics = _detect_query_topics(focus)
+    topics = _topics_for_turn(user_text or "", focus)
     # A drawing request is not a fault diagnosis — don't boost field-fault photos.
     if query_wants_technical_drawing(focus) or query_wants_assembly_diagram(focus):
         fault_boosts: dict[int, float] = {}
     else:
-        fault_boosts = _fault_boosted_numbers(focus)
+        # Fault photos follow this turn's part, not a leftover motor/sieve from history.
+        fault_query = user_text or focus
+        if topics & _PART_TOPICS:
+            fault_query = user_text or ""
+        fault_boosts = _fault_boosted_numbers(fault_query)
     scored: list[tuple[float, dict]] = []
 
     for entry in entries:
         num = entry.get("image_number")
         score = _score_entry(entry, focus, topics)
-        if num is not None and num in fault_boosts:
+        if score > 0 and num is not None and num in fault_boosts:
             score += fault_boosts[num]
         if score > 0:
             scored.append((score, entry))
@@ -784,7 +898,7 @@ def build_grounding_context(
         )
 
     focus = build_conversation_focus(user_text or "", history)
-    topics = sorted(_detect_query_topics(focus))
+    topics = sorted(_topics_for_turn(user_text or "", focus))
     lines = ["=== THIS TURN (stay on this topic only) ==="]
     if topics:
         lines.append("Farmer topic: " + ", ".join(topics))
@@ -883,7 +997,7 @@ def select_reference_images(
         limit = min(limit, 1)
 
     focus = build_conversation_focus(user_text or "", history)
-    topics = _detect_query_topics(focus)
+    topics = _topics_for_turn(user_text or "", focus)
     unit_drawing = _is_unit_drawing_query(focus)
     if unit_drawing:
         limit = min(limit, 2)
@@ -1007,22 +1121,13 @@ def refine_reference_images_for_reply(
     current: list[Path] | None = None,
     history: list[dict[str, str]] | None = None,
 ) -> list[Path]:
-    """Keep the gallery on the question — do not grow it from a long answer."""
+    """Keep the gallery on the farmer's question, not neighbouring parts in the answer."""
+    del reply_text  # answers name neighbours ("মোটর পুলি") and used to swap the photo
     current = list(current or [])
     if asks_for_full_machine(user_text or ""):
         return current[:1] or _select_full_machine_photos(limit=1)
-    if not conversation_wants_visuals(user_text or "", history) and not user_requests_visual_help(
-        user_text or ""
-    ):
-        return current[:1]
-    reply = (reply_text or "").strip()
-    if not reply:
-        return current
-    combined = f"{user_text or ''}\n{reply[:700]}"
-    picked = select_reference_images(combined, history=history)
-    if picked:
-        return picked
-    return current
+    picked = select_reference_images(user_text, history=history)
+    return picked or current
 
 
 def order_reference_images_by_relevance(

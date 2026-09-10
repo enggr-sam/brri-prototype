@@ -36,6 +36,34 @@ _PHOTO_SHOW = (
     "pic den",
 )
 
+_PART_NOUNS = (
+    "পুলি",
+    "pulley",
+    "মোটর",
+    "motor",
+    "বেল্ট",
+    "belt",
+    "হপার",
+    "hopper",
+    "চালুনি",
+    "চালনি",
+    "ঝরন",
+    "sieve",
+    "ব্লোয়ার",
+    "blower",
+    "বিয়ারিং",
+    "bearing",
+    "শ্যাফট",
+    "shaft",
+)
+
+
+def _names_a_part(text: str) -> bool:
+    raw = text or ""
+    lower = raw.lower()
+    return any(n in lower or n in raw for n in _PART_NOUNS)
+
+
 _SHORT_FOLLOWUP = (
     "কেন",
     "keno",
@@ -231,6 +259,9 @@ def build_conversation_focus(
     # Whole-machine photo is a new topic — do not keep the last part/symptom.
     if asks_for_full_machine(current):
         inherit = False
+    # "পুলি বানাতে খরচ?" after a motor chat is a new part, not a follow-up.
+    if _names_a_part(current) and _is_substantive(current):
+        inherit = False
 
     if inherit and prior:
         parts.extend(prior)
@@ -238,9 +269,6 @@ def build_conversation_focus(
         if asst:
             # Keep symptom/solution keywords for retrieval continuity.
             parts.append(asst)
-    elif prior and len(current) < 80 and not asks_for_full_machine(current):
-        # Short new turn may still refer to the open topic.
-        parts.append(prior[-1])
 
     if current:
         parts.append(current)
